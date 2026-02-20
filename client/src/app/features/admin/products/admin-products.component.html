@@ -24,7 +24,11 @@
                   [label]="showFilters ? 'Hide Filters' : 'Show Filters'"
                   (click)="toggleFilters()"
                   [severity]="showFilters ? 'info' : 'secondary'"
-                  class="ml-2">
+                  [title]="showFilters ? 'Hide Filters' : 'Show Filters'"
+                  class="ml-2"
+                  [attr.aria-label]="showFilters ? 'Hide Filters' : 'Show Filters'"
+                  title="filter"
+                  pTooltip="Show/Hide Filters">
           </button>
           <button pButton
                   type="button"
@@ -33,6 +37,7 @@
                   (click)="clearFilters()"
                   severity="danger"
                   [outlined]="true"
+                  title="Clear Filters"
                   class="ml-2"
                   *ngIf="searchValue || minPrice || maxPrice || startDate">
           </button>
@@ -43,14 +48,16 @@
                   label="Create Product"
                   icon="pi pi-plus"
                   (click)="showCreateDialog()"
-                  severity="success">
+                  severity="success"
+                  title="Create Product">
           </button>
 
           <button pButton
                   type="button"
                   label="Refresh"
                   icon="pi pi-refresh"
-                  (click)="loadProducts()">
+                  (click)="loadProducts()"
+                  title="Refresh Products">
           </button>
         </div>
       </div>
@@ -155,7 +162,9 @@
                         icon="pi pi-pencil"
                         [rounded]="true"
                         severity="info"
-                        (click)="editProduct(product)">
+                        title="Edit product"
+                    (click)="editProduct(product)"
+                    [attr.aria-label]="'Edit product ' + product.name">
                 </button>
                 <button pButton
                         type="button"
@@ -163,7 +172,9 @@
                         icon="pi pi-trash"
                         [rounded]="true"
                         severity="danger"
-                        (click)="deleteProduct(product.id)">
+                        title="Delete product"
+                        (click)="deleteProduct(product.id)"
+                        [attr.aria-label]="'Delete product ' + product.name">
                 </button>
               </div>
             </td>
@@ -291,11 +302,15 @@
             <button pButton 
                     type="button"
                     icon="pi pi-times"
+                    label="Remove"
                     class="p-button-rounded p-button-danger p-button-text remove-image-btn-evident"
                     (click)="removeImage()"
+                    title="Remove image"
                     pTooltip="Remove image"
                     tooltipPosition="top"
-                    [style]="{'position': 'absolute', 'top': '8px', 'right': '8px', 'width': '2.5rem', 'height': '2.5rem', 'background': 'rgba(239, 68, 68, 0.9)', 'color': 'white', 'box-shadow': '0 2px 8px rgba(0,0,0,0.3)'}">
+                    [attr.aria-label]="'Remove image'"
+                    [style]="{'position': 'absolute', 'top': '8px', 'right': '8px', 'width': '2.5rem', 'height': '2.5rem', 'background': 'rgba(239, 68, 68, 0.9)', 'color': 'white', 'box-shadow': '0 2px 8px rgba(0,0,0,0.3)'}"
+                    aria-label="Remove image">
             </button>
           </div>
 
@@ -313,7 +328,8 @@
                     label="Choose Image"
                     icon="pi pi-upload"
                     (click)="fileInput.click()"
-                    severity="secondary">
+                    severity="secondary"
+                    title="Choose product image">
             </button>
             <p class="upload-hint">JPG, PNG, GIF, WEBP (Max 5MB)</p>
           </div>
@@ -328,7 +344,9 @@
               icon="pi pi-times"
               (click)="hideDialog()"
               [disabled]="uploading"
-              severity="secondary">
+              severity="secondary"
+              title="Cancel"
+              [attr.aria-label]="'Cancel'">
       </button>
       <button pButton 
               type="button" 
@@ -336,6 +354,7 @@
               [icon]="uploading ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
               (click)="saveProduct()"
               [disabled]="uploading"
+              title="loading"
               severity="success">
       </button>
     </ng-template>

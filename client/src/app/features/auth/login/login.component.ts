@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, NgZone, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -11,8 +11,10 @@ import { Card } from 'primeng/card';
 import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
+import { interval, Subscription } from 'rxjs';
 
 import { AuthService } from '../../../core/services/auth.service';
+import { ChangeDetectorRef } from '@angular/core';
 
 
 @Component({
@@ -33,21 +35,25 @@ import { AuthService } from '../../../core/services/auth.service';
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
-export class LoginComponent {
+export class LoginComponent implements OnDestroy {
 
   loginForm;
-  // ===== OTP FEATURE COMMENTED OUT =====
-  // showOtpDialog = false;
-  // otpCode = '';
-  // userEmail = '';
-  // =====================================
+  // ===== OTP FEATURE ENABLED =====
+  showOtpDialog = false;
+  otpCode = '';
+  userEmail = '';
+  otpRemaining = 0; // seconds remaining for OTP expiry
+  private otpSubscription?: Subscription;
+
   loading = false;
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
     private authService: AuthService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private ngZone: NgZone,
+    private cd: ChangeDetectorRef 
 ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -71,36 +77,32 @@ export class LoginComponent {
       next: (response: any) => {
         this.loading = false;
 
-        // ===== OTP FEATURE COMMENTED OUT =====
         // Check if OTP is required
-        // if (response.otpRequired) {
-        //   this.userEmail = response.email;
-        //   this.showOtpDialog = true;
-        //   this.messageService.add({
-        //     severity: 'info',
-        //     summary: 'OTP Sent',
-        //     detail: response.message || 'Please check your email for OTP'
-        //   });
-        // } else {
-        //   this.handleLoginSuccess(response);
-        // }
-        // =====================================
+        if (response.otpRequired) {
+          this.userEmail = response.email;
+          this.showOtpDialog = true;
+          this.messageService.add({
+            severity: 'info',
+            summary: 'OTP Sent',
+            detail: response.message || 'Please check your email for OTP'
+          });
 
-        // ===== DIRECT LOGIN (OTP BYPASSED) =====
-        // Save tokens first
-        if (response.accessToken && response.refreshToken) {
-          this.authService.setTokens(response.accessToken, response.refreshToken);
+       
+          const expiry = response.expirySeconds ?? 300;
+          //const expiry = 10;
+
+          this.startOtpTimer(expiry);
+          return;
         }
 
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Login Successful',
-          detail: 'Welcome back!',
-          life: 3000
-        });
+        // ===== DIRECT LOGIN (OTP BYPASSED) =====
+        // Save tokens first (only when OTP not required)
+        if (response.accessToken && response.refreshToken) {
+          this.authService.setTokens(response.accessToken, response.refreshToken);
 
-        // Then redirect based on role
-        this.handleLoginSuccess(response);
+          // Then redirect based on role
+          this.handleLoginSuccess(response);
+        }
         // ========================================
       },
       error: (err: any) => {
@@ -128,39 +130,40 @@ export class LoginComponent {
     });
   }
 
-  // ===== OTP FEATURE COMMENTED OUT =====
-  // verifyOtp() {
-  //   if (!this.otpCode || this.otpCode.length !== 6) {
-  //     this.messageService.add({
-  //       severity: 'warn',
-  //       summary: 'Invalid OTP',
-  //       detail: 'Please enter a 6-digit OTP'
-  //     });
-  //     return;
-  //   }
+  // ===== OTP FEATURE ENABLED =====
+  verifyOtp() {
+    if (!this.otpCode || this.otpCode.length !== 6) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Invalid OTP',
+        detail: 'Please enter a 6-digit OTP'
+      });
+      return;
+    }
 
-  //   this.loading = true;
-  //   this.authService.verifyOtp(this.userEmail, this.otpCode).subscribe({
-  //     next: (response) => {
-  //       this.loading = false;
-  //       this.showOtpDialog = false;
-  //       this.handleLoginSuccess(response);
-  //       this.messageService.add({
-  //         severity: 'success',
-  //         summary: 'Success',
-  //         detail: 'Login successful!'
-  //       });
-  //     },
-  //     error: (err) => {
-  //       this.loading = false;
-  //       this.messageService.add({
-  //         severity: 'error',
-  //         summary: 'Verification Failed',
-  //         detail: err.error?.error || 'Invalid or expired OTP'
-  //       });
-  //     }
-  //   });
-  // }
+    this.loading = true;
+    this.authService.verifyOtp(this.userEmail, this.otpCode).subscribe({
+      next: (response) => {
+        this.loading = false;
+        this.stopOtpTimer();
+        this.showOtpDialog = false;
+        this.handleLoginSuccess(response);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Success',
+          detail: 'Login successful!'
+        });
+      },
+      error: (err) => {
+        this.loading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Verification Failed',
+          detail: err.error?.error || 'Invalid or expired OTP'
+        });
+      }
+    });
+  }
   // =====================================
 
   handleLoginSuccess(response: any) {
@@ -187,14 +190,71 @@ export class LoginComponent {
     }
   }
 
-  // ===== OTP FEATURE COMMENTED OUT =====
-  // closeOtpDialog() {
-  //   this.showOtpDialog = false;
-  //   this.otpCode = '';
-  // }
+  // ===== OTP FEATURE ENABLED =====
+  closeOtpDialog() {
+    this.stopOtpTimer();
+    this.showOtpDialog = false;
+    this.otpCode = '';
+  }
   // =====================================
 
   goToRegister() {
     this.router.navigate(['/register']);
   }
+
+  // OTP timer helpers
+  private startOtpTimer(seconds: number) {
+
+    this.stopOtpTimer();
+
+    this.otpRemaining = seconds > 0 ? seconds : 300;
+
+    this.otpSubscription = interval(1000).subscribe(() => {
+
+      if (this.otpRemaining > 0) {
+        this.otpRemaining--;
+
+        // 👇 Force UI update
+        this.cd.detectChanges();
+      }
+
+      if (this.otpRemaining === 0) {
+        this.stopOtpTimer();
+
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'OTP Expired',
+          detail: 'OTP expired. Please login again.'
+        });
+
+        this.showOtpDialog = false;
+        this.otpCode = '';
+      }
+    });
+  }
+
+  private stopOtpTimer() {
+    if (this.otpSubscription) {
+      this.otpSubscription.unsubscribe();
+      this.otpSubscription = undefined;
+    }
+  }
+
+
+  ngOnDestroy(): void {
+    this.stopOtpTimer();
+  }
+
+  // Format mm:ss
+  formatTime(seconds: number): string {
+    if (seconds <= 0) return '00:00';
+
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+
+    return `${m.toString().padStart(2, '0')}:${s
+      .toString()
+      .padStart(2, '0')}`;
+  }
+
 }

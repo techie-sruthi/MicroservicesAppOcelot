@@ -99,10 +99,11 @@ public class MinIOFileStorageService : IFileStorageService
             var transferUtility = new TransferUtility(_s3Client);
             await transferUtility.UploadAsync(uploadRequest);
 
-            // Return the public URL
+            // Return the public URL (use PublicEndpoint if set for external accessibility)
             var protocol = _settings.UseSSL ? "https" : "http";
-            var fileUrl = $"{protocol}://{_settings.Endpoint}/{_settings.BucketName}/{key}";
-            
+            var host = string.IsNullOrEmpty(_settings.PublicEndpoint) ? _settings.Endpoint : _settings.PublicEndpoint;
+            var fileUrl = $"{protocol}://{host}/{_settings.BucketName}/{key}";
+
             _logger.LogInformation($"File uploaded to MinIO: {fileUrl}");
             return fileUrl;
         }
@@ -155,7 +156,8 @@ public class MinIOFileStorageService : IFileStorageService
     {
         var key = $"products/{fileName}";
         var protocol = _settings.UseSSL ? "https" : "http";
-        var fileUrl = $"{protocol}://{_settings.Endpoint}/{_settings.BucketName}/{key}";
+        var host = string.IsNullOrEmpty(_settings.PublicEndpoint) ? _settings.Endpoint : _settings.PublicEndpoint;
+        var fileUrl = $"{protocol}://{host}/{_settings.BucketName}/{key}";
         return Task.FromResult(fileUrl);
     }
 

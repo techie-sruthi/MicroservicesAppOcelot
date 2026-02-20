@@ -94,6 +94,7 @@ services:
       - MongoDB__DatabaseName=ProductServiceDb
       - FileStorage__Provider=MinIO
       - FileStorage__MinIO__Endpoint=minio:9000
+      - FileStorage__MinIO__PublicEndpoint=localhost:9000
       - FileStorage__MinIO__AccessKey=minioadmin
       - FileStorage__MinIO__SecretKey=minioadmin
       - FileStorage__MinIO__BucketName=product-images

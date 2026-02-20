@@ -59,22 +59,24 @@ public class UsersController : ControllerBase
         }
     }
 
-    // ===== OTP FEATURE COMMENTED OUT =====
-    // [AllowAnonymous]
-    // [HttpPost("verify-otp")]
-    // public async Task<IActionResult> VerifyOtp(VerifyOtpCommand command)
-    // {
-    //     try
-    //     {
-    //         var response = await _mediator.Send(command);
-    //         return Ok(response);
-    //     }
-    //     catch (UnauthorizedAccessException ex)
-    //     {
-    //         return Unauthorized(new { error = ex.Message });
-    //     }
-    // }
-    // =====================================
+    
+
+    // ===== OTP FEATURE ENABLED =====
+    [AllowAnonymous]
+    [HttpPost("verify-otp")]
+    public async Task<IActionResult> VerifyOtp(VerifyOtpCommand command)
+    {
+        try
+        {
+            var response = await _mediator.Send(command);
+            return Ok(response);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { error = ex.Message });
+        }
+    }
+
 
     [AllowAnonymous]
     [HttpPost("refresh")]

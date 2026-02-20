@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using UserService.Application.Common.Interfaces;
 using UserService.Application.Users.DTOs;
 using UserService.Application.Contracts;
@@ -12,27 +13,26 @@ public class LoginUserCommandHandler
     private readonly IUserDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtService _jwtService;
-    // OTP FEATURE COMMENTED OUT 
-    // private readonly IOtpService _otpService;
-    // private readonly IEmailService _emailService;
-   
+    private readonly IOtpService _otpService;
+    private readonly IEmailService _emailService;
+    private readonly ILogger<LoginUserCommandHandler> _logger;
+
 
     public LoginUserCommandHandler(
         IUserDbContext context,
         IPasswordHasher passwordHasher,
-        IJwtService jwtService
-        //  OTP FEATURE COMMENTED OUT 
-        // IOtpService otpService,
-        // IEmailService emailService
-        
-        )
+        IJwtService jwtService,
+        IOtpService otpService,
+        IEmailService emailService,
+        ILogger<LoginUserCommandHandler> logger)
+
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _jwtService = jwtService;
-        //  OTP FEATURE COMMENTED OUT 
-        // _otpService = otpService;
-        // _emailService = emailService;
+        _otpService = otpService;
+        _emailService = emailService;
+        _logger = logger;
        
     }
 
@@ -51,33 +51,20 @@ public class LoginUserCommandHandler
         if (!_passwordHasher.Verify(request.Password, user.PasswordHash))
             throw new UnauthorizedAccessException("Invalid password. Please try again");
 
-        //  OTP FEATURE COMMENTED OUT
         // Generate and send OTP instead of returning tokens immediately
-        // var otp = _otpService.GenerateOtp();
-        // _otpService.StoreOtp(user.Email, otp);
-        // await _emailService.SendOtpEmailAsync(user.Email, otp);
-        // return new OtpRequiredResponse
-        // {
-        //     Email = user.Email,
-        //     Message = "OTP sent to your email. Please verify to complete login.",
-        //     OtpRequired = true
-        // };
-        
+        var otp = _otpService.GenerateOtp();
+        _otpService.StoreOtp(user.Email, otp);
+        await _emailService.SendOtpEmailAsync(user.Email, otp);
 
-        //  DIRECT LOGIN (OTP BYPASSED)
-        var accessToken = _jwtService.GenerateToken(user.Id, user.Email, user.Role);
-        var refreshToken = _jwtService.GenerateRefreshToken();
+        // Debug logging for OTP (only visible when log level includes Debug)
+        _logger?.LogDebug("Generated OTP for {Email}: {Otp}", user.Email, otp);
 
-        user.RefreshToken = refreshToken;
-        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-
-        await _context.SaveChangesAsync(cancellationToken);
-
-        return new LoginResponse
+        return new
         {
-            AccessToken = accessToken,
-            RefreshToken = refreshToken,
-            ExpiresIn = 3600
+            email = user.Email,
+            message = "OTP sent to your email. Please verify to complete login.",
+            otpRequired = true,
+            expirySeconds = _otpService.GetExpirySeconds()
         };
       
     }
