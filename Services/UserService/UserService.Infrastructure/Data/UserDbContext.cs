@@ -61,12 +61,41 @@ public class UserDbContext : DbContext, IUserDbContext
             .ToListAsync(cancellationToken);
     }
 
-    public async Task<PagedResult<UserDto>> GetAllUsersPagedAsync(int pageNumber, int pageSize, CancellationToken cancellationToken)
+    public async Task<PagedResult<UserDto>> GetAllUsersPagedAsync(
+        int pageNumber, 
+        int pageSize,
+        string? searchTerm,
+        string? roleFilter,
+        string? sortField,
+        string? sortOrder,
+        CancellationToken cancellationToken)
     {
-        var totalCount = await Users.CountAsync(cancellationToken);
+        // Start with base query
+        var query = Users.AsNoTracking();
 
-        var items = await Users
-            .AsNoTracking()
+        // Apply search filter (search by username or email)
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var searchLower = searchTerm.ToLower();
+            query = query.Where(u => 
+                u.UserName.ToLower().Contains(searchLower) || 
+                u.Email.ToLower().Contains(searchLower));
+        }
+
+        // Apply role filter
+        if (!string.IsNullOrWhiteSpace(roleFilter) && roleFilter != "all")
+        {
+            query = query.Where(u => u.Role == roleFilter);
+        }
+
+        // Get total count with filters
+        var totalCount = await query.CountAsync(cancellationToken);
+
+        // Apply sorting
+        query = ApplySorting(query, sortField, sortOrder);
+
+        // Apply pagination
+        var items = await query
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .Select(user => new UserDto
@@ -85,6 +114,27 @@ public class UserDbContext : DbContext, IUserDbContext
             TotalCount = totalCount,
             PageNumber = pageNumber,
             PageSize = pageSize
+        };
+    }
+
+    private IQueryable<User> ApplySorting(IQueryable<User> query, string? sortField, string? sortOrder)
+    {
+        // Default sort: CreatedAt descending (newest first)
+        if (string.IsNullOrWhiteSpace(sortField))
+        {
+            return query.OrderByDescending(u => u.CreatedAt);
+        }
+
+        var isDescending = sortOrder?.ToLower() == "desc" || sortOrder == "-1";
+
+        return sortField.ToLower() switch
+        {
+            "id" => isDescending ? query.OrderByDescending(u => u.Id) : query.OrderBy(u => u.Id),
+            "username" => isDescending ? query.OrderByDescending(u => u.UserName) : query.OrderBy(u => u.UserName),
+            "email" => isDescending ? query.OrderByDescending(u => u.Email) : query.OrderBy(u => u.Email),
+            "role" => isDescending ? query.OrderByDescending(u => u.Role) : query.OrderBy(u => u.Role),
+            "createdat" => isDescending ? query.OrderByDescending(u => u.CreatedAt) : query.OrderBy(u => u.CreatedAt),
+            _ => query.OrderByDescending(u => u.CreatedAt) // Default
         };
     }
 

@@ -128,6 +128,16 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
+  /**
+   * Check if email already exists
+   * Returns true if email is already taken
+   */
+  checkEmail(email: string): Observable<{ exists: boolean }> {
+    return this.http.get<{ exists: boolean }>(`${this.apiUrl}/check-email`, {
+      params: { email }
+    });
+  }
+
   isAuthenticated(): boolean {
     const token = this.getAccessToken();
     if (!token) return false;
@@ -148,5 +158,13 @@ export class AuthService {
 
   isLoggedIn(): boolean {
     return this.isAuthenticated();
+  }
+
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/forgot-password`, { email });
+  }
+
+  resetPassword(token: string, newPassword: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/reset-password`, { token, newPassword });
   }
 }

@@ -21,9 +21,9 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             Description = request.Description,
             Price = request.Price,
             DateOfManufacture = request.DateOfManufacture,
-            DateOfExpiry = request.DateOfExpiry,
             CreatedByUserId = request.CreatedByUserId,
-            ImageUrl = request.ImageUrl
+            ImageUrl = request.ImageUrl,
+            CreatedAt = DateTime.UtcNow // Set creation timestamp
         };
 
         var id = await _repository.AddAsync(product);

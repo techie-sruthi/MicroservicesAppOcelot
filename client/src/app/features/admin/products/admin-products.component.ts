@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AppLayoutComponent } from '../../../core/layout/app-layout.component';
@@ -15,6 +15,8 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import { ImageViewerComponent } from '../../../shared/components/image-viewer/image-viewer.component';
+import { Subject, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
 interface ProductForm {
   id?: string;
@@ -22,7 +24,6 @@ interface ProductForm {
   description?: string;
   price: number;
   dateOfManufacture: string;
-  dateOfExpiry: string;
   imageUrl?: string;
 }
 
@@ -48,10 +49,9 @@ interface ProductForm {
   templateUrl: './admin-products.component.html',
   styleUrl: './admin-products.component.css'
 })
-export class AdminProductsComponent implements OnInit {
+export class AdminProductsComponent implements OnInit, OnDestroy {
 
   products: Product[] = [];
-  filteredProducts: Product[] = [];
   searchValue: string = '';
   loading: boolean = false;
   displayDialog: boolean = false;
@@ -60,7 +60,8 @@ export class AdminProductsComponent implements OnInit {
   // Pagination properties
   totalRecords: number = 0;
   pageNumber: number = 1;
-  pageSize: number = 10;
+  pageSize: number = 5; // Match the first option in rowsPerPageOptions
+  first: number = 0; // For PrimeNG pagination
 
   // Image upload
   selectedFile: File | null = null;
@@ -73,12 +74,20 @@ export class AdminProductsComponent implements OnInit {
   maxPrice: number | null = null;
   startDate: string = '';
 
+  // Sorting properties
+  sortField: string | null = null;
+  sortOrder: string | null = null;
+
+  // Product name validation
+  private productNameCheck$ = new Subject<string>();
+  nameError: string = '';
+  checkingName: boolean = false;
+
   productForm: ProductForm = {
     name: '',
     description: '',
     price: 0,
     dateOfManufacture: '',
-    dateOfExpiry: '',
     imageUrl: undefined
   };
 
@@ -92,25 +101,79 @@ export class AdminProductsComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    this.setupNameValidation();
     this.loadProducts();
+  }
+
+  ngOnDestroy(): void {
+    this.productNameCheck$.complete();
+  }
+
+  setupNameValidation(): void {
+    this.productNameCheck$
+      .pipe(
+        debounceTime(500),
+        distinctUntilChanged(),
+        switchMap(name => {
+          if (!name || name.trim().length < 2) {
+            return of({ exists: false });
+          }
+          this.checkingName = true;
+          const excludeId = this.isEditMode ? this.productForm.id : undefined;
+          return this.productService.checkProductName(name.trim(), excludeId);
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          this.checkingName = false;
+          if (response.exists) {
+            this.nameError = 'A product with this name already exists';
+          } else {
+            this.nameError = '';
+          }
+        },
+        error: (error) => {
+          this.checkingName = false;
+        }
+      });
+  }
+
+  onProductNameChange(name: string): void {
+    this.productNameCheck$.next(name);
   }
 
   loadProducts(): void {
     this.loading = true;
-    this.productService.getAllProducts(this.pageNumber, this.pageSize).subscribe({
+
+    // Prepare filter parameters
+    const searchTerm = this.searchValue || undefined;
+    const minPrice = this.minPrice || undefined;
+    const maxPrice = this.maxPrice || undefined;
+    const startDate = this.startDate || undefined;
+    const sortField = this.sortField || undefined;
+    const sortOrder = this.sortOrder || undefined;
+
+    this.productService.getAllProducts(
+      this.pageNumber, 
+      this.pageSize,
+      searchTerm,
+      minPrice,
+      maxPrice,
+      startDate,
+      sortField,
+      sortOrder
+    ).subscribe({
       next: (data: PagedResult<Product>) => {
         this.products = data.items;
-        this.filteredProducts = data.items;
         this.totalRecords = data.totalCount;
         this.loading = false;
-        // Manually trigger change detection to update the table immediately
         this.cdr.detectChanges();
 
         if (data.items.length === 0 && data.totalCount === 0) {
           this.messageService.add({ 
             severity: 'info', 
             summary: 'No Products', 
-            detail: 'No products found in the system.' 
+            detail: 'No products found matching your criteria.' 
           });
         }
       },
@@ -126,15 +189,18 @@ export class AdminProductsComponent implements OnInit {
     });
   }
 
-  onPageChange(event: any): void {
-    const newPageNumber = Math.floor(event.first / event.rows) + 1;
-    const newPageSize = event.rows;
+  onLazyLoad(event: any): void {
+    this.pageNumber = Math.floor(event.first / event.rows) + 1;
+    this.pageSize = event.rows;
+    this.first = event.first;
 
-    if (newPageNumber !== this.pageNumber || newPageSize !== this.pageSize) {
-      this.pageNumber = newPageNumber;
-      this.pageSize = newPageSize;
-      this.loadProducts();
+    // Handle sorting from PrimeNG
+    if (event.sortField) {
+      this.sortField = event.sortField;
+      this.sortOrder = event.sortOrder === 1 ? 'asc' : 'desc';
     }
+
+    this.loadProducts();
   }
 
   showCreateDialog() {
@@ -144,11 +210,12 @@ export class AdminProductsComponent implements OnInit {
       description: '',
       price: 0,
       dateOfManufacture: '',
-      dateOfExpiry: '',
       imageUrl: undefined
     };
     this.selectedFile = null;
     this.imagePreview = null;
+    this.nameError = '';
+    this.checkingName = false;
     this.displayDialog = true;
   }
 
@@ -160,7 +227,6 @@ export class AdminProductsComponent implements OnInit {
       description: product.description,
       price: product.price,
       dateOfManufacture: product.dateOfManufacture?.split('T')[0] || '',
-      dateOfExpiry: product.dateOfExpiry?.split('T')[0] || '',
       imageUrl: product.imageUrl
     };
     this.imagePreview = product.imageUrl || null;
@@ -170,26 +236,23 @@ export class AdminProductsComponent implements OnInit {
   }
 
   async saveProduct() {
-    // Validate required fields
-    if (!this.productForm.name || !this.productForm.price || 
-        !this.productForm.dateOfManufacture || !this.productForm.dateOfExpiry) {
-      this.messageService.add({ 
-        severity: 'warn', 
-        summary: 'Validation', 
-        detail: 'Please fill all required fields' 
+    // Check for validation errors
+    if (this.nameError) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Validation Error',
+        detail: this.nameError
       });
       return;
     }
 
-    // Validate date range
-    const manufactureDate = new Date(this.productForm.dateOfManufacture);
-    const expiryDate = new Date(this.productForm.dateOfExpiry);
-
-    if (manufactureDate >= expiryDate) {
+    // Validate required fields
+    if (!this.productForm.name || !this.productForm.price || 
+        !this.productForm.dateOfManufacture) {
       this.messageService.add({ 
-        severity: 'error', 
-        summary: 'Validation Error', 
-        detail: 'Date of Manufacture must be before Date of Expiry' 
+        severity: 'warn', 
+        summary: 'Validation', 
+        detail: 'Please fill all required fields' 
       });
       return;
     }
@@ -218,11 +281,10 @@ export class AdminProductsComponent implements OnInit {
       this.uploading = false;
     }
 
-    // Prepare product data
+    // Prepare product data - FIX: Don't use Date constructor, use date string directly
     const productData = {
       ...this.productForm,
-      dateOfManufacture: new Date(this.productForm.dateOfManufacture).toISOString(),
-      dateOfExpiry: new Date(this.productForm.dateOfExpiry).toISOString(),
+      dateOfManufacture: this.productForm.dateOfManufacture + 'T00:00:00.000Z', // Add time at midnight UTC
       imageUrl: imageUrl
     };
 
@@ -298,46 +360,29 @@ export class AdminProductsComponent implements OnInit {
       description: '',
       price: 0,
       dateOfManufacture: '',
-      dateOfExpiry: '',
       imageUrl: undefined
     };
     this.selectedFile = null;
     this.imagePreview = null;
+    this.nameError = '';
+    this.checkingName = false;
   }
 
   onSearch() {
-    this.applyFilters();
+    // Reset to first page when searching
+    this.pageNumber = 1;
+    this.first = 0;
+    // loadProducts will be called by onLazyLoad
+    this.cdr.detectChanges();
+    this.loadProducts();
   }
 
   applyFilters() {
-    let filtered = [...this.products];
-
-    // Search by name or description
-    if (this.searchValue) {
-      const searchLower = this.searchValue.toLowerCase();
-      filtered = filtered.filter(p => 
-        p.name.toLowerCase().includes(searchLower) ||
-        (p.description && p.description.toLowerCase().includes(searchLower)) ||
-        p.price.toString().includes(searchLower)
-      );
-    }
-
-    // Filter by price range
-    if (this.minPrice !== null && this.minPrice > 0) {
-      filtered = filtered.filter(p => p.price >= this.minPrice!);
-    }
-    if (this.maxPrice !== null && this.maxPrice > 0) {
-      filtered = filtered.filter(p => p.price <= this.maxPrice!);
-    }
-
-    // Filter by date range
-    if (this.startDate) {
-      const startDateTime = new Date(this.startDate).getTime();
-      filtered = filtered.filter(p => new Date(p.dateOfManufacture).getTime() >= startDateTime);
-    }
-    // Expiry date filter removed - not needed
-
-    this.filteredProducts = filtered;
+    // Reset to first page when applying filters
+    this.pageNumber = 1;
+    this.first = 0;
+    this.cdr.detectChanges();
+    this.loadProducts();
   }
 
   toggleFilters() {
@@ -349,7 +394,10 @@ export class AdminProductsComponent implements OnInit {
     this.minPrice = null;
     this.maxPrice = null;
     this.startDate = '';
-    this.filteredProducts = this.products;
+    this.pageNumber = 1;
+    this.first = 0;
+    this.cdr.detectChanges();
+    this.loadProducts();
 
     this.messageService.add({
       severity: 'info',

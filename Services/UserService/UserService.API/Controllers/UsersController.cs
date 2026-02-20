@@ -4,9 +4,12 @@ using UserService.Application.Users.Commands.RegisterUser;
 using UserService.Application.Users.Commands.UpdateUser;
 using UserService.Application.Users.Commands.RefreshToken;
 using UserService.Application.Users.Commands.VerifyOtp;
+using UserService.Application.Users.Commands.ForgotPassword;
+using UserService.Application.Users.Commands.ResetPassword;
 using UserService.Application.Users.Queries.GetAllUsers;
 using UserService.Application.Users.Commands.DeleteUser;
 using UserService.Application.Users.Queries.GetUserById;
+using UserService.Application.Users.Queries.CheckEmail;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
@@ -96,9 +99,23 @@ public class UsersController : ControllerBase
 
     [HttpGet]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] int pageNumber = 1, 
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] string? roleFilter = null,
+        [FromQuery] string? sortField = null,
+        [FromQuery] string? sortOrder = null)
     {
-        return Ok(await _mediator.Send(new GetAllUsersQuery(pageNumber, pageSize)));
+        var query = new GetAllUsersQuery(
+            pageNumber, 
+            pageSize,
+            searchTerm,
+            roleFilter,
+            sortField,
+            sortOrder);
+            
+        return Ok(await _mediator.Send(query));
     }
 
     [Authorize]
@@ -122,4 +139,38 @@ public class UsersController : ControllerBase
         await _mediator.Send(new DeleteUserCommand(id));
         return NoContent();
     }
+
+    [AllowAnonymous]
+    [HttpGet("check-email")]
+    public async Task<IActionResult> CheckEmail([FromQuery] string email)
+    {
+        var exists = await _mediator.Send(new CheckEmailQuery { Email = email });
+        return Ok(new { exists });
+    }
+
+    [AllowAnonymous]
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        await _mediator.Send(new ForgotPasswordCommand(request.Email));
+        return Ok(new { message = "If your email exists, you will receive a password reset link." });
+    }
+
+    [AllowAnonymous]
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        try
+        {
+            await _mediator.Send(new ResetPasswordCommand(request.Token, request.NewPassword));
+            return Ok(new { message = "Password has been reset successfully." });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }
+
+public record ForgotPasswordRequest(string Email);
+public record ResetPasswordRequest(string Token, string NewPassword);

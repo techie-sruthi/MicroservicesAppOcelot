@@ -9,7 +9,6 @@ public class UpdateProductCommand : IRequest<Unit>
     public string? Description { get; set; }
     public decimal Price { get; set; }
     public DateTime DateOfManufacture { get; set; }
-    public DateTime? DateOfExpiry { get; set; } 
     public string? ImageUrl { get; set; }
 
     // Authorization context

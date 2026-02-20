@@ -8,7 +8,6 @@ public class CreateProductCommand : IRequest<string>
     public string? Description { get; set; }
     public decimal Price { get; set; }
     public DateTime DateOfManufacture { get; set; }
-    public DateTime? DateOfExpiry { get; set; }
     public int CreatedByUserId { get; set; }
     public string? ImageUrl { get; set; }
 }

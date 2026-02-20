@@ -3,8 +3,9 @@ using Ocelot.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Load Ocelot configuration (localhost development only)
-builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
+// Load Ocelot configuration - use Docker config when running in container
+var ocelotFile = Environment.GetEnvironmentVariable("OCELOT_CONFIG") ?? "ocelot.json";
+builder.Configuration.AddJsonFile(ocelotFile, optional: false, reloadOnChange: true);
 
 // Add Ocelot services
 builder.Services.AddOcelot();
@@ -23,11 +24,6 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
-
-Console.WriteLine("API Gateway starting on http://localhost:5000");
-Console.WriteLine("Routing to:");
-Console.WriteLine("  /users      → http://localhost:5100/api/users");
-Console.WriteLine("  /products   → http://localhost:5050/api/products");
 
 // Use CORS
 app.UseCors("AllowAngular");

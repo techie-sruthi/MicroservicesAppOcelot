@@ -29,11 +29,32 @@ export class UserService {
 
   constructor(private http: HttpClient) { }
 
-  getAllUsers(pageNumber: number = 1, pageSize: number = 10): Observable<PagedResult<User>> {
-    const params = new HttpParams()
+  getAllUsers(
+    pageNumber: number = 1, 
+    pageSize: number = 10,
+    searchTerm?: string,
+    roleFilter?: string,
+    sortField?: string,
+    sortOrder?: string
+  ): Observable<PagedResult<User>> {
+    let params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
       .set('pageSize', pageSize.toString());
-    return this.http.get<PagedResult<User>>(this.apiUrl, { params });
+      
+    if (searchTerm) {
+      params = params.set('searchTerm', searchTerm);
+    }
+    if (roleFilter && roleFilter !== 'all') {
+      params = params.set('roleFilter', roleFilter);
+    }
+    if (sortField) {
+      params = params.set('sortField', sortField);
+    }
+    if (sortOrder) {
+      params = params.set('sortOrder', sortOrder);
+    }
+    
+    return this.http.get<PagedResult<User>>(`${this.apiUrl}`, { params });
   }
 
   deleteUser(id: number) {

@@ -14,5 +14,12 @@ public interface IUserDbContext
     Task<User?> GetUserByRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken);
     void RemoveEntity<T>(T entity) where T : class;
     Task<List<UserDto>> GetAllUsersAsync(CancellationToken cancellationToken);
-    Task<PagedResult<UserDto>> GetAllUsersPagedAsync(int pageNumber, int pageSize, CancellationToken cancellationToken);
+    Task<PagedResult<UserDto>> GetAllUsersPagedAsync(
+     int pageNumber,
+     int pageSize,
+     string? searchTerm,
+     string? roleFilter,
+     string? sortField,
+     string? sortOrder,
+     CancellationToken cancellationToken);
 }

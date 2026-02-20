@@ -1,29 +1,40 @@
 <div class="layout">
 
+  <!-- Mobile Hamburger Button -->
+  <button class="hamburger-btn" (click)="toggleSidebar()" [class.active]="sidebarOpen">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Sidebar Overlay (Mobile) -->
+  <div class="sidebar-overlay" [class.active]="sidebarOpen" (click)="closeSidebar()"></div>
+
   <!-- Sidebar -->
-  <div class="sidebar">
+  <div class="sidebar" [class.mobile-open]="sidebarOpen">
+    <!-- Close button for mobile -->
+    <button class="close-sidebar-btn" (click)="closeSidebar()">
+      <span>×</span>
+    </button>
+
     <h2 class="logo">Product Serve</h2>
 
     <!-- Admin Navigation -->
     <ng-container *ngIf="isAdmin">
-      <a routerLink="/admin/products" routerLinkActive="active">
-        All Products
+      <a routerLink="/admin/products" routerLinkActive="active" (click)="closeSidebar()">
+        📦 All Products
       </a>
 
-      <a routerLink="/admin/users" routerLinkActive="active">
-        Manage Users
+      <a routerLink="/admin/users" routerLinkActive="active" (click)="closeSidebar()">
+        👥 Manage Users
       </a>
     </ng-container>
 
     <!-- User Navigation -->
     <ng-container *ngIf="!isAdmin">
-      <a routerLink="/products" routerLinkActive="active">
-        My Products
+      <a routerLink="/products" routerLinkActive="active" (click)="closeSidebar()">
+        📦 My Products
       </a>
-
-      <!--<a routerLink="/products/create" routerLinkActive="active">
-        Add Product
-      </a>-->
     </ng-container>
 
   </div>
@@ -33,11 +44,10 @@
 
     <!-- Topbar -->
     <div class="topbar">
-      <div>
+      <div class="welcome-text">
         Welcome
-        <span style="color:crimson">
+        <span class="role-badge">
           {{ isAdmin ? 'Admin' : 'User' }}
-          <!--({{ role }})-->
         </span> 👋
       </div>
 

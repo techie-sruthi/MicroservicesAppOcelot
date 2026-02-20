@@ -57,6 +57,35 @@ public class EmailService : IEmailService
         await SendEmailAsync(toEmail, subject, body);
     }
 
+    public async Task SendPasswordResetEmailAsync(string toEmail, string resetLink)
+    {
+        var subject = "Password Reset - ProductUser App";
+        var body = $@"
+            <html>
+            <body style='font-family: Arial, sans-serif;'>
+                <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
+                    <h2 style='color: #4F46E5;'>Password Reset Request</h2>
+                    <p>We received a request to reset your password.</p>
+                    <p>Click the button below to set a new password:</p>
+                    <div style='text-align: center; margin: 30px 0;'>
+                        <a href='{resetLink}' style='background-color: #4F46E5; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600;'>
+                            Reset Password
+                        </a>
+                    </div>
+                    <p>Or copy and paste this link in your browser:</p>
+                    <p style='word-break: break-all; color: #4F46E5;'>{resetLink}</p>
+                    <p>This link will expire in <strong>1 hour</strong>.</p>
+                    <p>If you didn't request a password reset, please ignore this email.</p>
+                    <hr style='border: 1px solid #E5E7EB; margin: 20px 0;'>
+                    <p style='color: #6B7280; font-size: 12px;'>This is an automated message, please do not reply.</p>
+                </div>
+            </body>
+            </html>
+        ";
+
+        await SendEmailAsync(toEmail, subject, body);
+    }
+
     private async Task SendEmailAsync(string toEmail, string subject, string body)
     {
         using var client = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort)

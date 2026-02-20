@@ -30,7 +30,6 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
         product.Description = request.Description;
         product.Price = request.Price;
         product.DateOfManufacture = request.DateOfManufacture;
-        product.DateOfExpiry = request.DateOfExpiry;
         product.ImageUrl = request.ImageUrl;
 
         await _repository.UpdateAsync(product);

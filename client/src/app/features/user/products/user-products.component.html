@@ -104,12 +104,15 @@
                [lazy]="true"
                [paginator]="true"
                [rows]="pageSize"
+               [first]="first"
                [totalRecords]="totalRecords"
                [loading]="loading"
                (onLazyLoad)="onLazyLoad($event)"
                [rowsPerPageOptions]="[5,10,20]"
+               [showCurrentPageReport]="true"
+               currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
                responsiveLayout="scroll"
-               sortMode="multiple">
+               styleClass="p-datatable-striped">
 
 
         <ng-template pTemplate="header">
@@ -121,9 +124,7 @@
             </th>
 
             <th pSortableColumn="description" style="min-width: 200px">
-              Description
-              <p-sortIcon field="description"></p-sortIcon>
-            </th>
+              Description</th>
 
             <th pSortableColumn="price">
               Price
@@ -133,11 +134,6 @@
             <th pSortableColumn="dateOfManufacture">
               Date of Manufacture
               <p-sortIcon field="dateOfManufacture"></p-sortIcon>
-            </th>
-
-            <th pSortableColumn="dateOfExpiry">
-              Date of Expiry
-              <p-sortIcon field="dateOfExpiry"></p-sortIcon>
             </th>
 
             <th style="width: 150px">Actions</th>
@@ -165,8 +161,7 @@
               </div>
             </td>
             <td>{{ product.price}}</td>
-            <td>{{ product.dateOfManufacture | date }}</td>
-            <td>{{ product.dateOfExpiry | date }}</td>
+            <td>{{ product.dateOfManufacture | date:'dd/MM/yyyy':'UTC' }}</td>
             <td>
               <div class="flex gap-2">
                 <button pButton
@@ -192,7 +187,7 @@
 
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="7" class="text-center p-4">
+            <td colspan="6" class="text-center p-4">
               <div class="flex flex-column align-items-center gap-3">
                 <i class="pi pi-inbox" style="font-size: 3rem; color: #999;"></i>
                 <p style="font-size: 1.2rem; color: #666;">No products found</p>
@@ -218,17 +213,38 @@
 
     <div class="form-grid">
       <div class="field">
-        <label for="productName">Product Name</label>
+        <label for="productName">Product Name<span class="required">*</span></label>
         <input 
           pInputText 
           id="productName" 
           [(ngModel)]="productForm.name" 
+          (ngModelChange)="onProductNameChange($event)"
           placeholder="Enter product name"
-          class="w-full" />
+          class="w-full"
+          [class.p-invalid]="nameError && !checkingName" />
+
+        <!-- Checking indicator -->
+        <small *ngIf="checkingName" style="color: #6366f1; display: flex; align-items: center; gap: 4px; margin-top: 4px;">
+          <i class="pi pi-spin pi-spinner" style="font-size: 0.8rem;"></i>
+          Checking availability...
+        </small>
+
+        <!-- Error message -->
+        <small *ngIf="nameError && !checkingName" class="p-error" style="display: flex; align-items: center; gap: 4px; margin-top: 4px;">
+          <i class="pi pi-exclamation-triangle"></i>
+          {{ nameError }}
+        </small>
+
+        <!-- Success message -->
+        <small *ngIf="!nameError && !checkingName && productForm.name && productForm.name.trim().length > 2" 
+               style="color: #22c55e; display: flex; align-items: center; gap: 4px; margin-top: 4px;">
+          <i class="pi pi-check"></i>
+          Product name is available
+        </small>
       </div>
 
       <div class="field" style="grid-column: 1 / -1;">
-        <label for="description">Description</label>
+        <label for="description">Description<span class="required">*</span></label>
         <textarea 
           id="description" 
           [(ngModel)]="productForm.description" 
@@ -253,7 +269,7 @@
       </div>
 
       <div class="field">
-        <label for="dateOfManufacture">Date of Manufacture</label>
+        <label for="dateOfManufacture">Date of Manufacture<span class="required">*</span></label>
         <input 
           pInputText 
           id="dateOfManufacture" 
@@ -262,16 +278,7 @@
           class="w-full"/>
       </div>
 
-      <div class="field">
-        <label for="dateOfExpiry">Date of Expiry <span style="color: #94a3b8; font-weight: 400;">(Optional)</span></label>
-        <input 
-          pInputText 
-          id="dateOfExpiry" 
-          type="date"
-          [(ngModel)]="productForm.dateOfExpiry" 
-          class="w-full"/>
-        <small style="color: #94a3b8; font-size: 0.85rem;">Leave blank if product doesn't expire</small>
-      </div>
+   
 
       <!-- Image Upload Section -->
       <div class="field" style="grid-column: 1 / -1;">
@@ -290,24 +297,23 @@
           <!-- Image Preview -->
           <div *ngIf="imagePreview && !uploading" class="image-preview">
             <img [src]="imagePreview" alt="Preview" />
-            <div class="image-info">
+            <div class="image-info" *ngIf="selectedFile?.name">
               <div class="file-details">
                 <i class="pi pi-check-circle" style="color: #22c55e; margin-right: 8px;"></i>
                 <span class="file-name">{{ selectedFile?.name }}</span>
                 <span class="file-size" *ngIf="selectedFile">({{ formatFileSize(selectedFile.size) }})</span>
               </div>
             </div>
+            <!-- Close/Remove button - more evident -->
             <button pButton 
                     type="button"
                     icon="pi pi-times"
-                    class="remove-image-btn"
+                    class="p-button-rounded p-button-danger p-button-text remove-image-btn-evident"
                     (click)="removeImage()"
-                    [rounded]="true"
-                    severity="danger"
-                    size="small"
                     pTooltip="Remove image"
-                    tooltipPosition="top">
-            </button>
+                    tooltipPosition="top"
+                    [style]="{'position': 'absolute', 'top': '0px', 'right': '0px', 'width': '1rem', 'height': '1rem', 'background': 'rgba(239, 68, 68, 0.9)', 'color': 'white', 'box-shadow': '0 2px 8px rgba(0,0,0,0.3)'}">
+            <span>×</span> </button>
           </div>
 
           <!-- Upload Button -->

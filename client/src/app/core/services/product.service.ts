@@ -9,7 +9,6 @@ export interface Product {
   description?: string;
   price: number;
   dateOfManufacture: string;
-  dateOfExpiry?: string;
   createdByUserId?: number;
   imageUrl?: string; 
 }
@@ -47,22 +46,80 @@ export class ProductService {
   }
 
   /**
-   * Get all products (Admin only) with pagination
+   * Get all products (Admin only) with pagination and filters
    */
-  getAllProducts(pageNumber: number = 1, pageSize: number = 10): Observable<PagedResult<Product>> {
-    const params = new HttpParams()
+  getAllProducts(
+    pageNumber: number = 1, 
+    pageSize: number = 10,
+    searchTerm?: string,
+    minPrice?: number,
+    maxPrice?: number,
+    startDate?: string,
+    sortField?: string,
+    sortOrder?: string
+  ): Observable<PagedResult<Product>> {
+    let params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
       .set('pageSize', pageSize.toString());
+
+    if (searchTerm) {
+      params = params.set('searchTerm', searchTerm);
+    }
+    if (minPrice !== undefined && minPrice !== null) {
+      params = params.set('minPrice', minPrice.toString());
+    }
+    if (maxPrice !== undefined && maxPrice !== null) {
+      params = params.set('maxPrice', maxPrice.toString());
+    }
+    if (startDate) {
+      params = params.set('startDate', startDate);
+    }
+    if (sortField) {
+      params = params.set('sortField', sortField);
+    }
+    if (sortOrder) {
+      params = params.set('sortOrder', sortOrder);
+    }
+
     return this.http.get<PagedResult<Product>>(`${this.apiUrl}/all`, { params });
   }
 
   /**
-   * Get only the logged-in user's products with pagination
+   * Get only the logged-in user's products with pagination and filters
    */
-  getMyProducts(pageNumber: number = 1, pageSize: number = 10): Observable<PagedResult<Product>> {
-    const params = new HttpParams()
+  getMyProducts(
+    pageNumber: number = 1, 
+    pageSize: number = 10,
+    searchTerm?: string,
+    minPrice?: number,
+    maxPrice?: number,
+    startDate?: string,
+    sortField?: string,
+    sortOrder?: string
+  ): Observable<PagedResult<Product>> {
+    let params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
       .set('pageSize', pageSize.toString());
+
+    if (searchTerm) {
+      params = params.set('searchTerm', searchTerm);
+    }
+    if (minPrice !== undefined && minPrice !== null) {
+      params = params.set('minPrice', minPrice.toString());
+    }
+    if (maxPrice !== undefined && maxPrice !== null) {
+      params = params.set('maxPrice', maxPrice.toString());
+    }
+    if (startDate) {
+      params = params.set('startDate', startDate);
+    }
+    if (sortField) {
+      params = params.set('sortField', sortField);
+    }
+    if (sortOrder) {
+      params = params.set('sortOrder', sortOrder);
+    }
+
     return this.http.get<PagedResult<Product>>(`${this.apiUrl}/my-products`, { params });
   }
 
@@ -111,5 +168,17 @@ export class ProductService {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post<{ imageUrl: string }>(`${this.apiUrl}/upload-image`, formData);
+  }
+
+  /**
+   * Check if product name already exists
+   * Returns true if duplicate exists
+   */
+  checkProductName(name: string, excludeId?: string): Observable<{ exists: boolean }> {
+    let params = new HttpParams().set('name', name);
+    if (excludeId) {
+      params = params.set('excludeId', excludeId);
+    }
+    return this.http.get<{ exists: boolean }>(`${this.apiUrl}/check-name`, { params });
   }
 }

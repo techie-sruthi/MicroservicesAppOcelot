@@ -51,44 +51,77 @@ services:
       # not needed in development
 
   # UserService API
-  # userservice:
-  #   build:
-  #     context: ./Services/UserService
-  #     dockerfile: UserService.API/Dockerfile
-  #   container_name: userservice
-  #   ports:
-  #     - "5000:5000"
-  #   environment:
-  #     - ASPNETCORE_ENVIRONMENT=Development
-  #     - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=UserServiceDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True
-  #     - Jwt__Key=THIS_IS_MY_SUPER_SECRET_KEY_12345
-  #   depends_on:
-  #     - sqlserver
-  #   networks:
-  #     - microservices-network
+  userservice:
+    build:
+      context: ./Services/UserService
+      dockerfile: UserService.API/Dockerfile
+    container_name: userservice
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+      - USERSERVICE_PORT=5000
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=UserServiceDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True
+      - Jwt__Key=THIS_IS_MY_SUPER_SECRET_KEY_12345
+      - Jwt__Issuer=UserService
+      - Jwt__Audience=MicroserviceUsers
+      - Jwt__ExpiryMinutes=60
+      - EmailSettings__SmtpServer=smtp.gmail.com
+      - EmailSettings__SmtpPort=587
+      - EmailSettings__SenderEmail=techie.sruthi23@gmail.com
+      - EmailSettings__SenderName=Product Manager
+      - EmailSettings__Password=orpm mdeu dzsr plns
+      - EmailSettings__EnableSSL=true
+    depends_on:
+      - sqlserver
+    networks:
+      - microservices-network
 
-  # ProductService API (COMMENTED OUT - Run manually with dotnet run)
-  # productservice:
-  #   image: yourusername/productservice:latest
-  #   container_name: productservice
-  #   ports:
-  #     - "5050:5050"
-  #   environment:
-  #     - ASPNETCORE_ENVIRONMENT=Development
-  #     - MongoDB__ConnectionString=mongodb://mongodb:27017
-  #     - MongoDB__DatabaseName=ProductServiceDb
-  #     - FileStorage__Provider=MinIO
-  #     - FileStorage__MinIO__Endpoint=minio:9000
-  #     - FileStorage__MinIO__AccessKey=minioadmin
-  #     - FileStorage__MinIO__SecretKey=minioadmin
-  #     - FileStorage__MinIO__BucketName=product-images
-  #     - FileStorage__MinIO__UseSSL=false
-  #     - Jwt__Key=THIS_IS_MY_SUPER_SECRET_KEY_12345
-  #   depends_on:
-  #     - mongodb
-  #     - minio
-  #   networks:
-  #     - microservices-network
+  # ProductService API
+  productservice:
+    build:
+      context: ./Services/ProductService
+      dockerfile: ProductService.API/Dockerfile
+    container_name: productservice
+    ports:
+      - "5050:5050"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5050
+      - PRODUCTSERVICE_PORT=5050
+      - MongoDB__ConnectionString=mongodb://mongodb:27017
+      - MongoDB__DatabaseName=ProductServiceDb
+      - FileStorage__Provider=MinIO
+      - FileStorage__MinIO__Endpoint=minio:9000
+      - FileStorage__MinIO__AccessKey=minioadmin
+      - FileStorage__MinIO__SecretKey=minioadmin
+      - FileStorage__MinIO__BucketName=product-images
+      - FileStorage__MinIO__UseSSL=false
+      - Jwt__Key=THIS_IS_MY_SUPER_SECRET_KEY_12345
+    depends_on:
+      - mongodb
+      - minio
+    networks:
+      - microservices-network
+
+  # API Gateway (Ocelot)
+  apigateway:
+    build:
+      context: ./Services/ApiGateway/ApiGateway
+      dockerfile: Dockerfile
+    container_name: apigateway
+    ports:
+      - "5200:5200"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5200
+      - OCELOT_CONFIG=ocelot.docker.json
+    depends_on:
+      - userservice
+      - productservice
+    networks:
+      - microservices-network
 
   # Angular Frontend
   # angular-app:

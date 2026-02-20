@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AppLayoutComponent } from '../../../core/layout/app-layout.component';
@@ -15,6 +15,8 @@ import { Table } from 'primeng/table';
 import { ProductService, Product, PagedResult } from '../../../core/services/product.service';
 import { MessageService } from 'primeng/api';
 import { ImageViewerComponent } from '../../../shared/components/image-viewer/image-viewer.component';
+import { Subject, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
 interface ProductForm {
   id?: string;
@@ -22,7 +24,6 @@ interface ProductForm {
   description?: string;
   price: number;
   dateOfManufacture: string;
-  dateOfExpiry?: string;
   imageUrl?: string;
 }
 
@@ -48,7 +49,7 @@ interface ProductForm {
   templateUrl: './user-products.component.html',
   styleUrl: './user-products.component.css'
 })
-export class UserProductsComponent implements OnInit {
+export class UserProductsComponent implements OnInit, OnDestroy {
 
   products: Product[] = [];
   loading = false;
@@ -56,6 +57,7 @@ export class UserProductsComponent implements OnInit {
   totalRecords = 0;
   pageNumber = 1;
   pageSize = 5;
+  first = 0; // For PrimeNG pagination
 
   displayDialog = false;
   isEditMode = false;
@@ -71,12 +73,20 @@ export class UserProductsComponent implements OnInit {
   maxPrice: number | null = null;
   startDate: string = '';
 
+  // Sorting properties
+  sortField: string | null = null;
+  sortOrder: string | null = null;
+
+  // Product name validation
+  private productNameCheck$ = new Subject<string>();
+  nameError: string = '';
+  checkingName: boolean = false;
+
   productForm: ProductForm = {
     name: '',
     description: '',
     price: 0,
     dateOfManufacture: '',
-    dateOfExpiry: '',
     imageUrl: undefined
   };
 
@@ -90,26 +100,96 @@ export class UserProductsComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    // Nothing here — PrimeNG lazy will trigger automatically
+    this.setupNameValidation();
   }
 
+  ngOnDestroy(): void {
+    this.productNameCheck$.complete();
+  }
+
+  setupNameValidation(): void {
+    this.productNameCheck$
+      .pipe(
+        debounceTime(500),
+        distinctUntilChanged(),
+        switchMap(name => {
+          if (!name || name.trim().length < 2) {
+            return of({ exists: false });
+          }
+          // Set checking state and trigger change detection
+          this.checkingName = true;
+          this.cdr.detectChanges();
+
+          const excludeId = this.isEditMode ? this.productForm.id : undefined;
+          return this.productService.checkProductName(name.trim(), excludeId);
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          // Defer state changes to next cycle to avoid ExpressionChangedAfterItHasBeenCheckedError
+          setTimeout(() => {
+            this.checkingName = false;
+            if (response.exists) {
+              this.nameError = 'A product with this name already exists';
+            } else {
+              this.nameError = '';
+            }
+            this.cdr.detectChanges();
+          }, 0);
+        },
+        error: (error) => {
+          // Defer error state change too
+          setTimeout(() => {
+            this.checkingName = false;
+            this.cdr.detectChanges();
+          }, 0);
+        }
+      });
+  }
+
+  onProductNameChange(name: string): void {
+    this.productNameCheck$.next(name);
+  }
 
   onLazyLoad(event: any): void {
     this.pageNumber = Math.floor(event.first / event.rows) + 1;
     this.pageSize = event.rows;
+    this.first = event.first;
+
+    // Handle sorting from PrimeNG
+    if (event.sortField) {
+      this.sortField = event.sortField;
+      this.sortOrder = event.sortOrder === 1 ? 'asc' : 'desc';
+    }
+
     this.loadProducts();
   }
 
   loadProducts(): void {
     this.loading = true;
 
-    this.productService.getMyProducts(this.pageNumber, this.pageSize)
-      .subscribe({
+    // Prepare filter parameters
+    const searchTerm = this.searchValue || undefined;
+    const minPrice = this.minPrice || undefined;
+    const maxPrice = this.maxPrice || undefined;
+    const startDate = this.startDate || undefined;
+    const sortField = this.sortField || undefined;
+    const sortOrder = this.sortOrder || undefined;
+
+    this.productService.getMyProducts(
+      this.pageNumber, 
+      this.pageSize,
+      searchTerm,
+      minPrice,
+      maxPrice,
+      startDate,
+      sortField,
+      sortOrder
+    ).subscribe({
         next: (data: PagedResult<Product>) => {
           this.products = data.items;
           this.totalRecords = data.totalCount;
           this.loading = false;
-          // Manually trigger change detection to update the table immediately
           this.cdr.detectChanges();
         },
         error: () => {
@@ -127,6 +207,8 @@ export class UserProductsComponent implements OnInit {
   showCreateDialog(): void {
     this.isEditMode = false;
     this.resetForm();
+    this.nameError = '';
+    this.checkingName = false;
     this.displayDialog = true;
   }
 
@@ -138,7 +220,6 @@ export class UserProductsComponent implements OnInit {
       description: product.description,
       price: product.price,
       dateOfManufacture: product.dateOfManufacture?.split('T')[0] || '',
-      dateOfExpiry: product.dateOfExpiry?.split('T')[0] || '',
       imageUrl: product.imageUrl
     };
     this.imagePreview = product.imageUrl || null;
@@ -147,25 +228,21 @@ export class UserProductsComponent implements OnInit {
 
   saveProduct(): void {
 
+    // Check for validation errors
+    if (this.nameError) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Validation Error',
+        detail: this.nameError
+      });
+      return;
+    }
+
     if (!this.productForm.name || !this.productForm.price || !this.productForm.dateOfManufacture) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Validation',
         detail: 'Please fill required fields'
-      });
-      return;
-    }
-
-    const manufactureDate = new Date(this.productForm.dateOfManufacture);
-    const expiryDate = this.productForm.dateOfExpiry
-      ? new Date(this.productForm.dateOfExpiry)
-      : null;
-
-    if (expiryDate && manufactureDate >= expiryDate) {
-      this.messageService.add({
-        severity: 'error',
-        summary: 'Validation',
-        detail: 'Manufacture date must be before expiry date'
       });
       return;
     }
@@ -194,15 +271,10 @@ export class UserProductsComponent implements OnInit {
   }
 
   private saveProductData(): void {
-    const manufactureDate = new Date(this.productForm.dateOfManufacture);
-    const expiryDate = this.productForm.dateOfExpiry
-      ? new Date(this.productForm.dateOfExpiry)
-      : null;
-
+    // FIX: Don't use Date constructor to avoid timezone conversion
     const productData = {
       ...this.productForm,
-      dateOfManufacture: manufactureDate.toISOString(),
-      dateOfExpiry: expiryDate?.toISOString(),
+      dateOfManufacture: this.productForm.dateOfManufacture + 'T00:00:00.000Z', // Add time at midnight UTC
       imageUrl: this.productForm.imageUrl
     };
 
@@ -253,7 +325,6 @@ export class UserProductsComponent implements OnInit {
       description: '',
       price: 0,
       dateOfManufacture: '',
-      dateOfExpiry: '',
       imageUrl: undefined
     };
     this.selectedFile = null;
@@ -262,6 +333,8 @@ export class UserProductsComponent implements OnInit {
 
   hideDialog(): void {
     this.displayDialog = false;
+    this.nameError = '';
+    this.checkingName = false;
     this.resetForm();
   }
 
@@ -320,7 +393,10 @@ export class UserProductsComponent implements OnInit {
 
   // Filter methods
   onSearch(): void {
-    this.table.filterGlobal(this.searchValue, 'contains');
+    // Reset to first page when searching
+    this.pageNumber = 1;
+    this.first = 0;
+    this.loadProducts();
   }
 
   toggleFilters(): void {
@@ -328,11 +404,10 @@ export class UserProductsComponent implements OnInit {
   }
 
   applyFilters(): void {
-    // Trigger table filtering
-    if (this.table) {
-      this.table.filter(this.minPrice, 'price', 'gte');
-      this.table.filter(this.maxPrice, 'price', 'lte');
-    }
+    // Reset to first page when applying filters
+    this.pageNumber = 1;
+    this.first = 0;
+    this.loadProducts();
   }
 
   clearFilters(): void {
@@ -340,11 +415,15 @@ export class UserProductsComponent implements OnInit {
     this.minPrice = null;
     this.maxPrice = null;
     this.startDate = '';
-    this.showFilters = false;
-    if (this.table) {
-      this.table.clear();
-    }
+    this.pageNumber = 1;
+    this.first = 0;
     this.loadProducts();
+
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Filters Cleared',
+      detail: 'All filters have been reset'
+    });
   }
 
   formatFileSize(bytes: number): string {

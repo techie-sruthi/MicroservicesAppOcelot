@@ -57,8 +57,6 @@ public class JwtTokenGenerator : IJwtService
 
         var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
 
-        Console.WriteLine($"Generated JWT for user {email} with role {role}");
-
         return tokenString;
     }
 

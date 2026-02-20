@@ -1,8 +1,10 @@
 import { Component, OnInit, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { AppLayoutComponent } from '../../../core/layout/app-layout.component';
 import { UserService, User, PagedResult } from '../../../core/services/user.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { distinctUntilChanged, Observable, tap } from 'rxjs';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
@@ -18,14 +20,14 @@ import { Password } from 'primeng/password';
   selector: 'app-admin-users',
   standalone: true,
   imports: [
-    CommonModule, 
-    FormsModule, 
-    AppLayoutComponent, 
-    CardModule, 
-    InputTextModule, 
-    ButtonModule, 
-    TableModule, 
-    SelectModule, 
+    CommonModule,
+    FormsModule,
+    AppLayoutComponent,
+    CardModule,
+    InputTextModule,
+    ButtonModule,
+    TableModule,
+    SelectModule,
     ConfirmDialogModule,
     ToastModule,
     Password
@@ -36,7 +38,6 @@ import { Password } from 'primeng/password';
 })
 export class AdminUsersComponent implements OnInit {
   users: User[] = [];
-  filteredUsers: User[] = [];
   searchValue: string = '';
   selectedUser: User = { id: 0, userName: '', email: '', role: 'User' };
   userPassword: string = ''; // Separate field for password
@@ -50,35 +51,40 @@ export class AdminUsersComponent implements OnInit {
 
   totalRecords: number = 0;
   pageNumber: number = 1;
-  pageSize: number = 10;
+  pageSize: number = 5; // Match the first option in rowsPerPageOptions
+  first: number = 0; // For PrimeNG pagination
+
+  // Sorting properties
+  sortField: string | null = null;
+  sortOrder: string | null = null;
 
   constructor(
-    private userService: UserService, 
+    private userService: UserService,
+    private authService: AuthService,
+    private router: Router,
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
     private cdr: ChangeDetectorRef
   ) { }
 
-    ngOnInit(): void {
-      this.loadUsers();
-    }     
+  ngOnInit(): void {
+    this.loadUsers();
+  }
+
+  isEditingOwnAccount(): boolean {
+    const currentUserId = this.authService.getUserId();
+    return this.isEditMode && this.selectedUser.id === currentUserId;
+  }
 
   loadUsers() {
     this.loading = true;
     this.userService.getAllUsers(this.pageNumber, this.pageSize).subscribe({
       next: (data: PagedResult<User>) => {
+
         this.users = data.items;
         this.totalRecords = data.totalCount;
         this.loading = false;
-        // Manually trigger change detection to update the table immediately
         this.cdr.detectChanges();
-
-        // Reapply search filter if active
-        if (this.searchValue) {
-          this.onSearch();
-        } else {
-          this.filteredUsers = data.items;
-        }
       },
       error: (err) => {
         this.loading = false;
@@ -92,15 +98,14 @@ export class AdminUsersComponent implements OnInit {
     });
   }
 
-  onPageChange(event: any): void {
-    const newPageNumber = Math.floor(event.first / event.rows) + 1;
-    const newPageSize = event.rows;
+  onLazyLoad(event: any): void {
 
-    if (newPageNumber !== this.pageNumber || newPageSize !== this.pageSize) {
-      this.pageNumber = newPageNumber;
-      this.pageSize = newPageSize;
-      this.loadUsers();
-    }
+
+    this.pageNumber = Math.floor(event.first / event.rows) + 1;
+    this.pageSize = event.rows;
+    this.first = event.first;
+
+    this.loadUsers();
   }
 
   saveUser() {
@@ -134,6 +139,42 @@ export class AdminUsersComponent implements OnInit {
       return;
     }
 
+    // Check if admin is changing their own role
+    const currentUserId = this.authService.getUserId();
+    const isChangingOwnRole = this.isEditMode && 
+                              this.selectedUser.id === currentUserId && 
+                              this.selectedUser.role !== this.authService.getUserRole();
+
+    if (isChangingOwnRole) {
+      // Warn admin about role change
+      this.confirmationService.confirm({
+        message: 'You are changing your own role! After saving, you will need to logout and login again for the changes to take effect. Do you want to continue?',
+        header: 'Role Change Warning',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Yes, Continue',
+        rejectLabel: 'Cancel',
+        acceptButtonStyleClass: 'p-button-warning',
+        rejectButtonStyleClass: 'p-button-secondary',
+        closeOnEscape: true,
+        accept: () => {
+          this.performSaveUser(true); // true = auto logout after save
+        },
+        reject: () => {
+          // Dialog will close automatically
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Cancelled',
+            detail: 'Role change cancelled'
+          });
+        }
+      });
+      return;
+    }
+
+    this.performSaveUser(false);
+  }
+
+  private performSaveUser(autoLogoutAfter: boolean) {
     this.saving = true;
 
     if (this.isEditMode && this.selectedUser.id) {
@@ -142,15 +183,34 @@ export class AdminUsersComponent implements OnInit {
         .subscribe({
           next: () => {
             this.saving = false;
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Success',
-              detail: 'User updated successfully'
-            });
-            this.resetForm();
-            setTimeout(() => {
-              this.loadUsers();
-            }, 100);
+
+            if (autoLogoutAfter) {
+              // Admin changed their own role
+              this.messageService.add({
+                severity: 'success',
+                summary: 'Role Changed',
+                detail: 'Your role has been updated. Logging out in 3 seconds...',
+                life: 3000
+              });
+
+              // Auto logout after 3 seconds
+              setTimeout(() => {
+                this.authService.logout();
+                this.router.navigate(['/login'], {
+                  queryParams: { message: 'Your role has been changed. Please login again.' }
+                });
+              }, 3000);
+            } else {
+              this.messageService.add({
+                severity: 'success',
+                summary: 'Success',
+                detail: 'User updated successfully'
+              });
+              this.resetForm();
+              setTimeout(() => {
+                this.loadUsers();
+              }, 100);
+            }
           },
           error: (err) => {
             this.saving = false;
@@ -237,20 +297,24 @@ export class AdminUsersComponent implements OnInit {
   }
 
   onSearch() {
+    // Note: This only searches the current page (client-side filter)
+    // For full search across all pages, implement server-side search
     if (!this.searchValue) {
-      this.filteredUsers = this.users;
       return;
     }
 
-    const searchLower = this.searchValue.toLowerCase();
-    this.filteredUsers = this.users.filter((user: User) => 
-      user.userName.toLowerCase().includes(searchLower) ||
-      user.email.toLowerCase().includes(searchLower)
-    );
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Search Limited',
+      detail: 'Search only works on the current page. Server-side search coming soon.'
+    });
   }
 
   clearSearch() {
     this.searchValue = '';
-    this.filteredUsers = this.users;
+    this.pageNumber = 1;
+    this.first = 0;
+    this.cdr.detectChanges();
+    this.loadUsers();
   }
 }

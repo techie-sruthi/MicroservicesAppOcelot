@@ -16,7 +16,16 @@ public class GetAllProductsQueryHandler : IRequestHandler<GetAllProductsQuery, P
 
     public async Task<PagedResult<ProductDto>> Handle(GetAllProductsQuery request, CancellationToken cancellationToken)
     {
-        var pagedResult = await _repository.GetAllPagedAsync(request.PageNumber, request.PageSize);
+        var pagedResult = await _repository.GetAllPagedWithFiltersAsync(
+            request.PageNumber, 
+            request.PageSize,
+            request.SearchTerm,
+            request.MinPrice,
+            request.MaxPrice,
+            request.StartDate,
+            request.SortField,
+            request.SortOrder
+        );
 
         return new PagedResult<ProductDto>
         {
@@ -27,7 +36,6 @@ public class GetAllProductsQueryHandler : IRequestHandler<GetAllProductsQuery, P
                 Description = p.Description,
                 Price = p.Price,
                 DateOfManufacture = p.DateOfManufacture,
-                DateOfExpiry = p.DateOfExpiry,
                 CreatedByUserId = p.CreatedByUserId,
                 ImageUrl = p.ImageUrl
             }).ToList(),

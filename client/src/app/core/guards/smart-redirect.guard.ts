@@ -15,20 +15,16 @@ export const smartRedirectGuard = () => {
   if (authService.isAuthenticated()) {
     const role = authService.getUserRole();
     
-    console.log('User is authenticated with role:', role);
     
     // Redirect based on role
     if (role === 'Admin') {
-      console.log('Redirecting admin to /admin/products');
       router.navigate(['/admin/products']);
     } else {
-      console.log('Redirecting user to /user/products');
       router.navigate(['/user/products']);
     }
   } else {
-    console.log('User not authenticated, redirecting to login');
     router.navigate(['/login']);
   }
 
-  return false; // Prevent the unknown route from activating
+  return false; 
 };

@@ -9,6 +9,10 @@ html, body {
   overflow-x: hidden;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 app-root {
   display: contents;
 }
@@ -17,4 +21,26 @@ app-login, app-register {
   display: block;
   width: 100% !important;
   height: 100% !important;
+}
+
+/* Mobile-first responsive utilities */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+}
+
+/* Responsive image utility */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Responsive table utility */
+@media (max-width: 768px) {
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }

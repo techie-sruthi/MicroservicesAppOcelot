@@ -14,6 +14,7 @@ export class AppLayoutComponent implements OnInit {
   role: string | null = '';
   isAdmin: boolean = false;
   userName: string = 'User';
+  sidebarOpen: boolean = false;
 
   constructor(private authService: AuthService, private router: Router) {}
 
@@ -26,8 +27,14 @@ export class AppLayoutComponent implements OnInit {
     if (userId) {
       this.userName = this.role === 'Admin' ? 'Admin' : 'User';
     }
+  }
 
-    console.log('User role:', this.role, 'isAdmin:', this.isAdmin);
+  toggleSidebar(): void {
+    this.sidebarOpen = !this.sidebarOpen;
+  }
+
+  closeSidebar(): void {
+    this.sidebarOpen = false;
   }
 
   onLogout(): void {

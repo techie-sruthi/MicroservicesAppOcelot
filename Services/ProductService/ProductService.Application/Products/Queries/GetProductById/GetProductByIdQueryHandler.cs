@@ -33,7 +33,6 @@ public class GetProductByIdQueryHandler : IRequestHandler<GetProductByIdQuery, P
             Description = product.Description,
             Price = product.Price,
             DateOfManufacture = product.DateOfManufacture,
-            DateOfExpiry = product.DateOfExpiry,
             CreatedByUserId = product.CreatedByUserId,
             ImageUrl = product.ImageUrl
         };

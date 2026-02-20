@@ -6,6 +6,7 @@ using ProductService.Application.Products.Queries.GetAllProducts;
 using ProductService.Application.Products.Commands.DeleteProduct;
 using ProductService.Application.Products.Queries.GetProductById;
 using ProductService.Application.Products.Queries.GetProductsByUserId;
+using ProductService.Application.Products.Queries.CheckProductName;
 using Microsoft.AspNetCore.Authorization;
 using ProductService.API.Helpers;
 using ProductService.API.Validators;
@@ -50,16 +51,53 @@ public class ProductsController : ControllerBase
 
     [HttpGet("all")]
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> GetAllProducts([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetAllProducts(
+        [FromQuery] int pageNumber = 1, 
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] decimal? minPrice = null,
+        [FromQuery] decimal? maxPrice = null,
+        [FromQuery] DateTime? startDate = null,
+        [FromQuery] string? sortField = null,
+        [FromQuery] string? sortOrder = null)
     {
-        return Ok(await _mediator.Send(new GetAllProductsQuery(pageNumber, pageSize)));
+        var query = new GetAllProductsQuery(
+            pageNumber, 
+            pageSize, 
+            searchTerm, 
+            minPrice, 
+            maxPrice, 
+            startDate,
+            sortField,
+            sortOrder);
+
+        return Ok(await _mediator.Send(query));
     }
 
     [HttpGet("my-products")]
-    public async Task<IActionResult> GetMyProducts([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetMyProducts(
+        [FromQuery] int pageNumber = 1, 
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] decimal? minPrice = null,
+        [FromQuery] decimal? maxPrice = null,
+        [FromQuery] DateTime? startDate = null,
+        [FromQuery] string? sortField = null,
+        [FromQuery] string? sortOrder = null)
     {
         var userId = User.GetUserId();
-        return Ok(await _mediator.Send(new GetProductsByUserIdQuery(userId, pageNumber, pageSize)));
+        var query = new GetProductsByUserIdQuery(
+            userId, 
+            pageNumber, 
+            pageSize,
+            searchTerm,
+            minPrice,
+            maxPrice,
+            startDate,
+            sortField,
+            sortOrder);
+
+        return Ok(await _mediator.Send(query));
     }
 
     [HttpGet("{id}")]
@@ -110,5 +148,19 @@ public class ProductsController : ControllerBase
         var imageUrl = await _fileStorageService.UploadFileAsync(stream, file.FileName, file.ContentType);
 
         return Ok(new { imageUrl });
+    }
+
+    [HttpGet("check-name")]
+    public async Task<IActionResult> CheckProductName([FromQuery] string name, [FromQuery] string? excludeId = null)
+    {
+        var query = new CheckProductNameQuery
+        {
+            Name = name,
+            ExcludeId = excludeId,
+            UserId = User.GetUserId()
+        };
+
+        var exists = await _mediator.Send(query);
+        return Ok(new { exists });
     }
 }

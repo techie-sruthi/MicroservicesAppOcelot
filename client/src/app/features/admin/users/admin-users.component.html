@@ -3,12 +3,26 @@
   <p-toast></p-toast>
 
   <!-- Confirmation dialog -->
-  <p-confirmDialog></p-confirmDialog>
+  <p-confirmDialog [style]="{width: '450px'}" [baseZIndex]="10000"></p-confirmDialog>
 
   <div class="dashboard-container">
 
     <!-- User Form Card -->
     <p-card [header]="isEditMode ? 'Edit User' : 'Create User'" styleClass="mb-4">
+
+      <!-- Warning message when editing own account -->
+      <!--<div *ngIf="isEditingOwnAccount()" class="mb-3 p-3" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 6px;">
+        <div class="flex align-items-center gap-2">
+          <i class="pi pi-exclamation-triangle" style="color: #ff9800; font-size: 1.2rem;"></i>
+          <div>
+            <strong style="color: #856404;">Editing Your Own Account</strong>
+            <p style="margin: 4px 0 0 0; color: #856404; font-size: 0.9rem;">
+              If you change your own role, you will be logged out automatically and need to login again.
+            </p>
+          </div>
+        </div>
+      </div>-->
+
       <div class="form-grid">
         <div class="field">
           <label for="userName">User Name <span class="required">*</span></label>
@@ -39,7 +53,9 @@
           <label for="password">
             Password 
             <span class="required" *ngIf="!isEditMode">*</span>
-            <span style="color: #94a3b8; font-weight: 400;" *ngIf="isEditMode">(Leave blank to keep current)</span>
+            <!--<span style="color: #94a3b8; font-weight: 400;"-->
+                  <!--*ngIf="isEditMode">(Leave blank to keep current)</span>-->
+
           </label>
           <p-password 
             id="password"
@@ -126,19 +142,21 @@
       </div>
 
       <p-table 
-        [value]="filteredUsers" 
+        [value]="users" 
+        [lazy]="true"
         [paginator]="true" 
         [rows]="pageSize"
+        [first]="first"
         [totalRecords]="totalRecords"
         [loading]="loading"
-        (onPage)="onPageChange($event)"
+        (onLazyLoad)="onLazyLoad($event)"
         [tableStyle]="{ 'min-width': '50rem' }"
         [rowsPerPageOptions]="[5, 10, 20]"
         [showCurrentPageReport]="true"
         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} users"
         styleClass="p-datatable-striped">
         
-        <ng-template #header>
+        <ng-template pTemplate="header">
           <tr>
             <th pSortableColumn="id">ID <p-sortIcon field="id" /></th>
             <th pSortableColumn="userName">User Name <p-sortIcon field="userName" /></th>
@@ -190,9 +208,6 @@
         </ng-template>
       </p-table>
     </p-card>
-
-    <!-- Confirmation Dialog -->
-    <p-confirmDialog />
 
   </div>
 </app-layout>

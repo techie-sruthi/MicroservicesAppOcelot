@@ -16,9 +16,16 @@ public class GetAllUsersQueryHandler
     }
 
     public async Task<PagedResult<UserDto>> Handle(
-      GetAllUsersQuery request,
-      CancellationToken cancellationToken)
+        GetAllUsersQuery request,
+        CancellationToken cancellationToken)
     {
-        return await _context.GetAllUsersPagedAsync(request.PageNumber, request.PageSize, cancellationToken);
+        return await _context.GetAllUsersPagedAsync(
+            request.PageNumber,
+            request.PageSize,
+            request.SearchTerm,
+            request.RoleFilter,
+            request.SortField,
+            request.SortOrder,
+            cancellationToken);
     }
 }

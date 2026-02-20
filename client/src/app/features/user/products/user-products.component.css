@@ -327,6 +327,24 @@
   right: 10px;
 }
 
+/* New evident close/remove button */
+.remove-image-btn-evident {
+  cursor: pointer;
+  transition: all 0.3s ease !important;
+  z-index: 10;
+  border: 2px solid white !important;
+}
+
+.remove-image-btn-evident:hover {
+  background: rgba(220, 38, 38, 1) !important;
+  transform: scale(1.1) rotate(90deg);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5) !important;
+}
+
+.remove-image-btn-evident:active {
+  transform: scale(0.95) rotate(90deg);
+}
+
 /* Image Upload Styles */
 .image-upload-container {
   border: 2px dashed #d1d5db;
@@ -427,4 +445,193 @@
   height: 60px;
   background: #f3f4f6;
   border-radius: 8px;
+}
+
+/* ============================================
+   MOBILE RESPONSIVE STYLES
+   ============================================ */
+
+/* Tablet (768px and below) */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 15px;
+    gap: 15px;
+  }
+
+  /* Toolbar becomes stacked */
+  .flex.justify-content-between {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch !important;
+  }
+
+  /* Search container stacked */
+  .search-container {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .search-container input {
+    width: 100% !important;
+  }
+
+  .search-container button {
+    width: 100%;
+  }
+
+  /* Action buttons full width */
+  .flex.gap-2 button {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* Filter grid */
+  .filter-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  /* Form grid */
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Dialog */
+  ::ng-deep .p-dialog {
+    width: 95vw !important;
+    max-width: 95vw !important;
+  }
+
+  /* Table scrollable */
+  ::ng-deep .p-datatable-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Hide some table columns on mobile */
+  ::ng-deep .p-datatable .p-datatable-tbody > tr > td:nth-child(3),
+  ::ng-deep .p-datatable .p-datatable-thead > tr > th:nth-child(3) {
+    display: none; /* Hide description on mobile */
+  }
+
+  /* Smaller buttons in table */
+  ::ng-deep .p-datatable button {
+    padding: 0.5rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  ::ng-deep .p-datatable button .p-button-label {
+    display: none; /* Hide button text, show only icons */
+  }
+
+  /* Image upload */
+  .image-preview img {
+    max-height: 200px;
+  }
+}
+
+/* Mobile (576px and below) */
+@media (max-width: 576px) {
+  .dashboard-container {
+    padding: 10px;
+  }
+
+  /* Card header */
+  ::ng-deep .p-card .p-card-header {
+    font-size: 1.1rem !important;
+    padding: 0.875rem !important;
+  }
+
+  /* Smaller buttons */
+  ::ng-deep button,
+  ::ng-deep .p-button {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  /* Form fields */
+  .field label {
+    font-size: 0.85rem;
+  }
+
+  ::ng-deep .p-inputtext,
+  ::ng-deep .p-inputnumber input {
+    padding: 0.625rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  /* Table */
+  ::ng-deep .p-datatable {
+    font-size: 0.875rem;
+  }
+
+  ::ng-deep .p-datatable .p-datatable-thead > tr > th,
+  ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+    padding: 0.5rem !important;
+  }
+
+  /* Hide more columns on small screens */
+  ::ng-deep .p-datatable .p-datatable-tbody > tr > td:nth-child(5),
+  ::ng-deep .p-datatable .p-datatable-thead > tr > th:nth-child(5),
+  ::ng-deep .p-datatable .p-datatable-tbody > tr > td:nth-child(6),
+  ::ng-deep .p-datatable .p-datatable-thead > tr > th:nth-child(6) {
+    display: none; /* Hide date columns on small screens */
+  }
+
+  /* Pagination */
+  ::ng-deep .p-paginator {
+    font-size: 0.875rem;
+    padding: 0.5rem !important;
+  }
+
+  ::ng-deep .p-paginator .p-paginator-pages .p-paginator-page {
+    min-width: 2rem;
+    height: 2rem;
+  }
+}
+
+/* Extra Small (400px and below) */
+@media (max-width: 400px) {
+  .dashboard-container {
+    padding: 8px;
+  }
+
+  ::ng-deep .p-card .p-card-header {
+    font-size: 1rem !important;
+  }
+
+  /* Stack action buttons vertically */
+  .flex.gap-2 {
+    flex-direction: column;
+  }
+
+  .flex.gap-2 button {
+    width: 100%;
+  }
+
+  /* Dialog full screen */
+  ::ng-deep .p-dialog {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  ::ng-deep .p-dialog .p-dialog-content {
+    max-height: calc(100vh - 150px) !important;
+  }
+}
+
+/* Landscape orientation fixes for phones */
+@media (max-height: 500px) and (orientation: landscape) {
+  ::ng-deep .p-dialog {
+    height: 100vh !important;
+    max-height: 100vh !important;
+  }
+
+  ::ng-deep .p-dialog .p-dialog-content {
+    max-height: calc(100vh - 120px) !important;
+    overflow-y: auto !important;
+  }
 }

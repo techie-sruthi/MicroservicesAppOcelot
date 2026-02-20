@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -12,6 +12,8 @@ import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 
 import { AuthService } from '../../../core/services/auth.service';
+import { Subject, of } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
 
 @Component({
@@ -30,10 +32,15 @@ import { AuthService } from '../../../core/services/auth.service';
   templateUrl: './register.component.html',
   styleUrl: './register.component.css'
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit, OnDestroy {
 
   registerForm;
   loading = false;
+
+  // Email validation
+  private emailCheck$ = new Subject<string>();
+  emailError: string = '';
+  checkingEmail: boolean = false;
 
   constructor(
     private fb: FormBuilder, 
@@ -49,7 +56,64 @@ export class RegisterComponent {
     });
   }
 
+  ngOnInit(): void {
+    this.setupEmailValidation();
+  }
+
+  ngOnDestroy(): void {
+    this.emailCheck$.complete();
+  }
+
+  setupEmailValidation(): void {
+    this.emailCheck$
+      .pipe(
+        debounceTime(500),
+        distinctUntilChanged(),
+        switchMap(email => {
+          // Check if email is valid format and not empty
+          if (!email || !this.isValidEmail(email)) {
+            return of({ exists: false });
+          }
+          this.checkingEmail = true;
+          return this.authService.checkEmail(email.trim().toLowerCase());
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          this.checkingEmail = false;
+          if (response.exists) {
+            this.emailError = 'This email is already registered';
+          } else {
+            this.emailError = '';
+          }
+        },
+        error: (error) => {
+          this.checkingEmail = false;
+          console.error('Email check error:', error);
+        }
+      });
+  }
+
+  isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  onEmailChange(email: string): void {
+    this.emailCheck$.next(email);
+  }
+
   onRegister() {
+    // Check for email validation error
+    if (this.emailError) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Validation Error',
+        detail: this.emailError
+      });
+      return;
+    }
+
     if (this.registerForm.invalid) {
       this.messageService.add({
         severity: 'warn',

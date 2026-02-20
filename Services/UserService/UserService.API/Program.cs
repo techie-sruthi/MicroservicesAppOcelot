@@ -1,4 +1,6 @@
 using UserService.API.DependencyInjection;
+using UserService.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -29,6 +31,14 @@ builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddCorsPolicy(builder.Configuration);
 
 var app = builder.Build();
+
+// Auto-create database tables when running in Docker (no migrations needed for scaffold approach)
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<UserDbContextScaffolded>();
+    db.Database.EnsureCreated();
+    Console.WriteLine("[Startup] Database ensured created.");
+}
 
 if (app.Environment.IsDevelopment())
 {
