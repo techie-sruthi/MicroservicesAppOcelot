@@ -123,57 +123,33 @@ export class ProductService {
     return this.http.get<PagedResult<Product>>(`${this.apiUrl}/my-products`, { params });
   }
 
-  /**
-   * Get product by ID
-   */
+
   getById(id: string): Observable<Product> {
     return this.http.get<Product>(`${this.apiUrl}/${id}`);
   }
 
-  /**
-   * Get products by specific user ID (Admin only)
-   */
   getByUserId(userId: number): Observable<Product[]> {
     return this.http.get<Product[]>(`${this.apiUrl}/user/${userId}`);
   }
 
-  /**
-   * Create new product
-   * UserId is automatically set from JWT on backend
-   */
   create(product: Product): Observable<{ id: string }> {
     return this.http.post<{ id: string }>(this.apiUrl, product);
   }
 
-  /**
-   * Update product
-   * Users can only update their own products, Admins can update any
-   */
   update(id: string, product: Product): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/${id}`, { ...product, id });
   }
 
-  /**
-   * Delete product
-   * Users can only delete their own products, Admins can delete any
-   */
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
-  /**
-   * Upload product image to MinIO
-   */
   uploadImage(file: File): Observable<{ imageUrl: string }> {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post<{ imageUrl: string }>(`${this.apiUrl}/upload-image`, formData);
   }
 
-  /**
-   * Check if product name already exists
-   * Returns true if duplicate exists
-   */
   checkProductName(name: string, excludeId?: string): Observable<{ exists: boolean }> {
     let params = new HttpParams().set('name', name);
     if (excludeId) {

@@ -78,7 +78,14 @@ export class AdminUsersComponent implements OnInit {
 
   loadUsers() {
     this.loading = true;
-    this.userService.getAllUsers(this.pageNumber, this.pageSize).subscribe({
+    this.userService.getAllUsers(
+      this.pageNumber,
+      this.pageSize,
+      this.searchValue || undefined,
+      undefined, // roleFilter (not used here)
+      this.sortField || undefined,
+      this.sortOrder || undefined
+    ).subscribe({
       next: (data: PagedResult<User>) => {
 
         this.users = data.items;
@@ -297,17 +304,10 @@ export class AdminUsersComponent implements OnInit {
   }
 
   onSearch() {
-    // Note: This only searches the current page (client-side filter)
-    // For full search across all pages, implement server-side search
-    if (!this.searchValue) {
-      return;
-    }
-
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Search Limited',
-      detail: 'Search only works on the current page. Server-side search coming soon.'
-    });
+    // Server-side search: reset to first page and reload with searchValue
+    this.pageNumber = 1;
+    this.first = 0;
+    this.loadUsers();
   }
 
   clearSearch() {

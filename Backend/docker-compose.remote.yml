@@ -1,0 +1,103 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - microservices-network
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    restart: unless-stopped
+    ports:
+      - "1433:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "YourStrong@Passw0rd"
+      MSSQL_PID: "Express"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - microservices-network
+
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - microservices-network
+
+  # Pull from Docker Hub (no build needed!)
+  userservice:
+    image: yourusername/userservice:latest
+    container_name: userservice
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5000
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=UserServiceDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True
+      - Jwt__Key=THIS_IS_MY_SUPER_SECRET_KEY_12345
+    depends_on:
+      - sqlserver
+    networks:
+      - microservices-network
+
+  productservice:
+    image: yourusername/productservice:latest
+    container_name: productservice
+    restart: unless-stopped
+    ports:
+      - "5050:5050"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5050
+      - MongoDB__ConnectionString=mongodb://mongodb:27017
+      - MongoDB__DatabaseName=ProductServiceDb
+      - FileStorage__MinIO__Endpoint=minio:9000
+      - FileStorage__MinIO__AccessKey=minioadmin
+      - FileStorage__MinIO__SecretKey=minioadmin
+      - FileStorage__MinIO__BucketName=product-images
+      - FileStorage__MinIO__UseSSL=false
+      - Jwt__Key=THIS_IS_MY_SUPER_SECRET_KEY_12345
+    depends_on:
+      - mongodb
+      - minio
+    networks:
+      - microservices-network
+
+  angular-app:
+    image: yourusername/frontend:latest
+    container_name: angular-app
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    depends_on:
+      - userservice
+      - productservice
+    networks:
+      - microservices-network
+
+volumes:
+  mongodb_data:
+  sqlserver_data:
+  minio_data:
+
+networks:
+  microservices-network:
+    driver: bridge

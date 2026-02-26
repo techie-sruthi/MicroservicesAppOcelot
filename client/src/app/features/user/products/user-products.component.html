@@ -213,7 +213,7 @@
 
     <div class="form-grid">
       <div class="field">
-        <label for="productName">Product Name<span class="required">*</span></label>
+        <label for="productName">Product Name<span class="required required-asterisk">*</span></label>
         <input 
           pInputText 
           id="productName" 
@@ -244,7 +244,7 @@
       </div>
 
       <div class="field" style="grid-column: 1 / -1;">
-        <label for="description">Description<span class="required">*</span></label>
+        <label for="description">Description<span class="required required-asterisk">*</span></label>
         <textarea 
           id="description" 
           [(ngModel)]="productForm.description" 
@@ -256,7 +256,7 @@
       </div>
 
       <div class="field">
-        <label for="price">Price</label>
+        <label for="price">Price<span class="required required-asterisk">*</span></label>
         <p-inputNumber
           id="price"
           [(ngModel)]="productForm.price"
@@ -269,7 +269,7 @@
       </div>
 
       <div class="field">
-        <label for="dateOfManufacture">Date of Manufacture<span class="required">*</span></label>
+        <label for="dateOfManufacture">Date of Manufacture<span class="required required-asterisk">*</span></label>
         <input 
           pInputText 
           id="dateOfManufacture" 

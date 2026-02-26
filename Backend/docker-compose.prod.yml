@@ -1,0 +1,165 @@
+services:
+  # MongoDB for ProductService
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: ProductServiceDb
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - microservices-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # SQL Server for UserService
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    restart: unless-stopped
+    ports:
+      - "1433:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "YourStrong@Passw0rd"
+      MSSQL_PID: "Express"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - microservices-network
+    healthcheck:
+      test: /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "YourStrong@Passw0rd" -Q "SELECT 1" || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MinIO for File Storage
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # UserService API
+  userservice:
+    build:
+      context: ./Services/UserService
+      dockerfile: UserService.API/Dockerfile
+    image: productapp/userservice:latest
+    container_name: userservice
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5000
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=UserServiceDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True
+      - Jwt__Key=THIS_IS_MY_SUPER_SECRET_KEY_12345
+      - Jwt__Issuer=UserService
+      - Jwt__Audience=MicroserviceUsers
+      - Jwt__ExpiryMinutes=60
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ProductService API
+  productservice:
+    build:
+      context: ./Services/ProductService
+      dockerfile: ProductService.API/Dockerfile
+    image: productapp/productservice:latest
+    container_name: productservice
+    restart: unless-stopped
+    ports:
+      - "5050:5050"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:5050
+      - MongoDB__ConnectionString=mongodb://mongodb:27017
+      - MongoDB__DatabaseName=ProductServiceDb
+      - FileStorage__MinIO__Endpoint=minio:9000
+      - FileStorage__MinIO__AccessKey=minioadmin
+      - FileStorage__MinIO__SecretKey=minioadmin
+      - FileStorage__MinIO__BucketName=product-images
+      - FileStorage__MinIO__UseSSL=false
+      - Jwt__Key=THIS_IS_MY_SUPER_SECRET_KEY_12345
+      - Jwt__Issuer=UserService
+      - Jwt__Audience=MicroserviceUsers
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5050/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Angular Frontend
+  angular-app:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    image: productapp/frontend:latest
+    container_name: angular-app
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    depends_on:
+      userservice:
+        condition: service_healthy
+      productservice:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  mongodb_data:
+    driver: local
+  sqlserver_data:
+    driver: local
+  minio_data:
+    driver: local
+
+networks:
+  microservices-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

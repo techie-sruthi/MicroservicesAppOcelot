@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/Services/" />
+  <Folder Name="/Services/ApiGateway/">
+    <Project Path="Services/ApiGateway/ApiGateway/ApiGateway.csproj" />
+  </Folder>
+  <Folder Name="/Services/ProductService/">
+    <Project Path="Services/ProductService/ProductService.API/ProductService.API.csproj" />
+    <Project Path="Services/ProductService/ProductService.Application/ProductService.Application.csproj" />
+    <Project Path="Services/ProductService/ProductService.Domain/ProductService.Domain.csproj" />
+    <Project Path="Services/ProductService/ProductService.Infrastructure/ProductService.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Services/UserService/">
+    <Project Path="Services/UserService/UserService.API/UserService.API.csproj" />
+    <Project Path="Services/UserService/UserService.Application/UserService.Application.csproj" />
+    <Project Path="Services/UserService/UserService.Domain/UserService.Domain.csproj" />
+    <Project Path="Services/UserService/UserService.Infrastructure/UserService.Infrastructure.csproj" />
+  </Folder>
+</Solution>

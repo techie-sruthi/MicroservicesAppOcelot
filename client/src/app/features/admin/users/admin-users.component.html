@@ -49,10 +49,10 @@
              />
         </div>
 
-        <div class="field">
+        <div class="field" *ngIf="!isEditMode">
           <label for="password">
             Password 
-            <span class="required" *ngIf="!isEditMode">*</span>
+            <span class="required">*</span>
             <!--<span style="color: #94a3b8; font-weight: 400;"-->
                   <!--*ngIf="isEditMode">(Leave blank to keep current)</span>-->
 
@@ -67,7 +67,7 @@
             [disabled]="saving">
           </p-password>
           <small style="color: #94a3b8; font-size: 0.85rem;">
-            {{ isEditMode ? 'Only fill this if you want to change the password' : 'Minimum 6 characters required' }}
+            Minimum 6 characters required
           </small>
         </div>
 
@@ -158,7 +158,7 @@
         
         <ng-template pTemplate="header">
           <tr>
-            <th pSortableColumn="id">ID <p-sortIcon field="id" /></th>
+            <!-- <th pSortableColumn="id">ID <p-sortIcon field="id" /></th> -->
             <th pSortableColumn="userName">User Name <p-sortIcon field="userName" /></th>
             <th pSortableColumn="email">Email <p-sortIcon field="email" /></th>
             <th pSortableColumn="role">Role <p-sortIcon field="role" /></th>
@@ -168,7 +168,7 @@
         
         <ng-template #body let-user>
           <tr>
-            <td>{{ user.id }}</td>
+            <!-- <td>{{ user.id }}</td> -->
             <td>{{ user.userName }}</td>
             <td>{{ user.email }}</td>
             <td>

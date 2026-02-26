@@ -35,7 +35,10 @@ img {
   max-width: 100%;
   height: auto;
 }
-
+.required-asterisk {  
+  color: red;  
+  margin-left: 2px;  
+}
 /* Responsive table utility */
 @media (max-width: 768px) {
   table {

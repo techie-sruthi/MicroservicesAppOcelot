@@ -5,7 +5,7 @@
     <form [formGroup]="registerForm" (ngSubmit)="onRegister()" class="p-fluid">
 
       <div class="field">
-        <label>Username</label>
+        <label>Username  <span class="required required-asterisk">*</span></label>
         <input pInputText type="text" formControlName="userName" />
         <small class="p-error" *ngIf="registerForm.get('userName')?.invalid && registerForm.get('userName')?.touched">
           <span *ngIf="registerForm.get('userName')?.errors?.['required']">Username is required.</span>
@@ -13,7 +13,7 @@
       </div>
 
       <div class="field mt-3">
-        <label>Email</label>
+        <label>Email  <span class="required required-asterisk">*</span></label>
         <input 
           pInputText 
           type="email" 
@@ -48,7 +48,7 @@
       </div>
 
       <div class="field mt-3">
-        <label>Password</label>
+        <label>Password  <span class="required required-asterisk">*</span></label>
         <p-password formControlName="password" [feedback]="true" [toggleMask]="true"></p-password>
         <small class="p-error" *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched">
           <span *ngIf="registerForm.get('password')?.errors?.['required']">Password is required.</span>
@@ -57,7 +57,7 @@
       </div>
 
       <div class="field mt-3">
-        <label>Confirm Password</label>
+        <label>Confirm Password <span class="required required-asterisk">*</span></label>
         <p-password formControlName="confirmPassword" [feedback]="false" [toggleMask]="true"></p-password>
         <small class="p-error" *ngIf="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched">
           <span *ngIf="registerForm.get('confirmPassword')?.errors?.['required']">Please confirm your password.</span>
