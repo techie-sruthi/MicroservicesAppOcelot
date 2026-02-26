@@ -36,29 +36,28 @@ public class LoginUserCommandHandler
        
     }
 
-    public async Task<object> Handle(
-        LoginUserCommand request,
-        CancellationToken cancellationToken)
+
+    public async Task<object> Handle(LoginUserCommand request, CancellationToken cancellationToken)
     {
+        // Find user by email
         var user = await _context.Users
-            .FirstOrDefaultAsync(x =>
-                x.Email == request.Email,
-                cancellationToken);
+            .FirstOrDefaultAsync(x => x.Email == request.Email, cancellationToken);
 
         if (user == null)
             throw new UnauthorizedAccessException("User not found with this email address");
 
+        // Verify password
         if (!_passwordHasher.Verify(request.Password, user.PasswordHash))
             throw new UnauthorizedAccessException("Invalid password. Please try again");
 
-        // Generate and send OTP instead of returning tokens immediately
+        // Generate and send OTP
         var otp = _otpService.GenerateOtp();
         _otpService.StoreOtp(user.Email, otp);
         await _emailService.SendOtpEmailAsync(user.Email, otp);
 
-        // Debug logging for OTP (only visible when log level includes Debug)
-        _logger?.LogDebug("Generated OTP for {Email}: {Otp}", user.Email, otp);
+        _logger.LogDebug("Generated OTP for {Email}: {Otp}", user.Email, otp);
 
+        // Return structured success response
         return new
         {
             email = user.Email,
@@ -66,6 +65,5 @@ public class LoginUserCommandHandler
             otpRequired = true,
             expirySeconds = _otpService.GetExpirySeconds()
         };
-      
     }
 }

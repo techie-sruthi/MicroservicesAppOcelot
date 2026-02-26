@@ -4,6 +4,7 @@ using ProductService.Application.Common.Interfaces;
 using ProductService.Infrastructure.Data;
 using ProductService.Infrastructure.FileStorage;
 using ProductService.Infrastructure.Repositories;
+using ProductService.API.Services;
 
 namespace ProductService.API.DependencyInjection;
 
@@ -31,6 +32,9 @@ public static class InfrastructureDependency
             configuration.GetSection("FileStorage:MinIO"));
 
         services.AddScoped<IFileStorageService, MinIOFileStorageService>();
+        services.AddHttpContextAccessor();
+
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         return services;
     }

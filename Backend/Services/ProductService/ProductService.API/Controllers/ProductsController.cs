@@ -39,44 +39,13 @@ public class ProductsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(CreateProductCommand command)
     {
-        command.CreatedByUserId = User.GetUserId();
         var productId = await _mediator.Send(command);
         return Ok(new { id = productId });
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetProducts([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
-    {
-        // Let the handler decide what to return based on user role
-        var query = User.IsAdmin()
-            ? new GetAllProductsQuery(pageNumber, pageSize)
-            : (object)new GetProductsByUserIdQuery(User.GetUserId(), pageNumber, pageSize);
-
-        return Ok(await _mediator.Send(query));
-    }
-
     [HttpGet("all")]
-    //[Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetAllProducts([FromQuery] GetAllProductsQuery query, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("🔍 GetAllProducts called by user {UserId}", User.GetUserId());
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        var roles = User.FindAll(ClaimTypes.Role)
-                        .Select(r => r.Value)
-                        .ToList();
-
-        _logger.LogInformation("🔍 GetAllProducts called by UserId: {UserId}, Roles: {Roles}",
-            userId, string.Join(",", roles));
-        // log role
-        if (User.IsAdmin())
-        {
-            _logger.LogInformation("👑 User is admin");
-        }
-        else
-        {
-            _logger.LogInformation("👤 User is not admin");
-        }   
         var result = await _mediator.Send(query, cancellationToken);
         return Ok(result);
     }
@@ -85,33 +54,24 @@ public class ProductsController : ControllerBase
     [HttpGet("my-products")]
     public async Task<IActionResult> GetMyProducts([FromQuery] GetProductsByUserIdQuery query, CancellationToken cancellationToken)
     {
-        var q = query with { UserId = User.GetUserId() };
-        var result = await _mediator.Send(q, cancellationToken);
+        var result = await _mediator.Send(query, cancellationToken);
         return Ok(result);
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(string id)
     {
-        var query = new GetProductByIdQuery(id)
         {
-            CurrentUserId = User.GetUserId(),
-            IsAdmin = User.IsAdmin()
-        };
-
-        var product = await _mediator.Send(query);
-        return Ok(product);
+            var product = await _mediator.Send(new GetProductByIdQuery(id));
+            return Ok(product);
+        }
     }
 
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(string id, UpdateProductCommand command)
     {
         if (id != command.Id)
-            return BadRequest("Product ID mismatch");
-
-        command.CurrentUserId = User.GetUserId();
-        command.IsAdmin = User.IsAdmin();
-
+           return BadRequest("Product ID mismatch");
         await _mediator.Send(command);
         return NoContent();
     }
@@ -141,16 +101,41 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("check-name")]
-    public async Task<IActionResult> CheckProductName([FromQuery] string name, [FromQuery] string? excludeId = null)
+    public async Task<IActionResult> CheckProductName([FromQuery] CheckProductNameQuery query)
     {
-        var query = new CheckProductNameQuery
-        {
-            Name = name,
-            ExcludeId = excludeId,
-            UserId = User.GetUserId()
-        };
-
         var exists = await _mediator.Send(query);
         return Ok(new { exists });
     }
 }
+
+
+
+
+
+//[HttpGet]
+//public async Task<IActionResult> GetProducts([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+//{
+//_logger.LogInformation("🔍 GetAllProducts called by user {UserId}", User.GetUserId());
+//var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+//var roles = User.FindAll(ClaimTypes.Role)
+//                .Select(r => r.Value)
+//                .ToList();
+
+//_logger.LogInformation("🔍 GetAllProducts called by UserId: {UserId}, Roles: {Roles}",
+//    userId, string.Join(",", roles));
+//// log role
+//if (User.IsAdmin())
+//{
+//    _logger.LogInformation("👑 User is admin");
+//}
+//else
+//{
+//    _logger.LogInformation("👤 User is not admin");
+//}   
+//    var query = User.IsAdmin()
+//        ? new GetAllProductsQuery(pageNumber, pageSize)
+//        : (object)new GetProductsByUserIdQuery(User.GetUserId(), pageNumber, pageSize);
+
+//    return Ok(await _mediator.Send(query));
+//}

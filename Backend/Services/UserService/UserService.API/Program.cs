@@ -1,6 +1,7 @@
 using UserService.API.DependencyInjection;
 using UserService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using UserService.API.Middleware;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -45,10 +46,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<ExceptionMiddleware>();
+
 app.UseHttpsRedirection();
 app.UseCors("AllowAngular");
-app.UseAuthentication();
-app.UseAuthorization();
+//app.UseAuthentication();
+//app.UseAuthorization();
 app.MapControllers();
 
 app.Run();

@@ -78,6 +78,14 @@ export class AdminUsersComponent implements OnInit {
 
   loadUsers() {
     this.loading = true;
+console.log('Loading users with parameters:', {
+  pageNumber: this.pageNumber,
+  pageSize: this.pageSize,
+  searchValue: this.searchValue,
+  sortField: this.sortField,
+  sortOrder: this.sortOrder
+});
+
     this.userService.getAllUsers(
       this.pageNumber,
       this.pageSize,
@@ -111,6 +119,12 @@ export class AdminUsersComponent implements OnInit {
     this.pageNumber = Math.floor(event.first / event.rows) + 1;
     this.pageSize = event.rows;
     this.first = event.first;
+
+    // Handle sorting from PrimeNG
+    if (event.sortField) {
+      this.sortField = event.sortField;
+      this.sortOrder = event.sortOrder === 1 ? 'asc' : 'desc';
+    }
 
     this.loadUsers();
   }

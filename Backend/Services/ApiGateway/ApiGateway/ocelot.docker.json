@@ -272,9 +272,6 @@
       ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
-      },
-      "RouteClaimsRequirement": {
-        "role": "Admin"
       }
     },
 
@@ -314,13 +311,13 @@
   ],
 
   "GlobalConfiguration": {
-    "BaseUrl": "http://localhost:5200",
-    "RateLimitOptions": {
-      "DisableRateLimitHeaders": false,
-      "QuotaExceededMessage": "Rate limit exceeded",
-      "HttpStatusCode": 429,
-      "ClientIdHeader": "ClientId",
-      "EnableRateLimiting": true
-    }
+    "BaseUrl": "http://localhost:5200"
+    //"RateLimitOptions": {
+    //  "DisableRateLimitHeaders": false,
+    //  "QuotaExceededMessage": "Rate limit exceeded",
+    //  "HttpStatusCode": 429,
+    //  "ClientIdHeader": "ClientId",
+    //  "EnableRateLimiting": true
+    //}
   }
 }

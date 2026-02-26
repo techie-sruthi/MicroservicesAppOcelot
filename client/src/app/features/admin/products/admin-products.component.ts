@@ -152,7 +152,7 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
     const startDate = this.startDate || undefined;
     const sortField = this.sortField || undefined;
     const sortOrder = this.sortOrder || undefined;
-
+    
     this.productService.getAllProducts(
       this.pageNumber, 
       this.pageSize,

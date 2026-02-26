@@ -8,16 +8,22 @@ namespace ProductService.Application.Products.Queries.GetProductsByUserId;
 public class GetProductsByUserIdQueryHandler : IRequestHandler<GetProductsByUserIdQuery, PagedResult<ProductDto>>
 {
     private readonly IProductRepository _repository;
+    private readonly ICurrentUserService _currentUser;
 
-    public GetProductsByUserIdQueryHandler(IProductRepository repository)
+    public GetProductsByUserIdQueryHandler(IProductRepository repository, ICurrentUserService currentUser)
     {
         _repository = repository;
+        _currentUser = currentUser;
     }
 
     public async Task<PagedResult<ProductDto>> Handle(GetProductsByUserIdQuery request, CancellationToken cancellationToken)
     {
+
+        var userId = _currentUser.UserId;
+        var isAdmin = _currentUser.IsAdmin;
+
         var pagedResult = await _repository.GetByUserIdPagedAsync(
-            request.UserId, 
+            userId, 
             request.PageNumber, 
             request.PageSize,
             request.SearchTerm,

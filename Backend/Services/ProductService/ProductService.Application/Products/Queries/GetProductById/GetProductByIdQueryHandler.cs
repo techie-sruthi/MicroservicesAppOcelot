@@ -7,21 +7,25 @@ namespace ProductService.Application.Products.Queries.GetProductById;
 public class GetProductByIdQueryHandler : IRequestHandler<GetProductByIdQuery, ProductDto>
 {
     private readonly IProductRepository _repository;
+    private readonly ICurrentUserService _currentUser;
 
-    public GetProductByIdQueryHandler(IProductRepository repository)
+    public GetProductByIdQueryHandler(IProductRepository repository, ICurrentUserService currentUser)
     {
         _repository = repository;
+        _currentUser = currentUser;
     }
 
     public async Task<ProductDto> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)
     {
+        var userId = _currentUser.UserId;
+        var isAdmin = _currentUser.IsAdmin;
         var product = await _repository.GetByIdAsync(request.Id);
 
         if (product == null)
             throw new Exception("Product not found");
 
         // Authorization: Non-admin users can only view their own products
-        if (!request.IsAdmin && product.CreatedByUserId != request.CurrentUserId)
+        if (!isAdmin && product.CreatedByUserId != userId)
         {
             throw new UnauthorizedAccessException($"User {request.CurrentUserId} is not authorized to access product {request.Id}");
         }

@@ -17,7 +17,6 @@ using UserService.API.Helpers;
 
 namespace UserService.API.Controllers;
 
-//[Authorize]
 [ApiController]
 [Route("api/users")]
 public class UsersController : ControllerBase
@@ -31,7 +30,6 @@ public class UsersController : ControllerBase
         _logger = logger;
     }
 
-    [AllowAnonymous]
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterUserCommand command)
     {
@@ -39,93 +37,45 @@ public class UsersController : ControllerBase
         return Ok(userId);
     }
 
-    [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginUserCommand command)
     {
-        try
-        {
-            var response = await _mediator.Send(command);
-            return Ok(response);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return Unauthorized(new { error = ex.Message });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning($"Login error: {ex.Message}");
-            return BadRequest(new { error = "Login failed. Please try again." });
-        }
+        var response = await _mediator.Send(command);
+        return Ok(response);
     }
 
     
 
     // ===== OTP FEATURE ENABLED =====
-    [AllowAnonymous]
     [HttpPost("verify-otp")]
     public async Task<IActionResult> VerifyOtp(VerifyOtpCommand command)
     {
-        try
-        {
             var response = await _mediator.Send(command);
-            return Ok(response);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return Unauthorized(new { error = ex.Message });
-        }
+            return Ok(response);   
     }
 
 
-    [AllowAnonymous]
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenCommand command)
     {
-        try
-        {
             var response = await _mediator.Send(command);
             return Ok(response);
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            _logger.LogWarning($"Refresh token failed: {ex.Message}");
-            return Unauthorized(new { error = ex.Message });
-        }
     }
 
-    //[Authorize]
     [HttpPost]
     public async Task<IActionResult> Create(CreateUserCommand command)
         => Ok(await _mediator.Send(command));
 
     [HttpGet]
-    [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> GetAll(
-        [FromQuery] int pageNumber = 1, 
-        [FromQuery] int pageSize = 10,
-        [FromQuery] string? searchTerm = null,
-        [FromQuery] string? roleFilter = null,
-        [FromQuery] string? sortField = null,
-        [FromQuery] string? sortOrder = null)
-    {
-        var query = new GetAllUsersQuery(
-            pageNumber, 
-            pageSize,
-            searchTerm,
-            roleFilter,
-            sortField,
-            sortOrder);
-            
+    public async Task<IActionResult> GetAll( [FromQuery] GetAllUsersQuery query)
+    {        
         return Ok(await _mediator.Send(query));
     }
 
-    //[Authorize]
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
         => Ok(await _mediator.Send(new GetUserByIdQuery(id)));
 
-    //[Authorize]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, UpdateUserCommand command)
     {
@@ -134,7 +84,6 @@ public class UsersController : ControllerBase
         return NoContent();
     }
 
-    //[Authorize]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -142,7 +91,6 @@ public class UsersController : ControllerBase
         return NoContent();
     }
 
-    [AllowAnonymous]
     [HttpGet("check-email")]
     public async Task<IActionResult> CheckEmail([FromQuery] string email)
     {
@@ -150,7 +98,6 @@ public class UsersController : ControllerBase
         return Ok(new { exists });
     }
 
-    [AllowAnonymous]
     [HttpPost("forgot-password")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
@@ -158,19 +105,11 @@ public class UsersController : ControllerBase
         return Ok(new { message = "If your email exists, you will receive a password reset link." });
     }
 
-    [AllowAnonymous]
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
     {
-        try
-        {
-            await _mediator.Send(new ResetPasswordCommand(request.Token, request.NewPassword));
-            return Ok(new { message = "Password has been reset successfully." });
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        await _mediator.Send(new ResetPasswordCommand(request.Token, request.NewPassword));
+        return Ok(new { message = "Password has been reset successfully." });
     }
 }
 

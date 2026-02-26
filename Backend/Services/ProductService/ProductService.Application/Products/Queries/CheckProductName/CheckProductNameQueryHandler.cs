@@ -16,12 +16,11 @@ public class CheckProductNameQueryHandler : IRequestHandler<CheckProductNameQuer
     {
         var allProducts = await _repository.GetAllAsync();
 
-        var exists = allProducts.Any(p => 
+        var exists = allProducts.Any(p =>
             p.Name.Equals(request.Name, StringComparison.OrdinalIgnoreCase) &&
             (string.IsNullOrEmpty(request.ExcludeId) || p.Id != request.ExcludeId));
 
-        Console.WriteLine($"[CheckProductName] Name: '{request.Name}', Exists: {exists}, ExcludeId: {request.ExcludeId},UserId :'{request.UserId}'");
-
-        return exists; 
+        return exists;
     }
 }
+

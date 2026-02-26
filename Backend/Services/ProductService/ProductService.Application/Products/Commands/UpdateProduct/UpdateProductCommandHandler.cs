@@ -7,23 +7,28 @@ namespace ProductService.Application.Products.Commands.UpdateProduct;
 public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand, Unit>
 {
     private readonly IProductRepository _repository;
+    private readonly ICurrentUserService _currentUser;
 
-    public UpdateProductCommandHandler(IProductRepository repository)
+    public UpdateProductCommandHandler(IProductRepository repository, ICurrentUserService currentUser)
     {
         _repository = repository;
+        _currentUser = currentUser;
     }
 
     public async Task<Unit> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
     {
+        var userId = _currentUser.UserId;
+        var isAdmin = _currentUser.IsAdmin;
+
         var product = await _repository.GetByIdAsync(request.Id);
 
         if (product == null)
             throw new Exception("Product not found");
 
         // Authorization: Non-admin users can only update their own products
-        if (!request.IsAdmin && product.CreatedByUserId != request.CurrentUserId)
+        if (!isAdmin && product.CreatedByUserId != userId)
         {
-            throw new UnauthorizedAccessException($"User {request.CurrentUserId} is not authorized to update product {request.Id}");
+            throw new UnauthorizedAccessException($"User {userId} is not authorized to update product {request.Id}");
         }
 
         product.Name = request.Name;
