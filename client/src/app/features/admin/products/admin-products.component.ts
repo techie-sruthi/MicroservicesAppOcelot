@@ -2,7 +2,12 @@ import { Component, OnInit, ViewChild, ChangeDetectorRef, OnDestroy } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AppLayoutComponent } from '../../../core/layout/app-layout.component';
-import { ProductService, Product, PagedResult } from '../../../core/services/product.service';
+import {
+  ProductService,
+  Product,
+  PagedResult,
+  MergedProduct,
+} from '../../../core/services/product.service';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -31,27 +36,28 @@ interface ProductForm {
   selector: 'app-admin-products',
   standalone: true,
   imports: [
-    CommonModule, 
-    FormsModule, 
-    AppLayoutComponent, 
-    CardModule, 
+    CommonModule,
+    FormsModule,
+    AppLayoutComponent,
+    CardModule,
     InputTextModule,
-    InputNumberModule, 
-    ButtonModule, 
-    TableModule, 
+    InputNumberModule,
+    ButtonModule,
+    TableModule,
     DialogModule,
     ProgressBarModule,
     ToastModule,
     TooltipModule,
-    ImageViewerComponent
+    ImageViewerComponent,
   ],
   providers: [MessageService],
   templateUrl: './admin-products.component.html',
-  styleUrl: './admin-products.component.css'
+  styleUrl: './admin-products.component.css',
 })
 export class AdminProductsComponent implements OnInit, OnDestroy {
-
   products: Product[] = [];
+  mergedProducts: Product[] = [];
+
   searchValue: string = '';
   loading: boolean = false;
   displayDialog: boolean = false;
@@ -88,7 +94,7 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
     description: '',
     price: 0,
     dateOfManufacture: '',
-    imageUrl: undefined
+    imageUrl: undefined,
   };
 
   @ViewChild('dt') table!: Table;
@@ -97,12 +103,12 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
   constructor(
     private productService: ProductService,
     private messageService: MessageService,
-    private cdr: ChangeDetectorRef
-  ) { }
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.setupNameValidation();
-    this.loadProducts();
+
   }
 
   ngOnDestroy(): void {
@@ -114,14 +120,14 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
       .pipe(
         debounceTime(500),
         distinctUntilChanged(),
-        switchMap(name => {
+        switchMap((name) => {
           if (!name || name.trim().length < 2) {
             return of({ exists: false });
           }
           this.checkingName = true;
           const excludeId = this.isEditMode ? this.productForm.id : undefined;
           return this.productService.checkProductName(name.trim(), excludeId);
-        })
+        }),
       )
       .subscribe({
         next: (response) => {
@@ -134,7 +140,7 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           this.checkingName = false;
-        }
+        },
       });
   }
 
@@ -145,48 +151,67 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
   loadProducts(): void {
     this.loading = true;
 
-    // Prepare filter parameters
     const searchTerm = this.searchValue || undefined;
     const minPrice = this.minPrice || undefined;
     const maxPrice = this.maxPrice || undefined;
     const startDate = this.startDate || undefined;
     const sortField = this.sortField || undefined;
     const sortOrder = this.sortOrder || undefined;
-    
-    this.productService.getAllProducts(
-      this.pageNumber, 
-      this.pageSize,
-      searchTerm,
-      minPrice,
-      maxPrice,
-      startDate,
-      sortField,
-      sortOrder
-    ).subscribe({
-      next: (data: PagedResult<Product>) => {
-        this.products = data.items;
-        this.totalRecords = data.totalCount;
-        this.loading = false;
-        this.cdr.detectChanges();
 
-        if (data.items.length === 0 && data.totalCount === 0) {
-          this.messageService.add({ 
-            severity: 'info', 
-            summary: 'No Products', 
-            detail: 'No products found matching your criteria.' 
+    // this.productService.getAllProductsWithUserIds(this.pageNumber, this.pageSize, searchTerm,
+    //   minPrice, maxPrice, startDate,   sortField,  sortOrder ).subscribe({
+    //   next: (data: PagedResult<MergedProduct>) => {
+    //     this.mergedProducts = data.items;
+    //     console.log('Merged mergedProducts with user IDs:', this.mergedProducts);
+    //     this.totalRecords = data.totalCount;
+    //     this.loading = false;
+    //     this.cdr.detectChanges();
+    //     if (data.items.length === 0 && data.totalCount === 0) {
+    //       this.messageService.add({
+    //         severity: 'info',
+    //         summary: 'No mergedProducts',
+    //         detail: 'No mergedProducts found matching your criteria.',
+    //       });
+    //     }
+    //   },
+    // });
+
+    this.productService
+      .getAllProducts(
+        this.pageNumber,
+        this.pageSize,
+        searchTerm,
+        minPrice,
+        maxPrice,
+        startDate,
+        sortField,
+        sortOrder,
+      )
+      .subscribe({
+        next: (data: PagedResult<Product>) => {
+          this.products = data.items;
+          this.totalRecords = data.totalCount;
+          this.loading = false;
+          this.cdr.detectChanges();
+
+          if (data.items.length === 0 && data.totalCount === 0) {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'No Products',
+              detail: 'No products found matching your criteria.',
+            });
+          }
+        },
+        error: (err) => {
+          this.loading = false;
+          this.cdr.detectChanges();
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to load products',
           });
-        }
-      },
-      error: (err) => {
-        this.loading = false;
-        this.cdr.detectChanges();
-        this.messageService.add({ 
-          severity: 'error', 
-          summary: 'Error', 
-          detail: 'Failed to load products' 
-        });
-      }
-    });
+        },
+      });
   }
 
   onLazyLoad(event: any): void {
@@ -210,7 +235,7 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
       description: '',
       price: 0,
       dateOfManufacture: '',
-      imageUrl: undefined
+      imageUrl: undefined,
     };
     this.selectedFile = null;
     this.imagePreview = null;
@@ -227,7 +252,7 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
       description: product.description,
       price: product.price,
       dateOfManufacture: product.dateOfManufacture?.split('T')[0] || '',
-      imageUrl: product.imageUrl
+      imageUrl: product.imageUrl,
     };
     this.imagePreview = product.imageUrl || null;
     this.displayDialog = true;
@@ -241,18 +266,17 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'error',
         summary: 'Validation Error',
-        detail: this.nameError
+        detail: this.nameError,
       });
       return;
     }
 
     // Validate required fields
-    if (!this.productForm.name || !this.productForm.price || 
-        !this.productForm.dateOfManufacture) {
-      this.messageService.add({ 
-        severity: 'warn', 
-        summary: 'Validation', 
-        detail: 'Please fill all required fields' 
+    if (!this.productForm.name || !this.productForm.price || !this.productForm.dateOfManufacture) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Validation',
+        detail: 'Please fill all required fields',
       });
       return;
     }
@@ -267,13 +291,13 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
         this.messageService.add({
           severity: 'success',
           summary: 'Image Uploaded',
-          detail: 'Product image uploaded successfully'
+          detail: 'Product image uploaded successfully',
         });
       } catch (error) {
         this.messageService.add({
           severity: 'error',
           summary: 'Upload Failed',
-          detail: 'Failed to upload image'
+          detail: 'Failed to upload image',
         });
         this.uploading = false;
         return;
@@ -281,52 +305,51 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
       this.uploading = false;
     }
 
-    // Prepare product data - FIX: Don't use Date constructor, use date string directly
     const productData = {
       ...this.productForm,
       dateOfManufacture: this.productForm.dateOfManufacture + 'T00:00:00.000Z', // Add time at midnight UTC
-      imageUrl: imageUrl
+      imageUrl: imageUrl,
     };
 
     if (this.isEditMode && this.productForm.id) {
       // Update existing product
       this.productService.update(this.productForm.id, productData).subscribe({
         next: () => {
-          this.messageService.add({ 
-            severity: 'success', 
-            summary: 'Success', 
-            detail: 'Product updated successfully' 
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Product updated successfully',
           });
           this.hideDialog();
           this.loadProducts();
         },
         error: (err) => {
-          this.messageService.add({ 
-            severity: 'error', 
-            summary: 'Error', 
-            detail: 'Failed to update product' 
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to update product',
           });
-        }
+        },
       });
     } else {
       // Create new product
       this.productService.create(productData as Product).subscribe({
         next: () => {
-          this.messageService.add({ 
-            severity: 'success', 
-            summary: 'Success', 
-            detail: 'Product created successfully' 
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Product created successfully',
           });
           this.hideDialog();
           this.loadProducts();
         },
         error: (err) => {
-          this.messageService.add({ 
-            severity: 'error', 
-            summary: 'Error', 
-            detail: 'Failed to create product' 
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to create product',
           });
-        }
+        },
       });
     }
   }
@@ -335,20 +358,20 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
     if (confirm('Are you sure you want to delete this product?')) {
       this.productService.delete(id).subscribe({
         next: () => {
-          this.messageService.add({ 
-            severity: 'success', 
-            summary: 'Success', 
-            detail: 'Product deleted successfully' 
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Product deleted successfully',
           });
           this.loadProducts();
         },
         error: (err) => {
-          this.messageService.add({ 
-            severity: 'error', 
-            summary: 'Error', 
-            detail: 'Failed to delete product' 
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to delete product',
           });
-        }
+        },
       });
     }
   }
@@ -360,7 +383,7 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
       description: '',
       price: 0,
       dateOfManufacture: '',
-      imageUrl: undefined
+      imageUrl: undefined,
     };
     this.selectedFile = null;
     this.imagePreview = null;
@@ -402,7 +425,8 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
     this.messageService.add({
       severity: 'info',
       summary: 'Filters Cleared',
-      detail: 'All filters have been reset'
+      detail: 'All filters have been reset',
+      life: 3000,
     });
   }
 
@@ -416,7 +440,7 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'error',
         summary: 'Invalid File',
-        detail: 'Only image files are allowed'
+        detail: 'Only image files are allowed',
       });
       event.target.value = ''; // Clear the input
       return;
@@ -427,7 +451,7 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'error',
         summary: 'File Too Large',
-        detail: 'Image size must be under 5MB'
+        detail: 'Image size must be under 5MB',
       });
       event.target.value = ''; // Clear the input
       return;
@@ -446,7 +470,7 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
     this.messageService.add({
       severity: 'success',
       summary: 'Image Selected',
-      detail: `${file.name} (${this.formatFileSize(file.size)})`
+      detail: `${file.name} (${this.formatFileSize(file.size)})`,
     });
   }
 
@@ -465,6 +489,6 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   }
 }

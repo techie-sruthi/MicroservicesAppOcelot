@@ -2,15 +2,26 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { map } from 'rxjs/operators';
 
 export interface Product {
-  id?: string;  // MongoDB uses string IDs (ObjectId)
+  id?: string;
   name: string;
   description?: string;
   price: number;
   dateOfManufacture: string;
   createdByUserId?: number;
-  imageUrl?: string; 
+  imageUrl?: string;
+}
+
+export interface MergedProduct {
+  id?: string;
+  name: string;
+  description?: string;
+  price: number;
+  dateOfManufacture: string;
+  createdByUserId?: number;
+  imageUrl?: string;
 }
 
 export interface PagedResult<T> {
@@ -24,20 +35,13 @@ export interface PagedResult<T> {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ProductService {
+  private apiUrl = `${environment.apiUrl}/products`; // Gateway routes /products to ProductService
 
-  private apiUrl = `${environment.apiUrl}/products`;  // Gateway routes /products to ProductService
+  constructor(private http: HttpClient) {}
 
-  constructor(private http: HttpClient) { }
-
-  /**
-   * Get products based on user role (with pagination):
-   * - Admin: Returns all products
-   * - User: Returns only user's products
-   * Backend handles filtering automatically based on JWT
-   */
   getProducts(pageNumber: number = 1, pageSize: number = 10): Observable<PagedResult<Product>> {
     const params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
@@ -45,18 +49,15 @@ export class ProductService {
     return this.http.get<PagedResult<Product>>(this.apiUrl, { params });
   }
 
-  /**
-   * Get all products (Admin only) with pagination and filters
-   */
   getAllProducts(
-    pageNumber: number = 1, 
+    pageNumber: number = 1,
     pageSize: number = 10,
     searchTerm?: string,
     minPrice?: number,
     maxPrice?: number,
     startDate?: string,
     sortField?: string,
-    sortOrder?: string
+    sortOrder?: string,
   ): Observable<PagedResult<Product>> {
     let params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
@@ -84,18 +85,15 @@ export class ProductService {
     return this.http.get<PagedResult<Product>>(`${this.apiUrl}/all`, { params });
   }
 
-  /**
-   * Get only the logged-in user's products with pagination and filters
-   */
   getMyProducts(
-    pageNumber: number = 1, 
+    pageNumber: number = 1,
     pageSize: number = 10,
     searchTerm?: string,
     minPrice?: number,
     maxPrice?: number,
     startDate?: string,
     sortField?: string,
-    sortOrder?: string
+    sortOrder?: string,
   ): Observable<PagedResult<Product>> {
     let params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
@@ -122,7 +120,6 @@ export class ProductService {
 
     return this.http.get<PagedResult<Product>>(`${this.apiUrl}/my-products`, { params });
   }
-
 
   getById(id: string): Observable<Product> {
     return this.http.get<Product>(`${this.apiUrl}/${id}`);
@@ -156,5 +153,43 @@ export class ProductService {
       params = params.set('excludeId', excludeId);
     }
     return this.http.get<{ exists: boolean }>(`${this.apiUrl}/check-name`, { params });
+  }
+
+  getAllProductsWithUserIds(
+    pageNumber: number,
+    pageSize: number,
+    searchTerm?: string,
+    minPrice?: number,
+    maxPrice?: number,
+    startDate?: string,
+    sortField?: string,
+    sortOrder?: string,
+  ): Observable<PagedResult<MergedProduct>> {
+    let params = new HttpParams()
+      .set('pageNumber', pageNumber.toString())
+      .set('pageSize', pageSize.toString());
+
+    if (searchTerm) {
+      params = params.set('searchTerm', searchTerm);
+    }
+    if (minPrice !== undefined && minPrice !== null) {
+      params = params.set('minPrice', minPrice.toString());
+    }
+    if (maxPrice !== undefined && maxPrice !== null) {
+      params = params.set('maxPrice', maxPrice.toString());
+    }
+    if (startDate) {
+      params = params.set('startDate', startDate);
+    }
+    if (sortField) {
+      params = params.set('sortField', sortField);
+    }
+    if (sortOrder) {
+      params = params.set('sortOrder', sortOrder);
+    }
+
+    return this.http.get<PagedResult<MergedProduct>>(`${environment.apiUrl}/products-with-user`, {
+      params,
+    });
   }
 }

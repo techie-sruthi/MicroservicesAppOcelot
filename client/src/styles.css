@@ -39,6 +39,7 @@ img {
   color: red;  
   margin-left: 2px;  
 }
+
 /* Responsive table utility */
 @media (max-width: 768px) {
   table {

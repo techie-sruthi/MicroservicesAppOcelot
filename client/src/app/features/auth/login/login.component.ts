@@ -38,7 +38,7 @@ import { ChangeDetectorRef } from '@angular/core';
 export class LoginComponent implements OnDestroy {
 
   loginForm;
-  // ===== OTP FEATURE ENABLED =====
+  // OTP FEATURE ENABLED
   showOtpDialog = false;
   otpCode = '';
   userEmail = '';
@@ -95,7 +95,7 @@ export class LoginComponent implements OnDestroy {
           return;
         }
 
-        // ===== DIRECT LOGIN (OTP BYPASSED) =====
+        // DIRECT LOGIN (OTP BYPASSED)
         // Save tokens first (only when OTP not required)
         if (response.accessToken && response.refreshToken) {
           this.authService.setTokens(response.accessToken, response.refreshToken);
@@ -103,7 +103,7 @@ export class LoginComponent implements OnDestroy {
           // Then redirect based on role
           this.handleLoginSuccess(response);
         }
-        // ========================================
+
       },
       error: (err: any) => {
         this.loading = false;
@@ -130,7 +130,7 @@ export class LoginComponent implements OnDestroy {
     });
   }
 
-  // ===== OTP FEATURE ENABLED =====
+  // OTP FEATURE ENABLED
   verifyOtp() {
     if (!this.otpCode || this.otpCode.length !== 6) {
       this.messageService.add({
@@ -164,7 +164,7 @@ export class LoginComponent implements OnDestroy {
       }
     });
   }
-  // =====================================
+
 
   handleLoginSuccess(response: any) {
     const role = this.authService.getUserRole();
@@ -190,13 +190,13 @@ export class LoginComponent implements OnDestroy {
     }
   }
 
-  // ===== OTP FEATURE ENABLED =====
+
   closeOtpDialog() {
     this.stopOtpTimer();
     this.showOtpDialog = false;
     this.otpCode = '';
   }
-  // =====================================
+
 
   goToRegister() {
     this.router.navigate(['/register']);

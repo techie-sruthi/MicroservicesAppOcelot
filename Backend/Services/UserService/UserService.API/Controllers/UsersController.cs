@@ -46,7 +46,7 @@ public class UsersController : ControllerBase
 
     
 
-    // ===== OTP FEATURE ENABLED =====
+    // OTP FEATURE ENABLED 
     [HttpPost("verify-otp")]
     public async Task<IActionResult> VerifyOtp(VerifyOtpCommand command)
     {
@@ -110,6 +110,14 @@ public class UsersController : ControllerBase
     {
         await _mediator.Send(new ResetPasswordCommand(request.Token, request.NewPassword));
         return Ok(new { message = "Password has been reset successfully." });
+    }
+
+    [HttpGet("by-ids")]
+    public async Task<IActionResult> GetUsersByIds([FromQuery] string ids)
+    {
+        var result = await _mediator.Send(new GetUserByIdsQuery { Ids = ids });
+
+        return Ok(result);
     }
 }
 

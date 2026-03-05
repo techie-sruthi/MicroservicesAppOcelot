@@ -107,7 +107,8 @@
       },
       "RouteClaimsRequirement": {
         "role": "Admin"
-      }
+      },
+      "Key": "UserRoute"
     },
 
     // ---------- AUTHENTICATED USERS ----------
@@ -161,6 +162,26 @@
       }
     },
 
+    {
+      "UpstreamPathTemplate": "/users/by-ids",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/users/by-ids",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "userservice",
+          "Port": 5100
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "RouteClaimsRequirement": {
+        "role": "Admin"
+      },
+      "Key": "UserByIdsRoute"
+    },
+
     // 
     //  PRODUCT SERVICE 
     // 
@@ -183,7 +204,8 @@
       },
       "RouteClaimsRequirement": {
         "role": "Admin"
-      }
+      },
+      "Key": "ProductRoute"
     },
 
     // ---------- USER ONLY ----------
@@ -196,7 +218,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "productservice",
-          "Port": 5050  
+          "Port": 5050
         }
       ],
       "AuthenticationOptions": {
@@ -217,7 +239,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "productservice",
-          "Port": 5050 
+          "Port": 5050
         }
       ],
       "AuthenticationOptions": {
@@ -233,7 +255,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "productservice",
-          "Port": 5050  
+          "Port": 5050
         }
       ],
       "AuthenticationOptions": {
@@ -267,7 +289,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "productservice",
-          "Port": 5050 
+          "Port": 5050
         }
       ],
       "AuthenticationOptions": {
@@ -284,7 +306,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "productservice",
-          "Port": 5050  
+          "Port": 5050
         }
       ],
       "AuthenticationOptions": {
@@ -297,7 +319,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "productservice",
-          "Port": 5050 
+          "Port": 5050
         }
       ],
       "UpstreamPathTemplate": "/gateway/products/{everything}",
@@ -307,17 +329,16 @@
         "AllowedScopes": []
       }
     }
-
   ],
-
+  "Aggregates": [
+    {
+      "RouteKeys": [ "ProductRoute","UserRoute" ],
+      "UpstreamPathTemplate": "/products-with-user",
+      "UpstreamHttpMethod": [ "GET" ],
+      "Aggregator": "ProductUserAggregator"
+    }
+  ],
   "GlobalConfiguration": {
     "BaseUrl": "http://localhost:5200"
-    //"RateLimitOptions": {
-    //  "DisableRateLimitHeaders": false,
-    //  "QuotaExceededMessage": "Rate limit exceeded",
-    //  "HttpStatusCode": 429,
-    //  "ClientIdHeader": "ClientId",
-    //  "EnableRateLimiting": true
-    //}
   }
 }

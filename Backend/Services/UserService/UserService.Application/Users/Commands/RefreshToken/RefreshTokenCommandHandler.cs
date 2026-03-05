@@ -22,7 +22,6 @@ public class RefreshTokenCommandHandler
         RefreshTokenCommand request,
         CancellationToken cancellationToken)
     {
-        // Find user by refresh token
         var user = await _context.GetUserByRefreshTokenAsync(
             request.RefreshToken,
             cancellationToken);
@@ -30,21 +29,17 @@ public class RefreshTokenCommandHandler
         if (user == null)
             throw new UnauthorizedAccessException("Invalid refresh token");
 
-        // Check if refresh token is expired
         if (user.RefreshTokenExpiryTime <= DateTime.UtcNow)
             throw new UnauthorizedAccessException("Refresh token expired");
 
-        // Generate new access token
         var accessToken = _jwtService.GenerateToken(
             user.Id,
             user.Email,
             user.Role
         );
 
-        // Generate new refresh token (token rotation)
         var newRefreshToken = _jwtService.GenerateRefreshToken();
 
-        // Update refresh token in database
         user.RefreshToken = newRefreshToken;
         user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
         

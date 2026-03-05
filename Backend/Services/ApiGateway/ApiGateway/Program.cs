@@ -8,7 +8,7 @@ using ApiGateway;
 using ApiGateway.Security;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
-
+using ApiGateway.Aggregator;
 using Microsoft.IdentityModel.Logging;
 using System.IdentityModel.Tokens.Jwt;
 
@@ -44,13 +44,18 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
+//builder.Services.AddHttpClient();
+
+builder.Services
+    .AddOcelot(builder.Configuration)
+    .AddSingletonDefinedAggregator<ProductUserAggregator>();
+
+//builder.Services.AddOcelot();
+
 builder.Services.AddAuthorization();
 
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-//builder.Services.AddTransient<ClaimsToHeadersHandler>();
 builder.Services.AddTransient<IClaimsTransformation, ClaimsTransformer>();
-
-builder.Services.AddOcelot();
 
 builder.Services.AddCors(options =>
 {
@@ -69,35 +74,18 @@ var app = builder.Build();
 app.UseCors("AllowAngular");
 app.UseAuthentication();
 app.UseAuthorization();
-app.Use(async (context, next) =>
-{
-    if (context.User.Identity?.IsAuthenticated == true)
-    {
-        foreach (var claim in context.User.Claims)
-        {
-            Console.WriteLine($"Claim *****: {claim.Type} = {claim.Value}");
-        }
-    }
-    await next();
-});
-//app.UseMiddleware<RateLimitingMiddleware>();
-await app.UseOcelot();
-
-app.Run();
-
-
-
-
 //app.Use(async (context, next) =>
 //{
 //    if (context.User.Identity?.IsAuthenticated == true)
 //    {
 //        foreach (var claim in context.User.Claims)
 //        {
-//            Console.WriteLine($"Claim: {claim.Type} = {claim.Value}");
+//            Console.WriteLine($"Claim *****: {claim.Type} = {claim.Value}");
 //        }
 //    }
 //    await next();
 //});
+//app.UseMiddleware<RateLimitingMiddleware>();
+await app.UseOcelot();
 
-//});
+app.Run();
