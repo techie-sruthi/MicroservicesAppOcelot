@@ -21,6 +21,7 @@ export interface MergedProduct {
   price: number;
   dateOfManufacture: string;
   createdByUserId?: number;
+  createdByUserName?: string;
   imageUrl?: string;
 }
 

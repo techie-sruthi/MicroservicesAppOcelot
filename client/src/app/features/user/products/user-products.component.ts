@@ -11,9 +11,10 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { Table } from 'primeng/table';
 import { ProductService, Product, PagedResult } from '../../../core/services/product.service';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { ImageViewerComponent } from '../../../shared/components/image-viewer/image-viewer.component';
 import { Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
@@ -43,9 +44,10 @@ interface ProductForm {
     ProgressBarModule,
     ToastModule,
     TooltipModule,
+    ConfirmDialogModule,
     ImageViewerComponent
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './user-products.component.html',
   styleUrl: './user-products.component.css'
 })
@@ -57,7 +59,7 @@ export class UserProductsComponent implements OnInit, OnDestroy {
   totalRecords = 0;
   pageNumber = 1;
   pageSize = 5;
-  first = 0; // For PrimeNG pagination
+  first = 0;
 
   displayDialog = false;
   isEditMode = false;
@@ -66,19 +68,28 @@ export class UserProductsComponent implements OnInit, OnDestroy {
   imagePreview: string | null = null;
   uploading = false;
 
-  // Filter properties
   searchValue: string = '';
   showFilters: boolean = false;
   minPrice: number | null = null;
   maxPrice: number | null = null;
   startDate: string = '';
 
-  // Sorting properties
   sortField: string | null = null;
   sortOrder: string | null = null;
 
-  // Product name validation
+  expandedDescriptions: Set<string> = new Set();
+
+  toggleDescription(productId: string) {
+    if (this.expandedDescriptions.has(productId)) {
+      this.expandedDescriptions.delete(productId);
+    } else {
+      this.expandedDescriptions.add(productId);
+    }
+  }
+
   private productNameCheck$ = new Subject<string>();
+  private search$ = new Subject<void>();
+  private filter$ = new Subject<void>();
   nameError: string = '';
   checkingName: boolean = false;
 
@@ -96,15 +107,20 @@ export class UserProductsComponent implements OnInit, OnDestroy {
   constructor(
     private productService: ProductService,
     private messageService: MessageService,
+    private confirmationService: ConfirmationService,
     private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
     this.setupNameValidation();
+    this.setupSearchDebounce();
+    this.setupFilterDebounce();
   }
 
   ngOnDestroy(): void {
     this.productNameCheck$.complete();
+    this.search$.complete();
+    this.filter$.complete();
   }
 
   setupNameValidation(): void {
@@ -116,7 +132,6 @@ export class UserProductsComponent implements OnInit, OnDestroy {
           if (!name || name.trim().length < 2) {
             return of({ exists: false });
           }
-          // Set checking state and trigger change detection
           this.checkingName = true;
           this.cdr.detectChanges();
 
@@ -126,25 +141,35 @@ export class UserProductsComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (response) => {
-          // Defer state changes to next cycle to avoid ExpressionChangedAfterItHasBeenCheckedError
-          setTimeout(() => {
-            this.checkingName = false;
-            if (response.exists) {
-              this.nameError = 'A product with this name already exists';
-            } else {
-              this.nameError = '';
-            }
-            this.cdr.detectChanges();
-          }, 0);
+          this.checkingName = false;
+          if (response.exists) {
+            this.nameError = 'A product with this name already exists';
+          } else {
+            this.nameError = '';
+          }
+          this.cdr.detectChanges();
         },
         error: (error) => {
-          // Defer error state change too
-          setTimeout(() => {
-            this.checkingName = false;
-            this.cdr.detectChanges();
-          }, 0);
+          this.checkingName = false;
+          this.cdr.detectChanges();
         }
       });
+  }
+
+  setupSearchDebounce(): void {
+    this.search$.pipe(debounceTime(1000)).subscribe(() => {
+      this.pageNumber = 1;
+      this.first = 0;
+      this.loadProducts();
+    });
+  }
+
+  setupFilterDebounce(): void {
+    this.filter$.pipe(debounceTime(1000)).subscribe(() => {
+      this.pageNumber = 1;
+      this.first = 0;
+      this.loadProducts();
+    });
   }
 
   onProductNameChange(name: string): void {
@@ -156,7 +181,6 @@ export class UserProductsComponent implements OnInit, OnDestroy {
     this.pageSize = event.rows;
     this.first = event.first;
 
-    // Handle sorting from PrimeNG
     if (event.sortField) {
       this.sortField = event.sortField;
       this.sortOrder = event.sortOrder === 1 ? 'asc' : 'desc';
@@ -168,7 +192,6 @@ export class UserProductsComponent implements OnInit, OnDestroy {
   loadProducts(): void {
     this.loading = true;
 
-    // Prepare filter parameters
     const searchTerm = this.searchValue || undefined;
     const minPrice = this.minPrice || undefined;
     const maxPrice = this.maxPrice || undefined;
@@ -228,7 +251,6 @@ export class UserProductsComponent implements OnInit, OnDestroy {
 
   saveProduct(): void {
 
-    // Check for validation errors
     if (this.nameError) {
       this.messageService.add({
         severity: 'error',
@@ -247,7 +269,6 @@ export class UserProductsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Upload image first if file is selected
     if (this.selectedFile) {
       this.uploading = true;
       this.productService.uploadImage(this.selectedFile).subscribe({
@@ -271,49 +292,67 @@ export class UserProductsComponent implements OnInit, OnDestroy {
   }
 
   private saveProductData(): void {
-    // FIX: Don't use Date constructor to avoid timezone conversion
     const productData = {
       ...this.productForm,
-      dateOfManufacture: this.productForm.dateOfManufacture + 'T00:00:00.000Z', // Add time at midnight UTC
+      dateOfManufacture: this.productForm.dateOfManufacture + 'T00:00:00.000Z',
       imageUrl: this.productForm.imageUrl
     };
 
     if (this.isEditMode && this.productForm.id) {
-      this.productService.update(this.productForm.id, productData)
-        .subscribe(() => this.afterSave('Product updated successfully'));
+      const updatedId = this.productForm.id;
+      this.productService.update(updatedId, productData)
+        .subscribe(() => {
+          this.products = this.products.map(p =>
+            p.id === updatedId ? { ...productData, id: updatedId } as Product : p
+          );
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Product updated successfully'
+          });
+          this.displayDialog = false;
+        });
     } else {
       this.productService.create(productData as Product)
-        .subscribe(() => this.afterSave('Product created successfully'));
+        .subscribe((response) => {
+          const createdProduct: Product = { ...productData, id: response.id } as Product;
+          this.products = [...this.products, createdProduct];
+          this.totalRecords++;
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Product created successfully'
+          });
+          this.displayDialog = false;
+        });
     }
   }
 
-  private afterSave(message: string): void {
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Success',
-      detail: message
-    });
-    this.displayDialog = false;
-    this.loadProducts();
-  }
-
   deleteProduct(id: string): void {
-    if (!confirm('Are you sure you want to delete this product?')) return;
-
-    this.productService.delete(id).subscribe({
-      next: () => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Deleted',
-          detail: 'Product deleted successfully'
-        });
-        this.loadProducts();
-      },
-      error: (error) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to delete product'
+    this.confirmationService.confirm({
+      message: 'Are you sure you want to delete this product?',
+      header: 'Confirm Delete',
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-secondary',
+      accept: () => {
+        this.productService.delete(id).subscribe({
+          next: () => {
+            this.products = this.products.filter(p => p.id !== id);
+            this.totalRecords--;
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Deleted',
+              detail: 'Product deleted successfully'
+            });
+          },
+          error: (error) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Failed to delete product'
+            });
+          }
         });
       }
     });
@@ -342,38 +381,34 @@ export class UserProductsComponent implements OnInit, OnDestroy {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       this.messageService.add({
         severity: 'error',
         summary: 'Invalid File',
-        detail: 'Only image files are allowed'
-      });
-      event.target.value = ''; // Clear the input
-      return;
-    }
+          detail: 'Only image files are allowed'
+          });
+          event.target.value = '';
+          return;
+        }
 
-    // Validate file size (5MB)
-    if (file.size > 5 * 1024 * 1024) {
+        if (file.size > 5 * 1024 * 1024) {
       this.messageService.add({
         severity: 'error',
         summary: 'File Too Large',
         detail: 'Image size must be under 5MB'
       });
-      event.target.value = ''; // Clear the input
+      event.target.value = '';
       return;
     }
 
     this.selectedFile = file;
 
-    // Show preview
     const reader = new FileReader();
     reader.onload = (e: any) => {
       this.imagePreview = e.target.result;
     };
     reader.readAsDataURL(file);
 
-    // Show success message
     this.messageService.add({
       severity: 'success',
       summary: 'Image Selected',
@@ -391,12 +426,8 @@ export class UserProductsComponent implements OnInit, OnDestroy {
     this.imageViewer.open(imageUrl);
   }
 
-  // Filter methods
   onSearch(): void {
-    // Reset to first page when searching
-    this.pageNumber = 1;
-    this.first = 0;
-    this.loadProducts();
+    this.search$.next();
   }
 
   toggleFilters(): void {
@@ -404,10 +435,7 @@ export class UserProductsComponent implements OnInit, OnDestroy {
   }
 
   applyFilters(): void {
-    // Reset to first page when applying filters
-    this.pageNumber = 1;
-    this.first = 0;
-    this.loadProducts();
+    this.filter$.next();
   }
 
   clearFilters(): void {

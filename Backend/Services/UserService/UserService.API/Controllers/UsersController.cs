@@ -6,8 +6,10 @@ using UserService.Application.Users.Commands.RefreshToken;
 using UserService.Application.Users.Commands.VerifyOtp;
 using UserService.Application.Users.Commands.ForgotPassword;
 using UserService.Application.Users.Commands.ResetPassword;
+using UserService.Application.Users.Commands.ChangePassword;
 using UserService.Application.Users.Queries.GetAllUsers;
 using UserService.Application.Users.Commands.DeleteUser;
+using UserService.Application.Users.Commands.Logout;
 using UserService.Application.Users.Queries.GetUserById;
 using UserService.Application.Users.Queries.CheckEmail;
 using MediatR;
@@ -44,9 +46,6 @@ public class UsersController : ControllerBase
         return Ok(response);
     }
 
-    
-
-    // OTP FEATURE ENABLED 
     [HttpPost("verify-otp")]
     public async Task<IActionResult> VerifyOtp(VerifyOtpCommand command)
     {
@@ -60,6 +59,13 @@ public class UsersController : ControllerBase
     {
             var response = await _mediator.Send(command);
             return Ok(response);
+    }
+
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout([FromBody] LogoutCommand command)
+    {
+        await _mediator.Send(command);
+        return NoContent();
     }
 
     [HttpPost]
@@ -119,7 +125,19 @@ public class UsersController : ControllerBase
 
         return Ok(result);
     }
+
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        //var userId = JwtHelper.GetUserIdFromToken(this, _logger);
+
+        var command = new ChangePasswordCommand(request.CurrentPassword, request.NewPassword);
+        await _mediator.Send(command);
+        return Ok(new { message = "Password changed successfully." });
+    }
 }
 
 public record ForgotPasswordRequest(string Email);
 public record ResetPasswordRequest(string Token, string NewPassword);
+public record ChangePasswordRequest(string CurrentPassword, string NewPassword);

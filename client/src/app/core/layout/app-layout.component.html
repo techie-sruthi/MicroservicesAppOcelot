@@ -28,12 +28,20 @@
       <a routerLink="/admin/users" routerLinkActive="active" (click)="closeSidebar()">
         👥 Manage Users
       </a>
+
+      <a routerLink="/admin/change-password" routerLinkActive="active" (click)="closeSidebar()">
+        🔒 Password
+      </a>
     </ng-container>
 
     <!-- User Navigation -->
     <ng-container *ngIf="!isAdmin">
-      <a routerLink="/products" routerLinkActive="active" (click)="closeSidebar()">
+      <a routerLink="/user/products" routerLinkActive="active" (click)="closeSidebar()">
         📦 My Products
+      </a>
+
+      <a routerLink="/user/change-password" routerLinkActive="active" (click)="closeSidebar()">
+        🔒 Password
       </a>
     </ng-container>
 

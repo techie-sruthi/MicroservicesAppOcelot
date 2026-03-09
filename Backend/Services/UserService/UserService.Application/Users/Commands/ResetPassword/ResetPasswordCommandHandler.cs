@@ -30,16 +30,12 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
             throw new UnauthorizedAccessException("Reset token has expired. Please request a new one.");
         }
 
-        // Hash and set the new password
         user.PasswordHash = _passwordHasher.Hash(request.NewPassword);
 
-        // Clear reset token
         user.PasswordResetToken = null;
         user.PasswordResetTokenExpiry = null;
 
         await _context.SaveChangesAsync(cancellationToken);
-
-        Console.WriteLine($"[ResetPassword] Password reset successful for user: {user.Email}");
 
         return true;
     }

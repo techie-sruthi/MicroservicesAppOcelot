@@ -230,23 +230,29 @@
 
 /* Description cell styling */
 .description-cell {
-  max-width: 250px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  max-width: 300px;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
   color: #666;
   font-size: 0.9rem;
+  cursor: pointer;
 }
 
-.description-cell:hover {
-  white-space: normal;
-  overflow: visible;
-  background: #f9fafb;
-  padding: 0.5rem;
-  border-radius: 4px;
-  position: relative;
-  z-index: 10;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+.more-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #2563eb;
+  font-size: 0.8rem;
+  cursor: pointer;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.more-indicator:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
 }
 
 /* Image Upload Styles */

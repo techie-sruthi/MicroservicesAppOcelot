@@ -14,7 +14,6 @@ import { SelectModule } from 'primeng/select';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
-import { Password } from 'primeng/password';
 
 @Component({
   selector: 'app-admin-users',
@@ -29,8 +28,7 @@ import { Password } from 'primeng/password';
     TableModule,
     SelectModule,
     ConfirmDialogModule,
-    ToastModule,
-    Password
+    ToastModule
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './admin-users.component.html',
@@ -40,7 +38,6 @@ export class AdminUsersComponent implements OnInit {
   users: User[] = [];
   searchValue: string = '';
   selectedUser: User = { id: 0, userName: '', email: '', role: 'User' };
-  userPassword: string = ''; // Separate field for password
   isEditMode = false;
   loading = false;
   saving = false;
@@ -51,10 +48,9 @@ export class AdminUsersComponent implements OnInit {
 
   totalRecords: number = 0;
   pageNumber: number = 1;
-  pageSize: number = 5; // Match the first option in rowsPerPageOptions
-  first: number = 0; // For PrimeNG pagination
+  pageSize: number = 5;
+  first: number = 0;
 
-  // Sorting properties
   sortField: string | null = null;
   sortOrder: string | null = null;
 
@@ -78,19 +74,12 @@ export class AdminUsersComponent implements OnInit {
 
   loadUsers() {
     this.loading = true;
-console.log('Loading users with parameters:', {
-  pageNumber: this.pageNumber,
-  pageSize: this.pageSize,
-  searchValue: this.searchValue,
-  sortField: this.sortField,
-  sortOrder: this.sortOrder
-});
 
     this.userService.getAllUsers(
       this.pageNumber,
       this.pageSize,
       this.searchValue || undefined,
-      undefined, // roleFilter (not used here)
+      undefined,
       this.sortField || undefined,
       this.sortOrder || undefined
     ).subscribe({
@@ -114,13 +103,10 @@ console.log('Loading users with parameters:', {
   }
 
   onLazyLoad(event: any): void {
-
-
     this.pageNumber = Math.floor(event.first / event.rows) + 1;
     this.pageSize = event.rows;
     this.first = event.first;
 
-    // Handle sorting from PrimeNG
     if (event.sortField) {
       this.sortField = event.sortField;
       this.sortOrder = event.sortOrder === 1 ? 'asc' : 'desc';
@@ -130,7 +116,6 @@ console.log('Loading users with parameters:', {
   }
 
   saveUser() {
-    // Validate required fields
     if (!this.selectedUser.userName || !this.selectedUser.email || !this.selectedUser.role) {
       this.messageService.add({
         severity: 'warn',
@@ -140,34 +125,12 @@ console.log('Loading users with parameters:', {
       return;
     }
 
-    // Password is required only for creating new users
-    if (!this.isEditMode && !this.userPassword) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Validation Error',
-        detail: 'Password is required for new users'
-      });
-      return;
-    }
-
-    // Validate password strength for new users
-    if (!this.isEditMode && this.userPassword.length < 6) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Validation Error',
-        detail: 'Password must be at least 6 characters long'
-      });
-      return;
-    }
-
-    // Check if admin is changing their own role
     const currentUserId = this.authService.getUserId();
     const isChangingOwnRole = this.isEditMode && 
                               this.selectedUser.id === currentUserId && 
                               this.selectedUser.role !== this.authService.getUserRole();
 
     if (isChangingOwnRole) {
-      // Warn admin about role change
       this.confirmationService.confirm({
         message: 'You are changing your own role! After saving, you will need to logout and login again for the changes to take effect. Do you want to continue?',
         header: 'Role Change Warning',
@@ -178,10 +141,9 @@ console.log('Loading users with parameters:', {
         rejectButtonStyleClass: 'p-button-secondary',
         closeOnEscape: true,
         accept: () => {
-          this.performSaveUser(true); // true = auto logout after save
+          this.performSaveUser(true); 
         },
         reject: () => {
-          // Dialog will close automatically
           this.messageService.add({
             severity: 'info',
             summary: 'Cancelled',
@@ -199,14 +161,12 @@ console.log('Loading users with parameters:', {
     this.saving = true;
 
     if (this.isEditMode && this.selectedUser.id) {
-      // Update existing user (without password)
       this.userService.updateUser(this.selectedUser.id, this.selectedUser)
         .subscribe({
           next: () => {
             this.saving = false;
 
             if (autoLogoutAfter) {
-              // Admin changed their own role
               this.messageService.add({
                 severity: 'success',
                 summary: 'Role Changed',
@@ -214,7 +174,6 @@ console.log('Loading users with parameters:', {
                 life: 3000
               });
 
-              // Auto logout after 3 seconds
               setTimeout(() => {
                 this.authService.logout();
                 this.router.navigate(['/login'], {
@@ -222,15 +181,16 @@ console.log('Loading users with parameters:', {
                 });
               }, 3000);
             } else {
+              const updatedUser = { ...this.selectedUser };
+              this.users = this.users.map(u =>
+                u.id === updatedUser.id ? updatedUser : u
+              );
               this.messageService.add({
                 severity: 'success',
                 summary: 'Success',
                 detail: 'User updated successfully'
               });
               this.resetForm();
-              setTimeout(() => {
-                this.loadUsers();
-              }, 100);
             }
           },
           error: (err) => {
@@ -243,25 +203,28 @@ console.log('Loading users with parameters:', {
           }
         });
     } else {
-      // Create new user (with password)
+    
       const createUserData = {
-        ...this.selectedUser,
-        password: this.userPassword
+        ...this.selectedUser
       };
 
       this.userService.createUser(createUserData)
         .subscribe({
-          next: () => {
+          next: (response: any) => {
             this.saving = false;
+            const createdUser: User = {
+              ...this.selectedUser,
+              id: typeof response === 'number' ? response : response?.id ?? 0
+            };
+            this.totalRecords++;
+            this.users = [createdUser, ...this.users];
+            this.cdr.detectChanges();
             this.messageService.add({
               severity: 'success',
               summary: 'Success',
-              detail: 'User created successfully'
+              detail: 'User created successfully. Password has been sent to their email.'
             });
             this.resetForm();
-            setTimeout(() => {
-              this.loadUsers();
-            }, 100);
           },
           error: (err) => {
             this.saving = false;
@@ -277,7 +240,6 @@ console.log('Loading users with parameters:', {
 
   editUser(user: User) {
     this.selectedUser = { ...user };
-    this.userPassword = ''; // Clear password when editing
     this.isEditMode = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -292,12 +254,14 @@ console.log('Loading users with parameters:', {
       accept: () => {
         this.userService.deleteUser(id).subscribe({
           next: () => {
+            this.users = this.users.filter(u => u.id !== id);
+            this.totalRecords--;
+            this.cdr.detectChanges();
             this.messageService.add({
               severity: 'success',
               summary: 'Success',
               detail: 'User deleted successfully'
             });
-            this.loadUsers();
           },
           error: (err) => {
             this.messageService.add({
@@ -313,12 +277,10 @@ console.log('Loading users with parameters:', {
 
   resetForm() {
     this.selectedUser = { id: 0, userName: '', email: '', role: 'User' };
-    this.userPassword = '';
     this.isEditMode = false;
   }
 
   onSearch() {
-    // Server-side search: reset to first page and reload with searchValue
     this.pageNumber = 1;
     this.first = 0;
     this.loadUsers();

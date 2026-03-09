@@ -86,6 +86,31 @@ public class EmailService : IEmailService
         await SendEmailAsync(toEmail, subject, body);
     }
 
+    public async Task SendNewUserCredentialsEmailAsync(string toEmail, string userName, string password)
+    {
+        var subject = "Your Account Has Been Created - ProductUser App";
+        var body = $@"
+            <html>
+            <body style='font-family: Arial, sans-serif;'>
+                <div style='max-width: 600px; margin: 0 auto; padding: 20px;'>
+                    <h2 style='color: #4F46E5;'>Welcome, {userName}!</h2>
+                    <p>An account has been created for you on <strong>ProductUser App</strong>.</p>
+                    <p>Here are your login credentials:</p>
+                    <div style='background-color: #F3F4F6; padding: 20px; border-radius: 8px; margin: 20px 0;'>
+                        <p style='margin: 8px 0;'><strong>Email:</strong> {toEmail}</p>
+                        <p style='margin: 8px 0;'><strong>Password:</strong> <code style='background-color: #E5E7EB; padding: 4px 8px; border-radius: 4px; font-size: 14px;'>{password}</code></p>
+                    </div>
+                    <p style='color: #DC2626; font-weight: 600;'>⚠️ Please change your password after your first login for security.</p>
+                    <hr style='border: 1px solid #E5E7EB; margin: 20px 0;'>
+                    <p style='color: #6B7280; font-size: 12px;'>This is an automated message, please do not reply.</p>
+                </div>
+            </body>
+            </html>
+        ";
+
+        await SendEmailAsync(toEmail, subject, body);
+    }
+
     private async Task SendEmailAsync(string toEmail, string subject, string body)
     {
         using var client = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort)

@@ -29,6 +29,33 @@
       ]
     },
     {
+      "UpstreamPathTemplate": "/users/change-password",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/api/users/change-password",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "userservice",
+          "Port": 5100
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/users/logout",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/api/users/logout",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "userservice",
+          "Port": 5100
+        }
+      ]
+    },
+    {
       "UpstreamPathTemplate": "/users/verify-otp",
       "UpstreamHttpMethod": [ "POST" ],
       "DownstreamPathTemplate": "/api/users/verify-otp",

@@ -18,7 +18,8 @@ import { Table } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
-import { MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { ImageViewerComponent } from '../../../shared/components/image-viewer/image-viewer.component';
 import { Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
@@ -48,9 +49,10 @@ interface ProductForm {
     ProgressBarModule,
     ToastModule,
     TooltipModule,
+    ConfirmDialogModule,
     ImageViewerComponent,
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './admin-products.component.html',
   styleUrl: './admin-products.component.css',
 })
@@ -63,29 +65,37 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
   displayDialog: boolean = false;
   isEditMode: boolean = false;
 
-  // Pagination properties
   totalRecords: number = 0;
   pageNumber: number = 1;
-  pageSize: number = 5; // Match the first option in rowsPerPageOptions
-  first: number = 0; // For PrimeNG pagination
+  pageSize: number = 5;
+  first: number = 0;
 
-  // Image upload
   selectedFile: File | null = null;
   imagePreview: string | null = null;
   uploading: boolean = false;
+  imageLoading: boolean = false;
 
-  // Filter properties
   showFilters: boolean = false;
   minPrice: number | null = null;
   maxPrice: number | null = null;
   startDate: string = '';
 
-  // Sorting properties
   sortField: string | null = null;
   sortOrder: string | null = null;
 
-  // Product name validation
+  expandedDescriptions: Set<number> = new Set();
+
+  toggleDescription(productId: number) {
+    if (this.expandedDescriptions.has(productId)) {
+      this.expandedDescriptions.delete(productId);
+    } else {
+      this.expandedDescriptions.add(productId);
+    }
+  }
+
   private productNameCheck$ = new Subject<string>();
+  private search$ = new Subject<void>();
+  private filter$ = new Subject<void>();
   nameError: string = '';
   checkingName: boolean = false;
 
@@ -103,16 +113,20 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
   constructor(
     private productService: ProductService,
     private messageService: MessageService,
+    private confirmationService: ConfirmationService,
     private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
     this.setupNameValidation();
-
+    this.setupSearchDebounce();
+    this.setupFilterDebounce();
   }
 
   ngOnDestroy(): void {
     this.productNameCheck$.complete();
+    this.search$.complete();
+    this.filter$.complete();
   }
 
   setupNameValidation(): void {
@@ -137,11 +151,31 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
           } else {
             this.nameError = '';
           }
+          this.cdr.detectChanges();
         },
         error: (error) => {
           this.checkingName = false;
+          this.cdr.detectChanges();
         },
       });
+  }
+
+  setupSearchDebounce(): void {
+    this.search$.pipe(debounceTime(1000)).subscribe(() => {
+      this.pageNumber = 1;
+      this.first = 0;
+      this.cdr.detectChanges();
+      this.loadProducts();
+    });
+  }
+
+  setupFilterDebounce(): void {
+    this.filter$.pipe(debounceTime(1000)).subscribe(() => {
+      this.pageNumber = 1;
+      this.first = 0;
+      this.cdr.detectChanges();
+      this.loadProducts();
+    });
   }
 
   onProductNameChange(name: string): void {
@@ -157,24 +191,6 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
     const startDate = this.startDate || undefined;
     const sortField = this.sortField || undefined;
     const sortOrder = this.sortOrder || undefined;
-
-    // this.productService.getAllProductsWithUserIds(this.pageNumber, this.pageSize, searchTerm,
-    //   minPrice, maxPrice, startDate,   sortField,  sortOrder ).subscribe({
-    //   next: (data: PagedResult<MergedProduct>) => {
-    //     this.mergedProducts = data.items;
-    //     console.log('Merged mergedProducts with user IDs:', this.mergedProducts);
-    //     this.totalRecords = data.totalCount;
-    //     this.loading = false;
-    //     this.cdr.detectChanges();
-    //     if (data.items.length === 0 && data.totalCount === 0) {
-    //       this.messageService.add({
-    //         severity: 'info',
-    //         summary: 'No mergedProducts',
-    //         detail: 'No mergedProducts found matching your criteria.',
-    //       });
-    //     }
-    //   },
-    // });
 
     this.productService
       .getAllProducts(
@@ -219,7 +235,6 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
     this.pageSize = event.rows;
     this.first = event.first;
 
-    // Handle sorting from PrimeNG
     if (event.sortField) {
       this.sortField = event.sortField;
       this.sortOrder = event.sortOrder === 1 ? 'asc' : 'desc';
@@ -256,12 +271,10 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
     };
     this.imagePreview = product.imageUrl || null;
     this.displayDialog = true;
-    // Trigger change detection to ensure form values are displayed immediately
     this.cdr.detectChanges();
   }
 
   async saveProduct() {
-    // Check for validation errors
     if (this.nameError) {
       this.messageService.add({
         severity: 'error',
@@ -271,7 +284,6 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Validate required fields
     if (!this.productForm.name || !this.productForm.price || !this.productForm.dateOfManufacture) {
       this.messageService.add({
         severity: 'warn',
@@ -281,7 +293,6 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Upload image if selected
     let imageUrl = this.productForm.imageUrl;
     if (this.selectedFile) {
       this.uploading = true;
@@ -307,21 +318,23 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
 
     const productData = {
       ...this.productForm,
-      dateOfManufacture: this.productForm.dateOfManufacture + 'T00:00:00.000Z', // Add time at midnight UTC
+      dateOfManufacture: this.productForm.dateOfManufacture + 'T00:00:00.000Z',
       imageUrl: imageUrl,
     };
 
     if (this.isEditMode && this.productForm.id) {
-      // Update existing product
-      this.productService.update(this.productForm.id, productData).subscribe({
+      const updatedId = this.productForm.id;
+      this.productService.update(updatedId, productData).subscribe({
         next: () => {
+          this.products = this.products.map(p =>
+            p.id === updatedId ? { ...productData, id: updatedId } as Product : p
+          );
           this.messageService.add({
             severity: 'success',
             summary: 'Success',
             detail: 'Product updated successfully',
           });
           this.hideDialog();
-          this.loadProducts();
         },
         error: (err) => {
           this.messageService.add({
@@ -332,16 +345,17 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
         },
       });
     } else {
-      // Create new product
       this.productService.create(productData as Product).subscribe({
-        next: () => {
+        next: (response) => {
+          const createdProduct: Product = { ...productData, id: response.id } as Product;
+          this.products = [...this.products, createdProduct];
+          this.totalRecords++;
           this.messageService.add({
             severity: 'success',
             summary: 'Success',
             detail: 'Product created successfully',
           });
           this.hideDialog();
-          this.loadProducts();
         },
         error: (err) => {
           this.messageService.add({
@@ -355,25 +369,33 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
   }
 
   deleteProduct(id: string) {
-    if (confirm('Are you sure you want to delete this product?')) {
-      this.productService.delete(id).subscribe({
-        next: () => {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Success',
-            detail: 'Product deleted successfully',
-          });
-          this.loadProducts();
-        },
-        error: (err) => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to delete product',
-          });
-        },
-      });
-    }
+    this.confirmationService.confirm({
+      message: 'Are you sure you want to delete this product?',
+      header: 'Confirm Delete',
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-secondary',
+      accept: () => {
+        this.productService.delete(id).subscribe({
+          next: () => {
+            this.products = this.products.filter(p => p.id !== id);
+            this.totalRecords--;
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Success',
+              detail: 'Product deleted successfully',
+            });
+          },
+          error: (err) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Failed to delete product',
+            });
+          },
+        });
+      }
+    });
   }
 
   hideDialog() {
@@ -392,20 +414,11 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
   }
 
   onSearch() {
-    // Reset to first page when searching
-    this.pageNumber = 1;
-    this.first = 0;
-    // loadProducts will be called by onLazyLoad
-    this.cdr.detectChanges();
-    this.loadProducts();
+    this.search$.next();
   }
 
   applyFilters() {
-    // Reset to first page when applying filters
-    this.pageNumber = 1;
-    this.first = 0;
-    this.cdr.detectChanges();
-    this.loadProducts();
+    this.filter$.next();
   }
 
   toggleFilters() {
@@ -430,53 +443,60 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Image handling methods
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       this.messageService.add({
         severity: 'error',
         summary: 'Invalid File',
-        detail: 'Only image files are allowed',
-      });
-      event.target.value = ''; // Clear the input
-      return;
-    }
+          detail: 'Only image files are allowed',
+          });
+          event.target.value = '';
+          return;
+        }
 
-    // Validate file size (5MB)
-    if (file.size > 5 * 1024 * 1024) {
+        if (file.size > 5 * 1024 * 1024) {
       this.messageService.add({
         severity: 'error',
         summary: 'File Too Large',
         detail: 'Image size must be under 5MB',
       });
-      event.target.value = ''; // Clear the input
+      event.target.value = '';
       return;
     }
 
     this.selectedFile = file;
+    this.imageLoading = true;
 
-    // Generate preview
     const reader = new FileReader();
     reader.onload = (e: any) => {
       this.imagePreview = e.target.result;
+      this.imageLoading = false;
+      this.cdr.detectChanges();
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Image Selected',
+        detail: `${file.name} (${this.formatFileSize(file.size)})`,
+      });
+    };
+    reader.onerror = () => {
+      this.imageLoading = false;
+      this.cdr.detectChanges();
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to read the selected image',
+      });
     };
     reader.readAsDataURL(file);
-
-    // Show success message
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Image Selected',
-      detail: `${file.name} (${this.formatFileSize(file.size)})`,
-    });
   }
 
   removeImage() {
     this.selectedFile = null;
     this.imagePreview = null;
+    this.imageLoading = false;
     this.productForm.imageUrl = undefined;
   }
 

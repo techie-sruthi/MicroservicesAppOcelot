@@ -1,26 +1,11 @@
 <app-layout>
   <p-toast></p-toast>
 
-  <!-- Confirmation dialog -->
   <p-confirmDialog [style]="{width: '450px'}" [baseZIndex]="10000"></p-confirmDialog>
 
   <div class="dashboard-container">
 
-    <!-- User Form Card -->
     <p-card [header]="isEditMode ? 'Edit User' : 'Create User'" styleClass="mb-4">
-
-      <!-- Warning message when editing own account -->
-      <!--<div *ngIf="isEditingOwnAccount()" class="mb-3 p-3" style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 6px;">
-        <div class="flex align-items-center gap-2">
-          <i class="pi pi-exclamation-triangle" style="color: #ff9800; font-size: 1.2rem;"></i>
-          <div>
-            <strong style="color: #856404;">Editing Your Own Account</strong>
-            <p style="margin: 4px 0 0 0; color: #856404; font-size: 0.9rem;">
-              If you change your own role, you will be logged out automatically and need to login again.
-            </p>
-          </div>
-        </div>
-      </div>-->
 
       <div class="form-grid">
         <div class="field">
@@ -48,28 +33,6 @@
              />
         </div>
 
-        <div class="field" *ngIf="!isEditMode">
-          <label for="password">
-            Password 
-            <span class="required">*</span>
-            <!--<span style="color: #94a3b8; font-weight: 400;"-->
-                  <!--*ngIf="isEditMode">(Leave blank to keep current)</span>-->
-
-          </label>
-          <p-password 
-            id="password"
-            [(ngModel)]="userPassword"
-            [feedback]="true"
-            [toggleMask]="true"
-            placeholder="Enter password"
-            styleClass="w-full"
-            [disabled]="saving">
-          </p-password>
-          <small style="color: #94a3b8; font-size: 0.85rem;">
-            Minimum 6 characters required
-          </small>
-        </div>
-
         <div class="field">
           <label for="role">Role <span class="required">*</span></label>
           <p-select 
@@ -85,7 +48,6 @@
         </div>
         </div>
         <div class="field">
-          <!-- Empty div to maintain grid structure -->
           <div class="field flex gap-2 align-items-end">
             <p-button [label]="saving ? 'Saving...' : (isEditMode ? 'Update' : 'Create')"
                       [icon]="saving ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
@@ -105,9 +67,7 @@
         </div>
     </p-card>
 
-    <!-- Users Table Card -->
     <p-card header="All Users">
-      <!-- Search Bar -->
       <div class="flex justify-content-between mb-3">
         <div class="search-container">
           <span class="p-input-icon-left">

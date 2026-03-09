@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError, switchMap } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+import { MessageService } from 'primeng/api';
 
 let isRefreshing = false;
 
@@ -24,8 +25,16 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
         return handle401Error(req, next, authService, router);
       }
 
-      // If 403, just logout
-      if (error.status === 403) {
+      // If 403 and not a change-password request, show forbidden toast and logout
+      if (error.status === 403 && !req.url.includes('/change-password')) {
+        const messageService = inject(MessageService);
+        messageService.add({
+          key: 'global',
+          severity: 'error',
+          summary: 'Access Denied',
+          detail: 'You do not have permission to perform this action.',
+          life: 3000
+        });
         authService.logout();
         router.navigate(['/login']);
       }
@@ -49,7 +58,7 @@ function handle401Error(
   authService: AuthService,
   router: Router
 ) {
-  // Don't try to refresh if it's the refresh endpoint itself
+
   if (request.url.includes('/refresh')) {
     authService.logout();
     router.navigate(['/login']);
@@ -63,7 +72,6 @@ function handle401Error(
       isRefreshing = false;
       console.log('Token refreshed successfully');
 
-      // Retry original request with new token
       const clonedRequest = addTokenToRequest(request, response.accessToken);
       return next(clonedRequest);
     }),
@@ -71,7 +79,6 @@ function handle401Error(
       isRefreshing = false;
       console.error('Token refresh failed:', err);
 
-      // Refresh failed, logout user
       authService.logout();
       router.navigate(['/login']);
 

@@ -54,16 +54,16 @@ namespace ApiGateway.Aggregator
                 from matchedUser in userGroup.DefaultIfEmpty()
                 select new
                 {
-                    Id = product.GetProperty("id").GetString(),
-                    Name = product.GetProperty("name").GetString(),
-                    Description = product.GetProperty("description").GetString(),
-                    Price = product.GetProperty("price").GetDecimal(),
-                    DateOfManufacture = product.GetProperty("dateOfManufacture").GetString(),
-                    CreatedByUserId = product.GetProperty("createdByUserId").GetInt32(),
-                    CreatedByUserName = matchedUser.ValueKind != JsonValueKind.Undefined
+                    id = product.GetProperty("id").GetString(),
+                    name = product.GetProperty("name").GetString(),
+                    description = product.GetProperty("description").GetString(),
+                    price = product.GetProperty("price").GetDecimal(),
+                    dateOfManufacture = product.GetProperty("dateOfManufacture").GetString(),
+                    createdByUserId = product.GetProperty("createdByUserId").GetInt32(),
+                    createdByUserName = matchedUser.ValueKind != JsonValueKind.Undefined
                         ? matchedUser.GetProperty("userName").GetString()
                         : null,
-                    ImageUrl = product.GetProperty("imageUrl").GetString()
+                    imageUrl = product.GetProperty("imageUrl").GetString()
                 }).ToList();
 
 

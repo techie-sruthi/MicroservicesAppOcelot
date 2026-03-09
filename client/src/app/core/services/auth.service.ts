@@ -121,6 +121,17 @@ export class AuthService {
   }
 
   logout(): void {
+    const refreshToken = this.getRefreshToken();
+
+    if (refreshToken) {
+      // Notify backend to invalidate refresh token, but don't block logout on failure
+      this.http.post(`${this.apiUrl}/logout`, { refreshToken })
+        .subscribe({
+          next: () => { /* no-op */ },
+          error: () => { /* ignore errors during logout */ }
+        });
+    }
+
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
@@ -128,10 +139,7 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
-  /**
-   * Check if email already exists
-   * Returns true if email is already taken
-   */
+ 
   checkEmail(email: string): Observable<{ exists: boolean }> {
     return this.http.get<{ exists: boolean }>(`${this.apiUrl}/check-email`, {
       params: { email }
