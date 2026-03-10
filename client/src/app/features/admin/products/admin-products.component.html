@@ -1,5 +1,5 @@
 <app-layout>
-<p-toast class="custom-toast"></p-toast>
+  <p-toast class="custom-toast"></p-toast>
   <p-confirmDialog [style]="{ width: '450px' }" [baseZIndex]="10000"></p-confirmDialog>
 
   <div class="dashboard-container">
@@ -54,14 +54,15 @@
             title="Create Product"
           ></button>
 
-          <!-- <button
+          <button
             pButton
             type="button"
             label="Refresh"
             icon="pi pi-refresh"
-            (click)="loadProducts()"
+            (click)="loadRefreshProducts()"
             title="Refresh Products"
-          ></button> -->
+          ></button>
+
         </div>
       </div>
 
@@ -114,6 +115,7 @@
 
       <!-- Table -->
       <p-table
+        #dt
         [value]="products"
         [lazy]="true"
         [paginator]="true"
@@ -156,7 +158,9 @@
               </div>
               <div *ngIf="!product.imageUrl" class="no-image-cell">
                 <i class="pi pi-image" style="font-size: 1.5rem; color: #ccc"></i>
-                <span style="font-size: 0.7rem; color: #ccc; display: block; margin-top: 2px">No Image</span>
+                <span style="font-size: 0.7rem; color: #ccc; display: block; margin-top: 2px"
+                  >No Image</span
+                >
               </div>
             </td>
             <td>{{ product.name }}</td>
@@ -271,7 +275,6 @@
           [class.p-invalid]="nameError && !checkingName"
         />
 
-      
         <small
           *ngIf="productForm.name && productForm.name.length >= 20"
           class="p-error"
@@ -281,7 +284,6 @@
           Product name cannot exceed 20 characters
         </small>
 
-        
         <small
           *ngIf="checkingName"
           style="color: #6366f1; display: flex; align-items: center; gap: 4px; margin-top: 4px"
@@ -290,7 +292,6 @@
           Checking availability...
         </small>
 
-     
         <small
           *ngIf="nameError && !checkingName"
           class="p-error"
@@ -300,7 +301,6 @@
           {{ nameError }}
         </small>
 
-      
         <small
           *ngIf="
             !nameError && !checkingName && productForm.name && productForm.name.trim().length > 2
@@ -376,7 +376,8 @@
             <p-progressBar mode="indeterminate" [style]="{ height: '6px' }"></p-progressBar>
           </div>
 
-\          <div *ngIf="imagePreview && !uploading && !imageLoading" class="image-preview">
+          \
+          <div *ngIf="imagePreview && !uploading && !imageLoading" class="image-preview">
             <img [src]="imagePreview" alt="Preview" />
             <div class="image-info" *ngIf="selectedFile?.name">
               <div class="file-details">

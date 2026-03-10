@@ -196,6 +196,26 @@ export class UserProductsComponent implements OnInit, OnDestroy {
     this.loadProducts();
   }
 
+  loadRefreshProducts(): void {
+    this.searchValue = '';
+    this.minPrice = null;
+    this.maxPrice = null;
+    this.startDate = '';
+    this.pageNumber = 1;
+    this.first = 0;
+    this.sortField = null;
+    this.sortOrder = null;
+    this.showFilters = false;
+    this.cdr.detectChanges();
+    if (this.table) {
+      this.table.sortField = '';
+      this.table.sortOrder = 1;
+      this.table.multiSortMeta = null;
+      this.table.tableService.onSort(null);
+    }
+    this.loadProducts();
+  }
+
   loadProducts(): void {
     this.loading = true;
 
