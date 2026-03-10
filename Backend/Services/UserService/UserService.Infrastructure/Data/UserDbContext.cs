@@ -70,7 +70,7 @@ public class UserDbContext : DbContext, IUserDbContext
         string? sortOrder,
         CancellationToken cancellationToken)
     {
-        // Start with base query
+    
         var query = Users.AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(searchTerm))

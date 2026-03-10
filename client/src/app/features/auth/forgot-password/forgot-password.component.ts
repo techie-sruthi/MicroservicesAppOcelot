@@ -19,11 +19,11 @@ import { MessageService } from 'primeng/api';
     CardModule,
     InputTextModule,
     ButtonModule,
-    ToastModule
+    ToastModule,
   ],
   providers: [MessageService],
   templateUrl: './forgot-password.component.html',
-  styleUrl: './forgot-password.component.css'
+  styleUrl: './forgot-password.component.css',
 })
 export class ForgotPasswordComponent {
   email: string = '';
@@ -33,12 +33,16 @@ export class ForgotPasswordComponent {
   constructor(
     private authService: AuthService,
     private messageService: MessageService,
-    private router: Router
+    private router: Router,
   ) {}
 
   onSubmit(): void {
     if (!this.email) {
-      this.messageService.add({ severity: 'warn', summary: 'Required', detail: 'Please enter your email address' });
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Required',
+        detail: 'Please enter your email address', styleClass: 'my-custom-toast'
+      });
       return;
     }
 
@@ -50,7 +54,7 @@ export class ForgotPasswordComponent {
         this.messageService.add({
           severity: 'success',
           summary: 'Email Sent',
-          detail: 'If your email exists, you will receive a password reset link.'
+          detail: 'If your email exists, you will receive a password reset link.', styleClass: 'my-custom-toast'
         });
       },
       error: () => {
@@ -58,9 +62,9 @@ export class ForgotPasswordComponent {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'Something went wrong. Please try again.'
+          detail: 'Something went wrong. Please try again.', styleClass: 'my-custom-toast'
         });
-      }
+      },
     });
   }
 }

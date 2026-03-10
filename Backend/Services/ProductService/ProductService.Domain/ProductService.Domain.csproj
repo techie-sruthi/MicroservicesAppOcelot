@@ -7,8 +7,8 @@
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 
-  <!-- Domain projects typically have no runtime framework-specific packages -->
+
   <ItemGroup>
-    <!-- Add domain-specific package references here if needed -->
+
   </ItemGroup>
 </Project>

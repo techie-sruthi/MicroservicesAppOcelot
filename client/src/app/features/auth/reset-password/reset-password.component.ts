@@ -21,11 +21,11 @@ import { MessageService } from 'primeng/api';
     InputTextModule,
     ButtonModule,
     ToastModule,
-    Password
+    Password,
   ],
   providers: [MessageService],
   templateUrl: './reset-password.component.html',
-  styleUrl: './reset-password.component.css'
+  styleUrl: './reset-password.component.css',
 })
 export class ResetPasswordComponent implements OnInit {
   token: string = '';
@@ -39,7 +39,7 @@ export class ResetPasswordComponent implements OnInit {
     private authService: AuthService,
     private messageService: MessageService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
@@ -51,17 +51,32 @@ export class ResetPasswordComponent implements OnInit {
 
   onSubmit(): void {
     if (!this.newPassword || !this.confirmPassword) {
-      this.messageService.add({ severity: 'warn', summary: 'Required', detail: 'Please fill in both password fields' });
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Required',
+        detail: 'Please fill in both password fields',
+        styleClass: 'my-custom-toast',
+      });
       return;
     }
 
     if (this.newPassword.length < 6) {
-      this.messageService.add({ severity: 'warn', summary: 'Too Short', detail: 'Password must be at least 6 characters' });
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Too Short',
+        detail: 'Password must be at least 6 characters',
+        styleClass: 'my-custom-toast',
+      });
       return;
     }
 
     if (this.newPassword !== this.confirmPassword) {
-      this.messageService.add({ severity: 'warn', summary: 'Mismatch', detail: 'Passwords do not match' });
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Mismatch',
+        detail: 'Passwords do not match',
+        styleClass: 'my-custom-toast',
+      });
       return;
     }
 
@@ -73,18 +88,21 @@ export class ResetPasswordComponent implements OnInit {
         this.messageService.add({
           severity: 'success',
           summary: 'Password Reset',
-          detail: 'Your password has been reset successfully!'
+          detail: 'Your password has been reset successfully!',
+          styleClass: 'my-custom-toast',
         });
       },
       error: (err) => {
         this.loading = false;
-        const message = err.error?.message || 'Invalid or expired reset token. Please request a new one.';
+        const message =
+          err.error?.message || 'Invalid or expired reset token. Please request a new one.';
         this.messageService.add({
           severity: 'error',
           summary: 'Reset Failed',
-          detail: message
+          detail: message,
+          styleClass: 'my-custom-toast',
         });
-      }
+      },
     });
   }
 

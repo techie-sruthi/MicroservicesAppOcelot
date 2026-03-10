@@ -7,19 +7,18 @@
     <span></span>
   </button>
 
-  <!-- Sidebar Overlay (Mobile) -->
+
   <div class="sidebar-overlay" [class.active]="sidebarOpen" (click)="closeSidebar()"></div>
 
-  <!-- Sidebar -->
+
   <div class="sidebar" [class.mobile-open]="sidebarOpen">
-    <!-- Close button for mobile -->
+    <!-- mobile -->
     <button class="close-sidebar-btn" (click)="closeSidebar()">
       <span>×</span>
     </button>
 
     <h2 class="logo">Product Serve</h2>
 
-    <!-- Admin Navigation -->
     <ng-container *ngIf="isAdmin">
       <a routerLink="/admin/products" routerLinkActive="active" (click)="closeSidebar()">
         📦 All Products
@@ -34,7 +33,6 @@
       </a>
     </ng-container>
 
-    <!-- User Navigation -->
     <ng-container *ngIf="!isAdmin">
       <a routerLink="/user/products" routerLinkActive="active" (click)="closeSidebar()">
         📦 My Products
@@ -47,10 +45,8 @@
 
   </div>
 
-  <!-- Main Content -->
   <div class="main">
 
-    <!-- Topbar -->
     <div class="topbar">
       <div class="welcome-text">
         Welcome
@@ -64,7 +60,6 @@
       </div>
     </div>
 
-    <!-- Page Content -->
     <div class="content">
       <ng-content></ng-content>
     </div>

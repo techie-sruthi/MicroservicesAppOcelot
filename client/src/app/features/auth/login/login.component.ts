@@ -16,7 +16,6 @@ import { interval, Subscription } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 import { ChangeDetectorRef } from '@angular/core';
 
-
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -29,14 +28,13 @@ import { ChangeDetectorRef } from '@angular/core';
     Password,
     Card,
     DialogModule,
-    ToastModule
+    ToastModule,
   ],
   providers: [MessageService],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+  styleUrl: './login.component.css',
 })
 export class LoginComponent implements OnDestroy {
-
   loginForm;
   // OTP FEATURE ENABLED
   showOtpDialog = false;
@@ -53,21 +51,21 @@ export class LoginComponent implements OnDestroy {
     private authService: AuthService,
     private messageService: MessageService,
     private ngZone: NgZone,
-    private cd: ChangeDetectorRef 
-) {
+    private cd: ChangeDetectorRef,
+  ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required]
+      password: ['', Validators.required],
     });
   }
 
   onLogin() {
-
     if (this.loginForm.invalid) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Validation Error',
-        detail: 'Please fill in all required fields'
+        detail: 'Please fill in all required fields',
+        styleClass: 'my-custom-toast',
       });
       return;
     }
@@ -77,17 +75,16 @@ export class LoginComponent implements OnDestroy {
       next: (response: any) => {
         this.loading = false;
 
-        // Check if OTP is required
         if (response.otpRequired) {
           this.userEmail = response.email;
           this.showOtpDialog = true;
           this.messageService.add({
             severity: 'info',
             summary: 'OTP Sent',
-            detail: response.message || 'Please check your email for OTP'
+            detail: response.message || 'Please check your email for OTP',
+            styleClass: 'my-custom-toast',
           });
 
-       
           const expiry = response.expirySeconds ?? 300;
           //const expiry = 10;
 
@@ -96,14 +93,12 @@ export class LoginComponent implements OnDestroy {
         }
 
         // DIRECT LOGIN (OTP BYPASSED)
-        // Save tokens first (only when OTP not required)
+
         if (response.accessToken && response.refreshToken) {
           this.authService.setTokens(response.accessToken, response.refreshToken);
 
-          // Then redirect based on role
           this.handleLoginSuccess(response);
         }
-
       },
       error: (err: any) => {
         this.loading = false;
@@ -124,9 +119,10 @@ export class LoginComponent implements OnDestroy {
           severity: 'error',
           summary: errorSummary,
           detail: errorMessage,
-          life: 5000
+          life: 5000,
+          styleClass: 'my-custom-toast',
         });
-      }
+      },
     });
   }
 
@@ -136,7 +132,8 @@ export class LoginComponent implements OnDestroy {
       this.messageService.add({
         severity: 'warn',
         summary: 'Invalid OTP',
-        detail: 'Please enter a 6-digit OTP'
+        detail: 'Please enter a 6-digit OTP',
+        styleClass: 'my-custom-toast',
       });
       return;
     }
@@ -151,7 +148,8 @@ export class LoginComponent implements OnDestroy {
         this.messageService.add({
           severity: 'success',
           summary: 'Success',
-          detail: 'Login successful!'
+          detail: 'Login successful!',
+          styleClass: 'my-custom-toast',
         });
       },
       error: (err) => {
@@ -159,12 +157,12 @@ export class LoginComponent implements OnDestroy {
         this.messageService.add({
           severity: 'error',
           summary: 'Verification Failed',
-          detail: err.error?.error || 'Invalid or expired OTP'
+          detail: err.error?.error || 'Invalid or expired OTP',
+          styleClass: 'my-custom-toast',
         });
-      }
+      },
     });
   }
-
 
   handleLoginSuccess(response: any) {
     const role = this.authService.getUserRole();
@@ -173,7 +171,8 @@ export class LoginComponent implements OnDestroy {
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: 'Could not determine user role. Please try logging in again.'
+        detail: 'Could not determine user role. Please try logging in again.',
+        styleClass: 'my-custom-toast',
       });
       return;
     }
@@ -190,13 +189,11 @@ export class LoginComponent implements OnDestroy {
     }
   }
 
-
   closeOtpDialog() {
     this.stopOtpTimer();
     this.showOtpDialog = false;
     this.otpCode = '';
   }
-
 
   goToRegister() {
     this.router.navigate(['/register']);
@@ -204,13 +201,11 @@ export class LoginComponent implements OnDestroy {
 
   // OTP timer helpers
   private startOtpTimer(seconds: number) {
-
     this.stopOtpTimer();
 
     this.otpRemaining = seconds > 0 ? seconds : 300;
 
     this.otpSubscription = interval(1000).subscribe(() => {
-
       if (this.otpRemaining > 0) {
         this.otpRemaining--;
 
@@ -224,7 +219,8 @@ export class LoginComponent implements OnDestroy {
         this.messageService.add({
           severity: 'warn',
           summary: 'OTP Expired',
-          detail: 'OTP expired. Please login again.'
+          detail: 'OTP expired. Please login again.',
+          styleClass: 'my-custom-toast',
         });
 
         this.showOtpDialog = false;
@@ -240,7 +236,6 @@ export class LoginComponent implements OnDestroy {
     }
   }
 
-
   ngOnDestroy(): void {
     this.stopOtpTimer();
   }
@@ -252,9 +247,6 @@ export class LoginComponent implements OnDestroy {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
 
-    return `${m.toString().padStart(2, '0')}:${s
-      .toString()
-      .padStart(2, '0')}`;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   }
-
 }

@@ -5,7 +5,8 @@ using ProductService.Application.Products.DTOs;
 
 namespace ProductService.Application.Products.Queries.GetAllProducts;
 
-public class GetAllProductsQueryHandler : IRequestHandler<GetAllProductsQuery, PagedResult<ProductDto>>
+public class GetAllProductsQueryHandler
+    : IRequestHandler<GetAllProductsQuery, PagedResult<ProductDto>>
 {
     private readonly IProductRepository _repository;
 
@@ -14,18 +15,11 @@ public class GetAllProductsQueryHandler : IRequestHandler<GetAllProductsQuery, P
         _repository = repository;
     }
 
-    public async Task<PagedResult<ProductDto>> Handle(GetAllProductsQuery request, CancellationToken cancellationToken)
+    public async Task<PagedResult<ProductDto>> Handle(
+        GetAllProductsQuery request,
+        CancellationToken cancellationToken)
     {
-        var pagedResult = await _repository.GetAllPagedWithFiltersAsync(
-            request.PageNumber, 
-            request.PageSize,
-            request.SearchTerm,
-            request.MinPrice,
-            request.MaxPrice,
-            request.StartDate,
-            request.SortField,
-            request.SortOrder
-        );
+        var pagedResult = await _repository.GetAllPagedWithFiltersAsync(request, cancellationToken);
 
         return new PagedResult<ProductDto>
         {
@@ -39,6 +33,7 @@ public class GetAllProductsQueryHandler : IRequestHandler<GetAllProductsQuery, P
                 CreatedByUserId = p.CreatedByUserId,
                 ImageUrl = p.ImageUrl
             }).ToList(),
+
             TotalCount = pagedResult.TotalCount,
             PageNumber = pagedResult.PageNumber,
             PageSize = pagedResult.PageSize

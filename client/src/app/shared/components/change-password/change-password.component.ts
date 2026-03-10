@@ -19,11 +19,11 @@ import { MessageService } from 'primeng/api';
     CardModule,
     ButtonModule,
     Password,
-    ToastModule
+    ToastModule,
   ],
   providers: [MessageService],
   templateUrl: './change-password.component.html',
-  styleUrl: './change-password.component.css'
+  styleUrl: './change-password.component.css',
 })
 export class ChangePasswordComponent {
   currentPassword: string = '';
@@ -33,7 +33,7 @@ export class ChangePasswordComponent {
 
   constructor(
     private userService: UserService,
-    private messageService: MessageService
+    private messageService: MessageService,
   ) {}
 
   changePassword(): void {
@@ -41,7 +41,8 @@ export class ChangePasswordComponent {
       this.messageService.add({
         severity: 'warn',
         summary: 'Validation Error',
-        detail: 'Please fill in all fields'
+        detail: 'Please fill in all fields',
+        styleClass: 'my-custom-toast',
       });
       return;
     }
@@ -50,7 +51,8 @@ export class ChangePasswordComponent {
       this.messageService.add({
         severity: 'warn',
         summary: 'Validation Error',
-        detail: 'New password must be at least 6 characters long'
+        detail: 'New password must be at least 6 characters long',
+        styleClass: 'my-custom-toast',
       });
       return;
     }
@@ -59,7 +61,8 @@ export class ChangePasswordComponent {
       this.messageService.add({
         severity: 'warn',
         summary: 'Validation Error',
-        detail: 'New password and confirm password do not match'
+        detail: 'New password and confirm password do not match',
+        styleClass: 'my-custom-toast',
       });
       return;
     }
@@ -71,7 +74,8 @@ export class ChangePasswordComponent {
         this.messageService.add({
           severity: 'success',
           summary: 'Success',
-          detail: 'Password changed successfully'
+          detail: 'Password changed successfully',
+          styleClass: 'my-custom-toast',
         });
         this.resetForm();
       },
@@ -80,9 +84,10 @@ export class ChangePasswordComponent {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-            detail: err.error?.error || err.error?.message || 'Failed to change password'
+          detail: err.error?.error || err.error?.message || 'Failed to change password',
+          styleClass: 'my-custom-toast',
         });
-      }
+      },
     });
   }
 

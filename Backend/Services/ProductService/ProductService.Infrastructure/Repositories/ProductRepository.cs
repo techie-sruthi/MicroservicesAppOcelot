@@ -7,6 +7,7 @@ using ProductService.Application.Common.Interfaces;
 using ProductService.Application.Common.Models;
 using ProductService.Domain.Entities;
 using ProductService.Infrastructure.Data;
+using ProductService.Application.Products.Queries.GetAllProducts;
 
 namespace ProductService.Infrastructure.Repositories;
 
@@ -19,19 +20,6 @@ public class ProductRepository : IProductRepository
         IOptions<MongoDbSettings> settings)
     {
         var mongoSettings = settings.Value;
-
-        //// Register MongoDB class map (only once)
-        //if (!BsonClassMap.IsClassMapRegistered(typeof(Product)))
-        //{
-        //    BsonClassMap.RegisterClassMap<Product>(cm =>
-        //    {
-        //        cm.AutoMap();
-        //        cm.SetIgnoreExtraElements(true);
-        //        cm.MapIdMember(c => c.Id)
-        //          .SetElementName("_id")
-        //          .SetSerializer(new StringSerializer(BsonType.ObjectId));
-        //    });
-        //}
 
         var database = mongoClient.GetDatabase(mongoSettings.DatabaseName);
         _products = database.GetCollection<Product>("Products");
@@ -63,21 +51,15 @@ public class ProductRepository : IProductRepository
     }
 
     public async Task<PagedResult<Product>> GetAllPagedWithFiltersAsync(
-        int pageNumber,
-        int pageSize,
-        string? searchTerm = null,
-        decimal? minPrice = null,
-        decimal? maxPrice = null,
-        DateTime? startDate = null,
-        string? sortField = null,
-        string? sortOrder = null)
+    GetAllProductsQuery query,
+    CancellationToken cancellationToken)
     {
         var filterBuilder = Builders<Product>.Filter;
         var filters = new List<FilterDefinition<Product>>();
 
-        if (!string.IsNullOrWhiteSpace(searchTerm))
+        if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {
-            var regex = new BsonRegularExpression(searchTerm, "i");
+            var regex = new BsonRegularExpression(query.SearchTerm, "i");
 
             filters.Add(filterBuilder.Or(
                 filterBuilder.Regex(p => p.Name, regex),
@@ -85,38 +67,38 @@ public class ProductRepository : IProductRepository
             ));
         }
 
-        if (minPrice.HasValue)
-            filters.Add(filterBuilder.Gte(p => p.Price, minPrice.Value));
+        if (query.MinPrice.HasValue)
+            filters.Add(filterBuilder.Gte(p => p.Price, query.MinPrice.Value));
 
-        if (maxPrice.HasValue)
-            filters.Add(filterBuilder.Lte(p => p.Price, maxPrice.Value));
+        if (query.MaxPrice.HasValue)
+            filters.Add(filterBuilder.Lte(p => p.Price, query.MaxPrice.Value));
 
-        if (startDate.HasValue)
-            filters.Add(filterBuilder.Gte(p => p.DateOfManufacture, startDate.Value));
+        if (query.StartDate.HasValue)
+            filters.Add(filterBuilder.Gte(p => p.DateOfManufacture, query.StartDate.Value));
 
         var combinedFilter = filters.Count > 0
             ? filterBuilder.And(filters)
             : filterBuilder.Empty;
 
-        var totalCount = await _products.CountDocumentsAsync(combinedFilter);
+        var totalCount = await _products.CountDocumentsAsync(combinedFilter, cancellationToken: cancellationToken);
 
         var findOptions = new FindOptions<Product>
         {
             Collation = new Collation("en", strength: CollationStrength.Secondary),
-            Skip = (pageNumber - 1) * pageSize,
-            Limit = pageSize,
-            Sort = GetSortDefinition(sortField, sortOrder)
+            Skip = (query.PageNumber - 1) * query.PageSize,
+            Limit = query.PageSize,
+            Sort = GetSortDefinition(query.SortField, query.SortOrder)
         };
 
-        var cursor = await _products.FindAsync(combinedFilter, findOptions);
-        var items = await cursor.ToListAsync();
+        var cursor = await _products.FindAsync(combinedFilter, findOptions, cancellationToken);
+        var items = await cursor.ToListAsync(cancellationToken);
 
         return new PagedResult<Product>
         {
             Items = items,
             TotalCount = (int)totalCount,
-            PageNumber = pageNumber,
-            PageSize = pageSize
+            PageNumber = query.PageNumber,
+            PageSize = query.PageSize
         };
     }
 

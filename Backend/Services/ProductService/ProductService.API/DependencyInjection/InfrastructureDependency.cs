@@ -24,10 +24,10 @@ public static class InfrastructureDependency
             return new MongoClient(settings.ConnectionString);
         });
 
-        // Register Repository as Scoped
+        
         services.AddScoped<IProductRepository, ProductRepository>();
 
-        // Configure MinIO
+        
         services.Configure<MinIOSettings>(
             configuration.GetSection("FileStorage:MinIO"));
 

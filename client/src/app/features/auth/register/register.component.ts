@@ -15,7 +15,6 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 
-
 @Component({
   selector: 'app-register',
   standalone: true,
@@ -26,14 +25,13 @@ import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
     Password,
     Card,
     RouterModule,
-    ToastModule
+    ToastModule,
   ],
   providers: [MessageService],
   templateUrl: './register.component.html',
-  styleUrl: './register.component.css'
+  styleUrl: './register.component.css',
 })
 export class RegisterComponent implements OnInit, OnDestroy {
-
   registerForm;
   loading = false;
 
@@ -43,16 +41,16 @@ export class RegisterComponent implements OnInit, OnDestroy {
   checkingEmail: boolean = false;
 
   constructor(
-    private fb: FormBuilder, 
+    private fb: FormBuilder,
     private router: Router,
     private authService: AuthService,
-    private messageService: MessageService
+    private messageService: MessageService,
   ) {
     this.registerForm = this.fb.group({
       userName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', Validators.required]
+      confirmPassword: ['', Validators.required],
     });
   }
 
@@ -69,14 +67,14 @@ export class RegisterComponent implements OnInit, OnDestroy {
       .pipe(
         debounceTime(500),
         distinctUntilChanged(),
-        switchMap(email => {
+        switchMap((email) => {
           // Check if email is valid format and not empty
           if (!email || !this.isValidEmail(email)) {
             return of({ exists: false });
           }
           this.checkingEmail = true;
           return this.authService.checkEmail(email.trim().toLowerCase());
-        })
+        }),
       )
       .subscribe({
         next: (response) => {
@@ -90,7 +88,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
         error: (error) => {
           this.checkingEmail = false;
           console.error('Email check error:', error);
-        }
+        },
       });
   }
 
@@ -109,7 +107,8 @@ export class RegisterComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'error',
         summary: 'Validation Error',
-        detail: this.emailError
+        detail: this.emailError,
+        styleClass: 'my-custom-toast',
       });
       return;
     }
@@ -118,7 +117,8 @@ export class RegisterComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'warn',
         summary: 'Validation Error',
-        detail: 'Please fill in all required fields'
+        detail: 'Please fill in all required fields',
+        styleClass: 'my-custom-toast',
       });
       return;
     }
@@ -129,7 +129,8 @@ export class RegisterComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'error',
         summary: 'Password Mismatch',
-        detail: 'Passwords do not match'
+        detail: 'Passwords do not match',
+        styleClass: 'my-custom-toast',
       });
       return;
     }
@@ -138,7 +139,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
 
     const requestData = {
       ...registerData,
-      role: 'User'
+      role: 'User',
     };
 
     this.authService.register(requestData).subscribe({
@@ -148,7 +149,8 @@ export class RegisterComponent implements OnInit, OnDestroy {
           severity: 'success',
           summary: 'Success',
           detail: 'Registration successful! Please login.',
-          life: 3000
+          styleClass: 'my-custom-toast',
+          life: 3000,
         });
         setTimeout(() => {
           this.router.navigate(['/login']);
@@ -160,9 +162,10 @@ export class RegisterComponent implements OnInit, OnDestroy {
           severity: 'error',
           summary: 'Registration Failed',
           detail: err.error?.message || 'Failed to register. Please try again.',
-          life: 5000
+          styleClass: 'my-custom-toast',
+          life: 5000,
         });
-      }
+      },
     });
   }
 

@@ -1,5 +1,5 @@
 <app-layout>
-  <p-toast></p-toast>
+<p-toast class="custom-toast"></p-toast>
 
   <p-confirmDialog [style]="{width: '450px'}" [baseZIndex]="10000"></p-confirmDialog>
 
@@ -27,10 +27,16 @@
             id="email" 
             type="email"
             [(ngModel)]="selectedUser.email" 
+            (blur)="onEmailBlur()"
             placeholder="Enter email"
             class="w-full"
             [disabled]="saving"
+            [class.p-invalid]="emailError"
              />
+          <small *ngIf="emailError" class="p-error" style="display: flex; align-items: center; gap: 4px; margin-top: 4px">
+            <i class="pi pi-exclamation-triangle"></i>
+            {{ emailError }}
+          </small>
         </div>
 
         <div class="field">

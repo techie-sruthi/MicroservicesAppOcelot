@@ -28,11 +28,11 @@ import { ToastModule } from 'primeng/toast';
     TableModule,
     SelectModule,
     ConfirmDialogModule,
-    ToastModule
+    ToastModule,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './admin-users.component.html',
-  styleUrl: './admin-users.component.css'
+  styleUrl: './admin-users.component.css',
 })
 export class AdminUsersComponent implements OnInit {
   users: User[] = [];
@@ -41,9 +41,10 @@ export class AdminUsersComponent implements OnInit {
   isEditMode = false;
   loading = false;
   saving = false;
+  emailError: string = '';
   roleOptions = [
     { label: 'User', value: 'User' },
-    { label: 'Admin', value: 'Admin' }
+    { label: 'Admin', value: 'Admin' },
   ];
 
   totalRecords: number = 0;
@@ -60,11 +61,34 @@ export class AdminUsersComponent implements OnInit {
     private router: Router,
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
-    private cdr: ChangeDetectorRef
-  ) { }
+    private cdr: ChangeDetectorRef,
+  ) {}
 
   ngOnInit(): void {
     this.loadUsers();
+  }
+
+  private readonly emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+  validateEmail(email: string): boolean {
+    if (!email || email.trim().length === 0) {
+      this.emailError = '';
+      return true;
+    }
+    if (!this.emailPattern.test(email)) {
+      this.emailError = 'Please enter a valid email address';
+      return false;
+    }
+    this.emailError = '';
+    return true;
+  }
+
+  onEmailChange(email: string): void {
+    this.validateEmail(email);
+  }
+
+  onEmailBlur(): void {
+    this.validateEmail(this.selectedUser.email);
   }
 
   isEditingOwnAccount(): boolean {
@@ -75,31 +99,33 @@ export class AdminUsersComponent implements OnInit {
   loadUsers() {
     this.loading = true;
 
-    this.userService.getAllUsers(
-      this.pageNumber,
-      this.pageSize,
-      this.searchValue || undefined,
-      undefined,
-      this.sortField || undefined,
-      this.sortOrder || undefined
-    ).subscribe({
-      next: (data: PagedResult<User>) => {
-
-        this.users = data.items;
-        this.totalRecords = data.totalCount;
-        this.loading = false;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        this.loading = false;
-        this.cdr.detectChanges();
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to load users'
-        });
-      }
-    });
+    this.userService
+      .getAllUsers(
+        this.pageNumber,
+        this.pageSize,
+        this.searchValue || undefined,
+        undefined,
+        this.sortField || undefined,
+        this.sortOrder || undefined,
+      )
+      .subscribe({
+        next: (data: PagedResult<User>) => {
+          this.users = data.items;
+          this.totalRecords = data.totalCount;
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.loading = false;
+          this.cdr.detectChanges();
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to load users',
+            styleClass: 'my-custom-toast',
+          });
+        },
+      });
   }
 
   onLazyLoad(event: any): void {
@@ -120,19 +146,33 @@ export class AdminUsersComponent implements OnInit {
       this.messageService.add({
         severity: 'warn',
         summary: 'Validation Error',
-        detail: 'Please fill in all required fields'
+        detail: 'Please fill in all required fields',
+        styleClass: 'my-custom-toast',
+      });
+      return;
+    }
+
+    this.validateEmail(this.selectedUser.email);
+    if (this.emailError) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Validation Error',
+        detail: this.emailError,
+        styleClass: 'my-custom-toast',
       });
       return;
     }
 
     const currentUserId = this.authService.getUserId();
-    const isChangingOwnRole = this.isEditMode && 
-                              this.selectedUser.id === currentUserId && 
-                              this.selectedUser.role !== this.authService.getUserRole();
+    const isChangingOwnRole =
+      this.isEditMode &&
+      this.selectedUser.id === currentUserId &&
+      this.selectedUser.role !== this.authService.getUserRole();
 
     if (isChangingOwnRole) {
       this.confirmationService.confirm({
-        message: 'You are changing your own role! After saving, you will need to logout and login again for the changes to take effect. Do you want to continue?',
+        message:
+          'You are changing your own role! After saving, you will need to logout and login again for the changes to take effect. Do you want to continue?',
         header: 'Role Change Warning',
         icon: 'pi pi-exclamation-triangle',
         acceptLabel: 'Yes, Continue',
@@ -141,15 +181,16 @@ export class AdminUsersComponent implements OnInit {
         rejectButtonStyleClass: 'p-button-secondary',
         closeOnEscape: true,
         accept: () => {
-          this.performSaveUser(true); 
+          this.performSaveUser(true);
         },
         reject: () => {
           this.messageService.add({
             severity: 'info',
             summary: 'Cancelled',
-            detail: 'Role change cancelled'
+            detail: 'Role change cancelled',
+            styleClass: 'my-custom-toast',
           });
-        }
+        },
       });
       return;
     }
@@ -161,80 +202,80 @@ export class AdminUsersComponent implements OnInit {
     this.saving = true;
 
     if (this.isEditMode && this.selectedUser.id) {
-      this.userService.updateUser(this.selectedUser.id, this.selectedUser)
-        .subscribe({
-          next: () => {
-            this.saving = false;
+      this.userService.updateUser(this.selectedUser.id, this.selectedUser).subscribe({
+        next: () => {
+          this.saving = false;
 
-            if (autoLogoutAfter) {
-              this.messageService.add({
-                severity: 'success',
-                summary: 'Role Changed',
-                detail: 'Your role has been updated. Logging out in 3 seconds...',
-                life: 3000
-              });
-
-              setTimeout(() => {
-                this.authService.logout();
-                this.router.navigate(['/login'], {
-                  queryParams: { message: 'Your role has been changed. Please login again.' }
-                });
-              }, 3000);
-            } else {
-              const updatedUser = { ...this.selectedUser };
-              this.users = this.users.map(u =>
-                u.id === updatedUser.id ? updatedUser : u
-              );
-              this.messageService.add({
-                severity: 'success',
-                summary: 'Success',
-                detail: 'User updated successfully'
-              });
-              this.resetForm();
-            }
-          },
-          error: (err) => {
-            this.saving = false;
+          if (autoLogoutAfter) {
             this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: err.error?.message || 'Failed to update user'
+              severity: 'success',
+              summary: 'Role Changed',
+              detail: 'Your role has been updated. Logging out in 3 seconds...',
+              life: 3000,
+              styleClass: 'my-custom-toast',
             });
-          }
-        });
-    } else {
-    
-      const createUserData = {
-        ...this.selectedUser
-      };
 
-      this.userService.createUser(createUserData)
-        .subscribe({
-          next: (response: any) => {
-            this.saving = false;
-            const createdUser: User = {
-              ...this.selectedUser,
-              id: typeof response === 'number' ? response : response?.id ?? 0
-            };
-            this.totalRecords++;
-            this.users = [createdUser, ...this.users];
-            this.cdr.detectChanges();
+            setTimeout(() => {
+              this.authService.logout();
+              this.router.navigate(['/login'], {
+                queryParams: { message: 'Your role has been changed. Please login again.' },
+              });
+            }, 3000);
+          } else {
+            const updatedUser = { ...this.selectedUser };
+            this.users = this.users.map((u) => (u.id === updatedUser.id ? updatedUser : u));
             this.messageService.add({
               severity: 'success',
               summary: 'Success',
-              detail: 'User created successfully. Password has been sent to their email.'
+              detail: 'User updated successfully',
+              styleClass: 'my-custom-toast',
             });
             this.resetForm();
-          },
-          error: (err) => {
-            this.saving = false;
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: err.error?.message || 'Failed to create user'
-            });
           }
-        });
+        },
+        error: (err) => {
+          this.saving = false;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: err.error?.error || err.error?.message || 'Failed to update user',
+            styleClass: 'my-custom-toast',
+          });
+        },
+      });
+    } else {
+      const createUserData = {
+        ...this.selectedUser,
+      };
+
+      this.userService.createUser(createUserData).subscribe({
+        next: (response: any) => {
+          this.saving = false;
+          const createdUser: User = {
+            ...this.selectedUser,
+            id: typeof response === 'number' ? response : (response?.id ?? 0),
+          };
+          this.totalRecords++;
+          this.users = [createdUser, ...this.users];
+          this.cdr.detectChanges();
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'User created successfully. Password has been sent to their email.',
+            styleClass: 'my-custom-toast',
+          });
+          this.resetForm();
+        },
+        error: (err) => {
+          this.saving = false;
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: err.error?.error || err.error?.message || 'Failed to create user',
+            styleClass: 'my-custom-toast',
+          });
+        },
+      });
     }
   }
 
@@ -254,30 +295,33 @@ export class AdminUsersComponent implements OnInit {
       accept: () => {
         this.userService.deleteUser(id).subscribe({
           next: () => {
-            this.users = this.users.filter(u => u.id !== id);
+            this.users = this.users.filter((u) => u.id !== id);
             this.totalRecords--;
             this.cdr.detectChanges();
             this.messageService.add({
               severity: 'success',
               summary: 'Success',
-              detail: 'User deleted successfully'
+              detail: 'User deleted successfully',
+              styleClass: 'my-custom-toast',
             });
           },
           error: (err) => {
             this.messageService.add({
               severity: 'error',
               summary: 'Error',
-              detail: err.error?.message || 'Failed to delete user'
+              detail: err.error?.message || 'Failed to delete user',
+              styleClass: 'my-custom-toast',
             });
-          }
+          },
         });
-      }
+      },
     });
   }
 
   resetForm() {
     this.selectedUser = { id: 0, userName: '', email: '', role: 'User' };
     this.isEditMode = false;
+    this.emailError = '';
   }
 
   onSearch() {

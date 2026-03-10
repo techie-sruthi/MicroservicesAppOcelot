@@ -17,7 +17,7 @@ import { ProductService, Product, PagedResult } from '../../../core/services/pro
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ImageViewerComponent } from '../../../shared/components/image-viewer/image-viewer.component';
 import { Subject, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 
 interface ProductForm {
   id?: string;
@@ -78,6 +78,7 @@ export class UserProductsComponent implements OnInit, OnDestroy {
   sortOrder: string | null = null;
 
   expandedDescriptions: Set<string> = new Set();
+  today: string = new Date().toISOString().split('T')[0];
 
   toggleDescription(productId: string) {
     if (this.expandedDescriptions.has(productId)) {
@@ -136,7 +137,13 @@ export class UserProductsComponent implements OnInit, OnDestroy {
           this.cdr.detectChanges();
 
           const excludeId = this.isEditMode ? this.productForm.id : undefined;
-          return this.productService.checkProductName(name.trim(), excludeId);
+          return this.productService.checkProductName(name.trim(), excludeId).pipe(
+            catchError(() => {
+              this.checkingName = false;
+              this.cdr.detectChanges();
+              return of({ exists: false });
+            })
+          );
         })
       )
       .subscribe({
@@ -149,7 +156,7 @@ export class UserProductsComponent implements OnInit, OnDestroy {
           }
           this.cdr.detectChanges();
         },
-        error: (error) => {
+        error: () => {
           this.checkingName = false;
           this.cdr.detectChanges();
         }
@@ -221,7 +228,7 @@ export class UserProductsComponent implements OnInit, OnDestroy {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'Failed to load products'
+            detail: 'Failed to load products', styleClass: 'my-custom-toast'
           });
         }
       });
@@ -232,6 +239,7 @@ export class UserProductsComponent implements OnInit, OnDestroy {
     this.resetForm();
     this.nameError = '';
     this.checkingName = false;
+    this.productNameCheck$.next('');
     this.displayDialog = true;
   }
 
@@ -246,6 +254,9 @@ export class UserProductsComponent implements OnInit, OnDestroy {
       imageUrl: product.imageUrl
     };
     this.imagePreview = product.imageUrl || null;
+    this.nameError = '';
+    this.checkingName = false;
+    this.productNameCheck$.next('');
     this.displayDialog = true;
   }
 
@@ -255,7 +266,7 @@ export class UserProductsComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'error',
         summary: 'Validation Error',
-        detail: this.nameError
+        detail: this.nameError, styleClass: 'my-custom-toast'
       });
       return;
     }
@@ -264,7 +275,7 @@ export class UserProductsComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'warn',
         summary: 'Validation',
-        detail: 'Please fill required fields'
+        detail: 'Please fill required fields', styleClass: 'my-custom-toast'
       });
       return;
     }
@@ -282,7 +293,7 @@ export class UserProductsComponent implements OnInit, OnDestroy {
           this.messageService.add({
             severity: 'error',
             summary: 'Upload Failed',
-            detail: 'Failed to upload image'
+            detail: 'Failed to upload image', styleClass: 'my-custom-toast'
           });
         }
       });
@@ -305,10 +316,11 @@ export class UserProductsComponent implements OnInit, OnDestroy {
           this.products = this.products.map(p =>
             p.id === updatedId ? { ...productData, id: updatedId } as Product : p
           );
+          this.cdr.detectChanges();
           this.messageService.add({
             severity: 'success',
             summary: 'Success',
-            detail: 'Product updated successfully'
+            detail: 'Product updated successfully', styleClass: 'my-custom-toast'
           });
           this.displayDialog = false;
         });
@@ -316,12 +328,13 @@ export class UserProductsComponent implements OnInit, OnDestroy {
       this.productService.create(productData as Product)
         .subscribe((response) => {
           const createdProduct: Product = { ...productData, id: response.id } as Product;
-          this.products = [...this.products, createdProduct];
+          this.products = [createdProduct, ...this.products];
           this.totalRecords++;
+          this.cdr.detectChanges();
           this.messageService.add({
             severity: 'success',
             summary: 'Success',
-            detail: 'Product created successfully'
+            detail: 'Product created successfully', styleClass: 'my-custom-toast'
           });
           this.displayDialog = false;
         });
@@ -343,14 +356,15 @@ export class UserProductsComponent implements OnInit, OnDestroy {
             this.messageService.add({
               severity: 'success',
               summary: 'Deleted',
-              detail: 'Product deleted successfully'
+              detail: 'Product deleted successfully', styleClass: 'my-custom-toast'
             });
+            this.cdr.detectChanges();
           },
           error: (error) => {
             this.messageService.add({
               severity: 'error',
               summary: 'Error',
-              detail: 'Failed to delete product'
+              detail: 'Failed to delete product', styleClass: 'my-custom-toast'
             });
           }
         });
@@ -385,17 +399,17 @@ export class UserProductsComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'error',
         summary: 'Invalid File',
-          detail: 'Only image files are allowed'
-          });
-          event.target.value = '';
-          return;
-        }
+        detail: 'Only image files are allowed', styleClass: 'my-custom-toast'
+      });
+      event.target.value = '';
+      return;
+    }
 
         if (file.size > 5 * 1024 * 1024) {
       this.messageService.add({
         severity: 'error',
         summary: 'File Too Large',
-        detail: 'Image size must be under 5MB'
+        detail: 'Image size must be under 5MB', styleClass: 'my-custom-toast'
       });
       event.target.value = '';
       return;
@@ -412,7 +426,7 @@ export class UserProductsComponent implements OnInit, OnDestroy {
     this.messageService.add({
       severity: 'success',
       summary: 'Image Selected',
-      detail: `${file.name} (${this.formatFileSize(file.size)})`
+      detail: `${file.name} (${this.formatFileSize(file.size)})`, styleClass: 'my-custom-toast'
     });
   }
 
@@ -450,7 +464,7 @@ export class UserProductsComponent implements OnInit, OnDestroy {
     this.messageService.add({
       severity: 'info',
       summary: 'Filters Cleared',
-      detail: 'All filters have been reset'
+      detail: 'All filters have been reset', styleClass: 'my-custom-toast'
     });
   }
 

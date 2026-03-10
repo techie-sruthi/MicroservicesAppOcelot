@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using MediatR;
 using UserService.Application.Common.Interfaces;
 using UserService.Application.Contracts;
@@ -13,6 +14,10 @@ public class CreateUserCommandHandler
     private readonly IPasswordHasher _passwordHasher;
     private readonly IEmailService _emailService;
 
+    private static readonly Regex EmailRegex = new(
+        @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
+        RegexOptions.Compiled);
+
     public CreateUserCommandHandler(
         IUserDbContext context,
         IPasswordHasher passwordHasher,
@@ -25,6 +30,9 @@ public class CreateUserCommandHandler
 
     public async Task<int> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(request.Email) || !EmailRegex.IsMatch(request.Email))
+            throw new ArgumentException("Invalid email format. Please enter a valid email (e.g. user@example.com)");
+
         var exists = await _context.UserExistsAsync(request.Email, cancellationToken);
 
         if (exists)

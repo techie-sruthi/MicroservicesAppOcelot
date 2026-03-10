@@ -22,7 +22,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ImageViewerComponent } from '../../../shared/components/image-viewer/image-viewer.component';
 import { Subject, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
 
 interface ProductForm {
   id?: string;
@@ -84,6 +84,7 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
   sortOrder: string | null = null;
 
   expandedDescriptions: Set<number> = new Set();
+  today: string = new Date().toISOString().split('T')[0];
 
   toggleDescription(productId: number) {
     if (this.expandedDescriptions.has(productId)) {
@@ -140,7 +141,13 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
           }
           this.checkingName = true;
           const excludeId = this.isEditMode ? this.productForm.id : undefined;
-          return this.productService.checkProductName(name.trim(), excludeId);
+          return this.productService.checkProductName(name.trim(), excludeId).pipe(
+            catchError(() => {
+              this.checkingName = false;
+              this.cdr.detectChanges();
+              return of({ exists: false });
+            }),
+          );
         }),
       )
       .subscribe({
@@ -153,7 +160,7 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
           }
           this.cdr.detectChanges();
         },
-        error: (error) => {
+        error: () => {
           this.checkingName = false;
           this.cdr.detectChanges();
         },
@@ -215,6 +222,7 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
               severity: 'info',
               summary: 'No Products',
               detail: 'No products found matching your criteria.',
+              styleClass: 'my-custom-toast',
             });
           }
         },
@@ -225,6 +233,7 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
             severity: 'error',
             summary: 'Error',
             detail: 'Failed to load products',
+            styleClass: 'my-custom-toast',
           });
         },
       });
@@ -256,6 +265,7 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
     this.imagePreview = null;
     this.nameError = '';
     this.checkingName = false;
+    this.productNameCheck$.next('');
     this.displayDialog = true;
   }
 
@@ -270,6 +280,9 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
       imageUrl: product.imageUrl,
     };
     this.imagePreview = product.imageUrl || null;
+    this.nameError = '';
+    this.checkingName = false;
+    this.productNameCheck$.next('');
     this.displayDialog = true;
     this.cdr.detectChanges();
   }
@@ -280,6 +293,7 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
         severity: 'error',
         summary: 'Validation Error',
         detail: this.nameError,
+        styleClass: 'my-custom-toast',
       });
       return;
     }
@@ -289,6 +303,7 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
         severity: 'warn',
         summary: 'Validation',
         detail: 'Please fill all required fields',
+        styleClass: 'my-custom-toast',
       });
       return;
     }
@@ -303,12 +318,14 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
           severity: 'success',
           summary: 'Image Uploaded',
           detail: 'Product image uploaded successfully',
+          styleClass: 'my-custom-toast',
         });
       } catch (error) {
         this.messageService.add({
           severity: 'error',
           summary: 'Upload Failed',
           detail: 'Failed to upload image',
+          styleClass: 'my-custom-toast',
         });
         this.uploading = false;
         return;
@@ -326,21 +343,24 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
       const updatedId = this.productForm.id;
       this.productService.update(updatedId, productData).subscribe({
         next: () => {
-          this.products = this.products.map(p =>
-            p.id === updatedId ? { ...productData, id: updatedId } as Product : p
+          this.products = this.products.map((p) =>
+            p.id === updatedId ? ({ ...productData, id: updatedId } as Product) : p,
           );
           this.messageService.add({
             severity: 'success',
             summary: 'Success',
             detail: 'Product updated successfully',
+            styleClass: 'my-custom-toast',
           });
           this.hideDialog();
+          this.cdr.detectChanges();
         },
         error: (err) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
             detail: 'Failed to update product',
+            styleClass: 'my-custom-toast',
           });
         },
       });
@@ -348,20 +368,23 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
       this.productService.create(productData as Product).subscribe({
         next: (response) => {
           const createdProduct: Product = { ...productData, id: response.id } as Product;
-          this.products = [...this.products, createdProduct];
+          this.products = [createdProduct, ...this.products];
           this.totalRecords++;
           this.messageService.add({
             severity: 'success',
             summary: 'Success',
             detail: 'Product created successfully',
+            styleClass: 'my-custom-toast',
           });
           this.hideDialog();
+          this.cdr.detectChanges();
         },
         error: (err) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
             detail: 'Failed to create product',
+            styleClass: 'my-custom-toast',
           });
         },
       });
@@ -378,23 +401,26 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
       accept: () => {
         this.productService.delete(id).subscribe({
           next: () => {
-            this.products = this.products.filter(p => p.id !== id);
+            this.products = this.products.filter((p) => p.id !== id);
             this.totalRecords--;
             this.messageService.add({
               severity: 'success',
               summary: 'Success',
               detail: 'Product deleted successfully',
+              styleClass: 'my-custom-toast',
             });
+            this.cdr.detectChanges();
           },
           error: (err) => {
             this.messageService.add({
               severity: 'error',
               summary: 'Error',
               detail: 'Failed to delete product',
+              styleClass: 'my-custom-toast',
             });
           },
         });
-      }
+      },
     });
   }
 
@@ -439,6 +465,7 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
       severity: 'info',
       summary: 'Filters Cleared',
       detail: 'All filters have been reset',
+      styleClass: 'my-custom-toast',
       life: 3000,
     });
   }
@@ -451,17 +478,19 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'error',
         summary: 'Invalid File',
-          detail: 'Only image files are allowed',
-          });
-          event.target.value = '';
-          return;
-        }
+        detail: 'Only image files are allowed',
+        styleClass: 'my-custom-toast',
+      });
+      event.target.value = '';
+      return;
+    }
 
-        if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 5 * 1024 * 1024) {
       this.messageService.add({
         severity: 'error',
         summary: 'File Too Large',
         detail: 'Image size must be under 5MB',
+        styleClass: 'my-custom-toast',
       });
       event.target.value = '';
       return;
@@ -479,6 +508,7 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
         severity: 'success',
         summary: 'Image Selected',
         detail: `${file.name} (${this.formatFileSize(file.size)})`,
+        styleClass: 'my-custom-toast',
       });
     };
     reader.onerror = () => {
@@ -488,6 +518,7 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
         severity: 'error',
         summary: 'Error',
         detail: 'Failed to read the selected image',
+        styleClass: 'my-custom-toast',
       });
     };
     reader.readAsDataURL(file);

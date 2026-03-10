@@ -1,4 +1,4 @@
-<p-toast></p-toast>
+<p-toast class="custom-toast"></p-toast>
 
 <div class="auth-container">
   <p-card header="Register">
@@ -21,26 +21,25 @@
           (ngModelChange)="onEmailChange($event)"
           [class.p-invalid]="(emailError && !checkingEmail) || (registerForm.get('email')?.invalid && registerForm.get('email')?.touched)" />
 
-        <!-- Checking indicator -->
         <small *ngIf="checkingEmail" style="color: #6366f1; display: flex; align-items: center; gap: 4px; margin-top: 4px;">
           <i class="pi pi-spin pi-spinner" style="font-size: 0.8rem;"></i>
           Checking availability...
         </small>
 
-        <!-- Email exists error -->
+
         <small *ngIf="emailError && !checkingEmail" class="p-error" style="display: flex; align-items: center; gap: 4px; margin-top: 4px;">
           <i class="pi pi-exclamation-triangle"></i>
           {{ emailError }}
         </small>
 
-        <!-- Available message -->
+
         <small *ngIf="!emailError && !checkingEmail && registerForm.get('email')?.valid && registerForm.get('email')?.value" 
                style="color: #22c55e; display: flex; align-items: center; gap: 4px; margin-top: 4px;">
           <i class="pi pi-check"></i>
           Email is available
         </small>
 
-        <!-- Form validation errors -->
+     
         <small class="p-error" *ngIf="!emailError && !checkingEmail && registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
           <span *ngIf="registerForm.get('email')?.errors?.['required']">Email is required.</span>
           <span *ngIf="registerForm.get('email')?.errors?.['email']">Please enter a valid email.</span>
