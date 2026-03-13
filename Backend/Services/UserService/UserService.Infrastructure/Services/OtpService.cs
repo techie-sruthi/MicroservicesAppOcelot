@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using UserService.Application.Contracts;
@@ -9,7 +10,6 @@ public class OtpService : IOtpService
 {
     private readonly IMemoryCache _cache;
     private readonly OtpSettings _otpSettings;
-    private readonly Random _random = new();
 
     public OtpService(IMemoryCache cache, IOptions<OtpSettings> otpSettings)
     {
@@ -22,7 +22,7 @@ public class OtpService : IOtpService
         var otp = "";
         for (int i = 0; i < _otpSettings.Length; i++)
         {
-            otp += _random.Next(0, 10).ToString();
+            otp += RandomNumberGenerator.GetInt32(0, 10).ToString();
         }
         return otp;
     }

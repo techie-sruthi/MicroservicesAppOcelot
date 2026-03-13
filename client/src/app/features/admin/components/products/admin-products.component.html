@@ -1,0 +1,464 @@
+<app-layout>
+  <p-toast class="custom-toast"></p-toast>
+  <p-confirmDialog [style]="{ width: '450px' }" [baseZIndex]="10000"></p-confirmDialog>
+
+  <div class="dashboard-container">
+    <p-card header="All Products">
+      <div class="flex justify-content-between mb-3">
+        <div class="search-container">
+          <span class="p-input-icon-left">
+            <i class="pi pi-search"></i>
+            <input
+              pInputText
+              type="text"
+              placeholder="Search by name or description..."
+              [(ngModel)]="searchValue"
+              (input)="onSearch()"
+              style="width: 300px"
+            />
+          </span>
+          <p-button
+            icon="pi pi-filter"
+            [label]="showFilters ? 'Hide Filters' : 'Show Filters'"
+            (onClick)="toggleFilters()"
+            [severity]="showFilters ? 'info' : 'secondary'"
+            [title]="showFilters ? 'Hide Filters' : 'Show Filters'"
+            styleClass="ml-2"
+            [attr.aria-label]="showFilters ? 'Hide Filters' : 'Show Filters'"
+            pTooltip="Show/Hide Filters"
+          ></p-button>
+          <p-button
+            icon="pi pi-filter-slash"
+            label="Clear Filters"
+            (onClick)="clearFilters()"
+            severity="danger"
+            [outlined]="true"
+            title="Clear Filters"
+            styleClass="ml-2"
+            *ngIf="searchValue || minPrice || maxPrice || startDate"
+          ></p-button>
+        </div>
+        <div class="flex gap-2">
+          <p-button
+            label="Create Product"
+            icon="pi pi-plus"
+            (onClick)="showCreateDialog()"
+            severity="success"
+            title="Create Product"
+          ></p-button>
+
+          <p-button
+            label="Refresh"
+            icon="pi pi-refresh"
+            (onClick)="loadRefreshProducts()"
+            title="Refresh Products"
+          ></p-button>
+
+        </div>
+      </div>
+
+      <!--Filters -->
+      <div class="filters-panel" *ngIf="showFilters">
+        <p-card header="Advanced Filters" styleClass="filter-card">
+          <div class="filter-grid">
+            <div class="field">
+              <label for="minPrice">Min Price</label>
+              <p-inputNumber
+                id="minPrice"
+                [(ngModel)]="minPrice"
+                [min]="0"
+                [maxFractionDigits]="2"
+                placeholder="Min"
+                (ngModelChange)="applyFilters()"
+                class="w-full"
+              >
+              </p-inputNumber>
+            </div>
+
+            <div class="field">
+              <label for="maxPrice">Max Price</label>
+              <p-inputNumber
+                id="maxPrice"
+                [(ngModel)]="maxPrice"
+                [min]="0"
+                [maxFractionDigits]="2"
+                placeholder="Max"
+                (ngModelChange)="applyFilters()"
+                class="w-full"
+              >
+              </p-inputNumber>
+            </div>
+
+            <div class="field">
+              <label for="startDate">Manufacture Date From</label>
+              <input
+                pInputText
+                id="startDate"
+                type="date"
+                [(ngModel)]="startDate"
+                (ngModelChange)="applyFilters()"
+                class="w-full"
+              />
+            </div>
+          </div>
+        </p-card>
+      </div>
+
+      <!-- Table -->
+      <p-table
+        #dt
+        [value]="products"
+        [lazy]="true"
+        [paginator]="true"
+        [rows]="pageSize"
+        [first]="first"
+        [totalRecords]="totalRecords"
+        [loading]="loading"
+        (onLazyLoad)="onLazyLoad($event)"
+        [tableStyle]="{ 'min-width': '50rem' }"
+        [rowsPerPageOptions]="[5, 10, 20]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
+        styleClass="p-datatable-striped"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 80px">Image</th>
+            <th pSortableColumn="name">Name <p-sortIcon field="name" /></th>
+            <th pSortableColumn="description" style="min-width: 200px">Description</th>
+            <th pSortableColumn="price">Price <p-sortIcon field="price" /></th>
+            <th pSortableColumn="dateOfManufacture">
+              Date of Manufacture <p-sortIcon field="dateOfManufacture" />
+            </th>
+            <!-- <th pSortableColumn="createdByUserId">Created By User ID </th> -->
+            <th style="width: 150px">Actions</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-product>
+          <tr>
+            <td>
+              <!-- <div *ngIf="product.imageUrl" class="product-image-cell">
+                <img
+                  [src]="product.imageUrl"
+                  [alt]="product.name"
+                  class="product-thumbnail"
+                  (click)="viewImage(product.imageUrl)"
+                  title="Click to view full size"
+                />
+              </div>
+              <div *ngIf="!product.imageUrl" class="no-image-cell">
+                <i class="pi pi-image" style="font-size: 1.5rem; color: #ccc"></i>
+                <span style="font-size: 0.7rem; color: #ccc; display: block; margin-top: 2px"
+                  >No Image</span
+                >
+              </div> -->
+
+              <div *ngIf="product.imageUrl">
+                <p-button
+                  icon="pi pi-eye"
+                  label="View"
+                  [text]="true"
+                  size="small"
+                  (onClick)="viewImage(product.imageUrl)"
+                  title="View image of {{ product.name }}"
+                  [attr.aria-label]="'View image of ' + product.name"
+                ></p-button>
+              </div>
+              <div *ngIf="!product.imageUrl" style="text-align: center">
+                <span style="font-size: 0.8rem; color: #999">No image</span>
+              </div>
+
+            </td>
+            <td>{{ product.name }}</td>
+            <td>
+              <div
+                class="description-cell"
+                (click)="
+                  product.description && product.description.length > 100
+                    ? toggleDescription(product.id)
+                    : null
+                "
+              >
+                <span *ngIf="!product.description">-</span>
+                <span *ngIf="product.description && product.description.length <= 100">{{
+                  product.description
+                }}</span>
+                <span *ngIf="product.description && product.description.length > 100">
+                  {{
+                    expandedDescriptions.has(product.id)
+                      ? product.description
+                      : (product.description | slice: 0 : 100) + '...'
+                  }}
+                </span>
+                <span
+                  *ngIf="product.description && product.description.length > 100"
+                  class="more-indicator"
+                >
+                  <i
+                    class="pi"
+                    [ngClass]="
+                      expandedDescriptions.has(product.id) ? 'pi-chevron-up' : 'pi-chevron-down'
+                    "
+                  ></i>
+                  {{ expandedDescriptions.has(product.id) ? 'Show less' : 'Show more' }}
+                </span>
+              </div>
+            </td>
+            <td>{{ product.price | number: '1.2-2' }}</td>
+            <td>{{ product.dateOfManufacture | date: 'MM/dd/yyyy' : 'UTC' }}</td>
+            <!-- <td>{{ product.createdByUserId }}</td> -->
+            <td>
+              <div class="flex gap-2">
+                <p-button
+                  label="Edit"
+                  icon="pi pi-pencil"
+                  [rounded]="true"
+                  severity="info"
+                  title="Edit product"
+                  (onClick)="editProduct(product)"
+                  [attr.aria-label]="'Edit product ' + product.name"
+                ></p-button>
+                <p-button
+                  label="Delete"
+                  icon="pi pi-trash"
+                  [rounded]="true"
+                  severity="danger"
+                  title="Delete product"
+                  (onClick)="deleteProduct(product.id)"
+                  [attr.aria-label]="'Delete product ' + product.name"
+                ></p-button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="7" class="text-center p-4">
+              <div class="flex flex-column align-items-center gap-3">
+                <i class="pi pi-inbox" style="font-size: 3rem; color: #999"></i>
+                <p style="font-size: 1.2rem; color: #666">No products found</p>
+                <p style="color: #999">
+                  {{
+                    searchValue
+                      ? 'Try adjusting your search criteria'
+                      : 'Click "Create Product" to add the first product'
+                  }}
+                </p>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
+  </div>
+
+  <!-- Create/Edit Product Modal -->
+  <p-dialog
+    [(visible)]="displayDialog"
+    [header]="isEditMode ? 'Edit Product' : 'Create Product'"
+    [modal]="true"
+    [style]="{ width: '50vw' }"
+    [breakpoints]="{ '960px': '75vw', '640px': '90vw' }"
+  >
+    <div class="form-grid">
+      <div class="field">
+        <label for="productName"
+          >Product Name<span class="required required-asterisk">*</span></label
+        >
+        <input
+          pInputText
+          id="productName"
+          [(ngModel)]="productForm.name"
+          (ngModelChange)="onProductNameChange($event)"
+          placeholder="Enter product name"
+          class="w-full"
+          [maxlength]="20"
+          [class.p-invalid]="nameError && !checkingName"
+        />
+
+        <small
+          *ngIf="productForm.name && productForm.name.length >= 20"
+          class="p-error"
+          style="color: #e24c4c; display: flex; align-items: center; gap: 4px; margin-top: 4px"
+        >
+          <i class="pi pi-exclamation-triangle" style="color: #e24c4c"></i>
+          Product name cannot exceed 20 characters
+        </small>
+
+        <small
+          *ngIf="checkingName"
+          style="color: #6366f1; display: flex; align-items: center; gap: 4px; margin-top: 4px"
+        >
+          <i class="pi pi-spin pi-spinner" style="font-size: 0.8rem"></i>
+          Checking availability...
+        </small>
+
+        <small
+          *ngIf="nameError && !checkingName"
+          class="p-error"
+          style="display: flex; align-items: center; gap: 4px; margin-top: 4px"
+        >
+          <i class="pi pi-exclamation-triangle"></i>
+          {{ nameError }}
+        </small>
+
+        <small
+          *ngIf="
+            !nameError && !checkingName && productForm.name && productForm.name.trim().length > 2
+          "
+          style="color: #22c55e; display: flex; align-items: center; gap: 4px; margin-top: 4px"
+        >
+          <i class="pi pi-check"></i>
+          Product name is available
+        </small>
+      </div>
+
+      <div class="field" style="grid-column: 1 / -1">
+        <label for="description"
+          >Description<span class="required required-asterisk">*</span></label
+        >
+        <textarea
+          pTextarea
+          id="description"
+          [(ngModel)]="productForm.description"
+          placeholder="Enter product description"
+          rows="3"
+          class="w-full"
+          style="width: 100%; resize: vertical"
+        >
+        </textarea>
+      </div>
+
+      <div class="field">
+        <label for="price">Price<span class="required required-asterisk">*</span></label>
+        <p-inputNumber
+          id="price"
+          [(ngModel)]="productForm.price"
+          [min]="0"
+          [maxFractionDigits]="2"
+          [minFractionDigits]="0"
+          placeholder="Enter price"
+          class="w-full"
+        >
+        </p-inputNumber>
+      </div>
+
+      <div class="field">
+        <label for="dateOfManufacture"
+          >Date of Manufacture<span class="required required-asterisk">*</span></label
+        >
+        <input
+          pInputText
+          id="dateOfManufacture"
+          type="date"
+          [(ngModel)]="productForm.dateOfManufacture"
+          [max]="today"
+          class="w-full"
+        />
+      </div>
+
+      <!-- Image Upload Section -->
+      <div class="field" style="grid-column: 1 / -1">
+        <label for="productImage">Product Image (Optional)</label>
+
+        <div class="image-upload-container">
+          <div *ngIf="uploading" class="upload-progress">
+            <div class="spinner-container">
+              <i class="pi pi-spin pi-spinner" style="font-size: 3rem; color: #4f46e5"></i>
+            </div>
+            <p class="upload-text">Uploading image, please wait...</p>
+            <p-progressBar mode="indeterminate" [style]="{ height: '6px' }"></p-progressBar>
+          </div>
+
+          <div *ngIf="imageLoading && !uploading" class="upload-progress">
+            <div class="spinner-container">
+              <i class="pi pi-spin pi-spinner" style="font-size: 2.5rem; color: #4f46e5"></i>
+            </div>
+            <p class="upload-text">Loading image preview...</p>
+            <p-progressBar mode="indeterminate" [style]="{ height: '6px' }"></p-progressBar>
+          </div>
+
+          \
+          <div *ngIf="imagePreview && !uploading && !imageLoading" class="image-preview">
+            <img [src]="imagePreview" alt="Preview" />
+            <div class="image-info" *ngIf="selectedFile?.name">
+              <div class="file-details">
+                <i class="pi pi-check-circle" style="color: #22c55e; margin-right: 8px"></i>
+                <span class="file-name">{{ selectedFile?.name }}</span>
+                <span class="file-size" *ngIf="selectedFile"
+                  >({{ formatFileSize(selectedFile.size) }})</span
+                >
+              </div>
+            </div>
+
+            <p-button
+              icon="pi pi-times"
+              label="X"
+              [rounded]="true"
+              severity="danger"
+              [text]="true"
+              (onClick)="removeImage()"
+              title="Remove image"
+              pTooltip="Remove image"
+              tooltipPosition="top"
+              [attr.aria-label]="'Remove image'"
+              [style]="{
+                position: 'absolute',
+                top: '8px',
+                right: '8px',
+                width: '2.5rem',
+                height: '2.5rem',
+                background: 'rgba(239, 68, 68, 0.9)',
+                color: 'white',
+                'box-shadow': '0 2px 8px rgba(0,0,0,0.3)',
+              }"
+              aria-label="Remove image"
+            ></p-button>
+          </div>
+
+          <div *ngIf="!imagePreview && !uploading && !imageLoading" class="upload-placeholder">
+            <input
+              type="file"
+              id="productImage"
+              accept="image/*"
+              (change)="onFileSelected($event)"
+              style="display: none"
+              #fileInput
+            />
+            <p-button
+              label="Choose Image"
+              icon="pi pi-upload"
+              (onClick)="fileInput.click()"
+              severity="secondary"
+              title="Choose product image"
+            ></p-button>
+            <p class="upload-hint">JPG, PNG, GIF, WEBP (Max 5MB)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <p-button
+        label="Cancel"
+        icon="pi pi-times"
+        (onClick)="hideDialog()"
+        [disabled]="uploading"
+        severity="secondary"
+        title="Cancel"
+        [attr.aria-label]="'Cancel'"
+      ></p-button>
+      <p-button
+        [label]="uploading ? 'Uploading...' : isEditMode ? 'Update' : 'Create'"
+        [icon]="uploading ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+        (onClick)="saveProduct()"
+        [disabled]="uploading"
+        severity="success"
+      ></p-button>
+    </ng-template>
+  </p-dialog>
+
+  <app-image-viewer #imageViewer></app-image-viewer>
+</app-layout>

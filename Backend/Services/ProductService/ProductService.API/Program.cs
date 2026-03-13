@@ -45,8 +45,8 @@ app.UseCors("AllowAngular");
 // Global exception handling middleware
 app.UseMiddleware<ExceptionMiddleware>();
 
-//app.UseAuthentication();
-//app.UseAuthorization();
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();

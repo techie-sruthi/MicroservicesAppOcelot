@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
-import { AuthService } from '../services/auth.service';
+import { Component, OnInit, inject } from '@angular/core';
+import { AuthService } from '../../shared/services/auth.service';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
+import { Button } from 'primeng/button';
 
 @Component({
   selector: 'app-layout',
@@ -16,13 +17,13 @@ export class AppLayoutComponent implements OnInit {
   userName: string = 'User';
   sidebarOpen: boolean = false;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  private authService = inject(AuthService);
+  private router = inject(Router);
 
   ngOnInit(): void {
     this.role = this.authService.getUserRole();
     this.isAdmin = this.role === 'Admin';
 
-    // Get user name from token if available
     const userId = this.authService.getUserId();
     if (userId) {
       this.userName = this.role === 'Admin' ? 'Admin' : 'User';

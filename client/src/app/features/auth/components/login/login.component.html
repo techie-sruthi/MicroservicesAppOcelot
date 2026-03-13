@@ -1,0 +1,100 @@
+<p-toast class="custom-toast"></p-toast>
+
+<div class="auth-container">
+  <p-card header="Login">
+    <form [formGroup]="loginForm" (ngSubmit)="onLogin()" class="p-fluid">
+
+      <div class="field">
+        <label>Email</label>
+        <input pInputText type="email" formControlName="email" />
+        <small class="p-error" *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+          <span *ngIf="loginForm.get('email')?.errors?.['required']">Email is required.</span>
+          <span *ngIf="loginForm.get('email')?.errors?.['email']">Please enter a valid email address.</span>
+        </small>
+      </div>
+
+      <div class="field mt-3">
+        <label>Password</label>
+        <p-password formControlName="password" [feedback]="false"  [toggleMask]="true"></p-password>
+        <small class="p-error" *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+          <span *ngIf="loginForm.get('password')?.errors?.['required']">Password is required.</span>
+        </small>
+      </div>
+
+     <div class="mt-4">
+    <button
+      pButton
+      type="submit"
+      class="w-full"
+      [disabled]="loading"
+      [label]="loading ? 'Logging in...' : 'Login'">
+    </button>
+  </div>
+
+     <div class="mt-3 text-center">
+    <a routerLink="/forgot-password" class="text-primary" style="text-decoration: none; font-weight: 600;">Forgot Password?</a>
+  </div>
+
+      <div class="mt-3">
+        <button
+          pButton
+          type="button"
+          class="w-full"
+          (click)="goToRegister()"
+          [label]="'Sign Up'"
+          [severity]="'secondary'">
+        </button>
+      </div>
+
+    </form>
+
+  </p-card>
+</div>
+
+
+<p-dialog 
+  [(visible)]="showOtpDialog" 
+  header="Verify OTP"
+  [modal]="true" 
+  [style]="{ width: '400px' }"
+  [closable]="true"
+  (onHide)="closeOtpDialog()">
+
+  <div class="otp-dialog-content">
+    <p class="mb-3">Enter the 6-digit OTP sent to:</p>
+    <p class="mb-4" style="font-weight: bold;">{{ userEmail }}</p>
+
+    <div class="field">
+      <label for="otpCode">OTP Code</label>
+      <input pInputText
+             id="otpCode"
+             [(ngModel)]="otpCode"
+             placeholder="Enter 6-digit OTP"
+             maxlength="6"
+             class="w-full otp-input"
+             style="font-size: 1.5rem; letter-spacing: 0.5rem; text-align: center;"
+             (keypress)="$event.charCode >= 48 && $event.charCode <= 57" /> 
+             <!-- This line restricts input to numeric characters only -->
+    </div>
+
+    <p class="mt-2 text-center" [style.font-size.px]="14" [style.color]="otpRemaining <= 60 ? '#ef4444' : '#666'">
+      OTP expires in {{ formatTime(otpRemaining) }}
+    </p>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Cancel"
+      (onClick)="closeOtpDialog()"
+      [text]="true"
+      [disabled]="loading">
+    </p-button>
+    <p-button
+      [label]="loading ? 'Verifying...' : 'Verify'"
+      (onClick)="verifyOtp()"
+      [disabled]="loading || otpCode.length !== 6">
+    </p-button>
+  </ng-template>
+</p-dialog>
+

@@ -20,6 +20,13 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         var userId = _currentUser.UserId;
         var isAdmin = _currentUser.IsAdmin;
 
+        var allProducts = await _repository.GetAllAsync();
+        var nameExists = allProducts.Any(p =>
+            p.Name.Equals(request.Name, StringComparison.OrdinalIgnoreCase));
+
+        if (nameExists)
+            throw new ArgumentException("A product with the same name already exists.");
+
         var product = new Product
         {
             Name = request.Name,
@@ -28,7 +35,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             DateOfManufacture = request.DateOfManufacture,
             CreatedByUserId = userId,
             ImageUrl = request.ImageUrl,
-            CreatedAt = DateTime.UtcNow // Set creation timestamp
+            CreatedAt = DateTime.UtcNow 
         };
 
         var id = await _repository.AddAsync(product);

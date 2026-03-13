@@ -11,6 +11,8 @@ public class UpdateProductCommand : IRequest<Unit>
     public DateTime DateOfManufacture { get; set; }
     public string? ImageUrl { get; set; }
 
+    public string RouteId { get; set; } = default!;
+
     // Authorization context
     public int CurrentUserId { get; set; }
     public bool IsAdmin { get; set; }

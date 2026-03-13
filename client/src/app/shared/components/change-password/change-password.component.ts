@@ -2,12 +2,13 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AppLayoutComponent } from '../../../core/layout/app-layout.component';
-import { UserService } from '../../../core/services/user.service';
+import { UserService } from '../../services/user.service';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { Password } from 'primeng/password';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import { catchError, finalize, of, tap } from 'rxjs';
 
 @Component({
   selector: 'app-change-password',
@@ -67,28 +68,41 @@ export class ChangePasswordComponent {
       return;
     }
 
-    this.saving = true;
-    this.userService.changePassword(this.currentPassword, this.newPassword).subscribe({
-      next: () => {
-        this.saving = false;
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Success',
-          detail: 'Password changed successfully',
-          styleClass: 'my-custom-toast',
-        });
-        this.resetForm();
-      },
-      error: (err) => {
-        this.saving = false;
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: err.error?.error || err.error?.message || 'Failed to change password',
-          styleClass: 'my-custom-toast',
-        });
-      },
-    });
+  this.saving = true;
+
+this.userService
+  .changePassword(this.currentPassword, this.newPassword)
+  .pipe(
+    
+    tap(() => {
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Password changed successfully',
+        styleClass: 'my-custom-toast',
+      });
+
+      this.resetForm();
+    }),
+
+    catchError((err) => {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: err.error?.error || err.error?.message || 'Failed to change password',
+        styleClass: 'my-custom-toast',
+      });
+
+      return of(null);
+    }),
+
+  
+    finalize(() => {
+      this.saving = false;
+    })
+
+  )
+  .subscribe();
   }
 
   resetForm(): void {

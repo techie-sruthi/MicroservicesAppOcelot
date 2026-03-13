@@ -17,6 +17,9 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
 
     public async Task<Unit> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
     {
+        if (request.RouteId != request.Id)
+            throw new ArgumentException("Route ID does not match the command ID.");
+
         var userId = _currentUser.UserId;
         var isAdmin = _currentUser.IsAdmin;
 

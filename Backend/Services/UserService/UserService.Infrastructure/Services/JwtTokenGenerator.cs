@@ -10,31 +10,28 @@ namespace UserService.Infrastructure.Services;
 
 public class JwtTokenGenerator : IJwtService
 {
-    private readonly IConfiguration _configuration;
+    private readonly string _keyString;
+    private readonly string _issuer;
+    private readonly string _audience;
+    private readonly int _expiryMinutes;
 
     public JwtTokenGenerator(IConfiguration configuration)
     {
-        _configuration = configuration;
+        var jwt = configuration.GetSection("Jwt");
+        _keyString = jwt["Key"]
+            ?? throw new Exception("JWT Key missing in configuration");
+        _issuer = jwt["Issuer"]
+            ?? throw new Exception("JWT Issuer missing in configuration");
+        _audience = jwt["Audience"]
+            ?? throw new Exception("JWT Audience missing in configuration");
+        _expiryMinutes = int.Parse(jwt["ExpiryMinutes"]
+            ?? throw new Exception("JWT ExpiryMinutes missing in configuration"));
     }
 
     public string GenerateToken(int userId, string email, string role)
     {
-        var jwt = _configuration.GetSection("Jwt");
-
-        var keyString = jwt["Key"]
-            ?? throw new Exception("JWT Key missing in configuration");
-
-        var issuer = jwt["Issuer"]
-            ?? throw new Exception("JWT Issuer missing in configuration");
-
-        var audience = jwt["Audience"]
-            ?? throw new Exception("JWT Audience missing in configuration");
-
-        var expiry = jwt["ExpiryMinutes"]
-            ?? throw new Exception("JWT ExpiryMinutes missing in configuration");
-
         var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(keyString)
+            Encoding.UTF8.GetBytes(_keyString)
         );
 
         var claims = new[]
@@ -45,10 +42,10 @@ public class JwtTokenGenerator : IJwtService
         };
 
         var token = new JwtSecurityToken(
-            issuer: issuer,
-            audience: audience,
+            issuer: _issuer,
+            audience: _audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(int.Parse(expiry)),
+            expires: DateTime.UtcNow.AddMinutes(_expiryMinutes),
             signingCredentials: new SigningCredentials(
                 key,
                 SecurityAlgorithms.HmacSha256

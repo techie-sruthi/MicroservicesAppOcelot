@@ -119,7 +119,7 @@ public class EmailService : IEmailService
             Credentials = new NetworkCredential(_emailSettings.SenderEmail, _emailSettings.Password)
         };
 
-        var mailMessage = new MailMessage
+        using var mailMessage = new MailMessage
         {
             From = new MailAddress(_emailSettings.SenderEmail, _emailSettings.SenderName),
             Subject = subject,

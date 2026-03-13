@@ -1,4 +1,3 @@
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using ProductService.Application.Products.Commands.CreateProduct;
 using ProductService.Application.Products.Commands.UpdateProduct;
@@ -7,105 +6,44 @@ using ProductService.Application.Products.Commands.DeleteProduct;
 using ProductService.Application.Products.Queries.GetProductById;
 using ProductService.Application.Products.Queries.GetProductsByUserId;
 using ProductService.Application.Products.Queries.CheckProductName;
-using Microsoft.AspNetCore.Authorization;
+using ProductService.Application.Products.Commands.UploadImage;
 using ProductService.API.Helpers;
-using ProductService.API.Validators;
-using ProductService.Application.Common.Interfaces;
-using System.Security.Claims;
-using Microsoft.Extensions.Logging;
-
 
 namespace ProductService.API.Controllers;
 
-//[Authorize]
-[ApiController]
-[Route("api/products")]
-public class ProductsController : ControllerBase
+public class ProductsController : BaseController
 {
-    private readonly IMediator _mediator;
-    private readonly IFileStorageService _fileStorageService;
-     private readonly ILogger<ProductsController> _logger;
-    public ProductsController(
-        IMediator mediator,
-        IFileStorageService fileStorageService,
-         ILogger<ProductsController> logger
-        )
-    {
-        _mediator = mediator;
-        _fileStorageService = fileStorageService;
-         _logger = logger;
-    }
-
-    [HttpPost]
+    [HttpPost("[action]")]
     public async Task<IActionResult> Create(CreateProductCommand command)
-    {
-        var productId = await _mediator.Send(command);
-        return Ok(new { id = productId });
-    }
+        => Ok(new { id = await Mediator.Send(command) });
 
-    [HttpGet("all")]
+    [HttpGet("[action]")]
     public async Task<IActionResult> GetAllProducts([FromQuery] GetAllProductsQuery query, CancellationToken cancellationToken)
-    {
-        var result = await _mediator.Send(query, cancellationToken);
-        return Ok(result);
-    }
+        => Ok(await Mediator.Send(query, cancellationToken));
 
-
-    [HttpGet("my-products")]
+    [HttpGet("[action]")]
     public async Task<IActionResult> GetMyProducts([FromQuery] GetProductsByUserIdQuery query, CancellationToken cancellationToken)
-    {
-        var result = await _mediator.Send(query, cancellationToken);
-        return Ok(result);
-    }
+        => Ok(await Mediator.Send(query, cancellationToken));
 
-    [HttpGet("{id}")]
+    [HttpGet("[action]/{id}")]
     public async Task<IActionResult> GetById(string id)
-    {
-        {
-            var product = await _mediator.Send(new GetProductByIdQuery(id));
-            return Ok(product);
-        }
-    }
+        => Ok(await Mediator.Send(new GetProductByIdQuery(id)));
 
-    [HttpPut("{id}")]
+    [HttpPut("[action]/{id}")]
     public async Task<IActionResult> Update(string id, UpdateProductCommand command)
-    {
-        if (id != command.Id)
-           return BadRequest("Product ID mismatch");
-        await _mediator.Send(command);
-        return NoContent();
-    }
+    { command.RouteId = id; return await SendNoContent(command); }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("[action]/{id}")]
     public async Task<IActionResult> Delete(string id)
-    {
-        var command = new DeleteProductCommand(id)
-        {
-            CurrentUserId = User.GetUserId(),
-            IsAdmin = User.IsAdmin()
-        };
+        => await SendNoContent(new DeleteProductCommand(id) { CurrentUserId = User.GetUserId(), IsAdmin = User.IsAdmin() });
 
-        await _mediator.Send(command);
-        return NoContent();
-    }
-
-    [HttpPost("upload-image")]
+    [HttpPost("[action]")]
     public async Task<IActionResult> UploadImage(IFormFile file)
-    {
-        FileValidator.ValidateImageFile(file);
+        => Ok(new { imageUrl = await Mediator.Send(new UploadImageCommand(file)) });
 
-        using var stream = file.OpenReadStream();
-        var imageUrl = await _fileStorageService.UploadFileAsync(stream, file.FileName, file.ContentType);
-
-        return Ok(new { imageUrl });
-    }
-
-    [HttpGet("check-name")]
+    [HttpGet("[action]")]
     public async Task<IActionResult> CheckProductName([FromQuery] CheckProductNameQuery query)
-    {
-        var exists = await _mediator.Send(query);
-        return Ok(new { exists });
-    }
+        => Ok(new { exists = await Mediator.Send(query) });
 }
 
 

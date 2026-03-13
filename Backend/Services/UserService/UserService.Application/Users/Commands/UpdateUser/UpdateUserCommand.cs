@@ -7,4 +7,7 @@ public record UpdateUserCommand(
     string UserName,
     string Email,
     string Role
-) : IRequest<Unit>;
+) : IRequest<Unit>
+{
+    public int RouteId { get; set; }
+}

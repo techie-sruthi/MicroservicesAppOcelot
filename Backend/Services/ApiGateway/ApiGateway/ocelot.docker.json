@@ -5,9 +5,9 @@
     // ---------- PUBLIC ROUTES (NO AUTH) ----------
 
     {
-      "UpstreamPathTemplate": "/users/register",
+      "UpstreamPathTemplate": "/users/Register",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "/api/users/register",
+      "DownstreamPathTemplate": "/api/users/Register",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -17,9 +17,9 @@
       ]
     },
     {
-      "UpstreamPathTemplate": "/users/login",
+      "UpstreamPathTemplate": "/users/Login",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "/api/users/login",
+      "DownstreamPathTemplate": "/api/users/Login",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -29,9 +29,9 @@
       ]
     },
     {
-      "UpstreamPathTemplate": "/users/change-password",
+      "UpstreamPathTemplate": "/users/ChangePassword",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "/api/users/change-password",
+      "DownstreamPathTemplate": "/api/users/ChangePassword",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -44,9 +44,9 @@
       }
     },
     {
-      "UpstreamPathTemplate": "/users/logout",
+      "UpstreamPathTemplate": "/users/Logout",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "/api/users/logout",
+      "DownstreamPathTemplate": "/api/users/Logout",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -56,9 +56,9 @@
       ]
     },
     {
-      "UpstreamPathTemplate": "/users/verify-otp",
+      "UpstreamPathTemplate": "/users/VerifyOtp",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "/api/users/verify-otp",
+      "DownstreamPathTemplate": "/api/users/VerifyOtp",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -68,9 +68,9 @@
       ]
     },
     {
-      "UpstreamPathTemplate": "/users/refresh",
+      "UpstreamPathTemplate": "/users/Refresh",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "/api/users/refresh",
+      "DownstreamPathTemplate": "/api/users/Refresh",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -80,9 +80,9 @@
       ]
     },
     {
-      "UpstreamPathTemplate": "/users/check-email",
+      "UpstreamPathTemplate": "/users/CheckEmail",
       "UpstreamHttpMethod": [ "GET" ],
-      "DownstreamPathTemplate": "/api/users/check-email",
+      "DownstreamPathTemplate": "/api/users/CheckEmail",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -92,9 +92,9 @@
       ]
     },
     {
-      "UpstreamPathTemplate": "/users/forgot-password",
+      "UpstreamPathTemplate": "/users/ForgotPassword",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "/api/users/forgot-password",
+      "DownstreamPathTemplate": "/api/users/ForgotPassword",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -104,9 +104,9 @@
       ]
     },
     {
-      "UpstreamPathTemplate": "/users/reset-password",
+      "UpstreamPathTemplate": "/users/ResetPassword",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "/api/users/reset-password",
+      "DownstreamPathTemplate": "/api/users/ResetPassword",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -119,9 +119,9 @@
     // ---------- ADMIN ONLY ----------
 
     {
-      "UpstreamPathTemplate": "/users",
+      "UpstreamPathTemplate": "/users/GetAll",
       "UpstreamHttpMethod": [ "GET" ],
-      "DownstreamPathTemplate": "/api/users",
+      "DownstreamPathTemplate": "/api/users/GetAll",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -141,9 +141,9 @@
     // ---------- AUTHENTICATED USERS ----------
 
     {
-      "UpstreamPathTemplate": "/users",
+      "UpstreamPathTemplate": "/users/Create",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "/api/users",
+      "DownstreamPathTemplate": "/api/users/Create",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -158,9 +158,39 @@
 
     // Parameter route LAST
     {
-      "UpstreamPathTemplate": "/users/{id}",
-      "UpstreamHttpMethod": [ "GET", "PUT", "DELETE" ],
-      "DownstreamPathTemplate": "/api/users/{id}",
+      "UpstreamPathTemplate": "/users/GetById/{id}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/users/GetById/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "userservice",
+          "Port": 5100
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/users/Update/{id}",
+      "UpstreamHttpMethod": [ "PUT" ],
+      "DownstreamPathTemplate": "/api/users/Update/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "userservice",
+          "Port": 5100
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/users/Delete/{id}",
+      "UpstreamHttpMethod": [ "DELETE" ],
+      "DownstreamPathTemplate": "/api/users/Delete/{id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -190,9 +220,9 @@
     },
 
     {
-      "UpstreamPathTemplate": "/users/by-ids",
+      "UpstreamPathTemplate": "/users/GetUsersByIds",
       "UpstreamHttpMethod": [ "GET" ],
-      "DownstreamPathTemplate": "/api/users/by-ids",
+      "DownstreamPathTemplate": "/api/users/GetUsersByIds",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -216,9 +246,9 @@
     // ---------- ADMIN ONLY (MOST SPECIFIC FIRST) ----------
 
     {
-      "UpstreamPathTemplate": "/products/all",
+      "UpstreamPathTemplate": "/products/GetAllProducts",
       "UpstreamHttpMethod": [ "GET" ],
-      "DownstreamPathTemplate": "/api/products/all",
+      "DownstreamPathTemplate": "/api/products/GetAllProducts",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -238,9 +268,9 @@
     // ---------- USER ONLY ----------
 
     {
-      "UpstreamPathTemplate": "/products/my-products",
+      "UpstreamPathTemplate": "/products/GetMyProducts",
       "UpstreamHttpMethod": [ "GET" ],
-      "DownstreamPathTemplate": "/api/products/my-products",
+      "DownstreamPathTemplate": "/api/products/GetMyProducts",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -259,9 +289,9 @@
     // ---------- OTHER SPECIFIC ROUTES ----------
 
     {
-      "UpstreamPathTemplate": "/products/check-name",
+      "UpstreamPathTemplate": "/products/CheckProductName",
       "UpstreamHttpMethod": [ "GET" ],
-      "DownstreamPathTemplate": "/api/products/check-name",
+      "DownstreamPathTemplate": "/api/products/CheckProductName",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -275,9 +305,9 @@
     },
 
     {
-      "UpstreamPathTemplate": "/products/upload-image",
+      "UpstreamPathTemplate": "/products/UploadImage",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "/api/products/upload-image",
+      "DownstreamPathTemplate": "/api/products/UploadImage",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -292,26 +322,10 @@
 
     // ---------- BASE ROUTE ----------
 
-    {
-      "UpstreamPathTemplate": "/products",
-      "UpstreamHttpMethod": [ "GET" ],
-      "DownstreamPathTemplate": "/api/products",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
         {
-          "Host": "productservice",
-          "Port": 5050
-        }
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      }
-    },
-
-    {
-      "UpstreamPathTemplate": "/products",
+      "UpstreamPathTemplate": "/products/Create",
       "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "/api/products",
+      "DownstreamPathTemplate": "/api/products/Create",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -326,9 +340,39 @@
 
     // Parameter route LAST
     {
-      "UpstreamPathTemplate": "/products/{id}",
-      "UpstreamHttpMethod": [ "GET", "PUT", "DELETE" ],
-      "DownstreamPathTemplate": "/api/products/{id}",
+      "UpstreamPathTemplate": "/products/GetById/{id}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/products/GetById/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "productservice",
+          "Port": 5050
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/products/Update/{id}",
+      "UpstreamHttpMethod": [ "PUT" ],
+      "DownstreamPathTemplate": "/api/products/Update/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "productservice",
+          "Port": 5050
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/products/Delete/{id}",
+      "UpstreamHttpMethod": [ "DELETE" ],
+      "DownstreamPathTemplate": "/api/products/Delete/{id}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {

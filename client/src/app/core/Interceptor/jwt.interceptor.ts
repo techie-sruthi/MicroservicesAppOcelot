@@ -2,7 +2,7 @@ import { HttpInterceptorFn, HttpRequest, HttpHandlerFn } from '@angular/common/h
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError, switchMap } from 'rxjs';
-import { AuthService } from '../services/auth.service';
+import { AuthService } from '../../shared/services/auth.service';
 import { MessageService } from 'primeng/api';
 
 let isRefreshing = false;
@@ -10,6 +10,7 @@ let isRefreshing = false;
 export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
+  const messageService = inject(MessageService);
 
   const token = authService.getAccessToken();
 
@@ -26,8 +27,7 @@ export const jwtInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       // If 403 and not a change-password request, show forbidden toast and logout
-      if (error.status === 403 && !req.url.includes('/change-password')) {
-        const messageService = inject(MessageService);
+      if (error.status === 403 && !req.url.includes('/ChangePassword')) {
         messageService.add({
           key: 'global',
           severity: 'error',
@@ -70,14 +70,12 @@ function handle401Error(
   return authService.refreshToken().pipe(
     switchMap((response: any) => {
       isRefreshing = false;
-      console.log('Token refreshed successfully');
 
       const clonedRequest = addTokenToRequest(request, response.accessToken);
       return next(clonedRequest);
     }),
     catchError((err) => {
       isRefreshing = false;
-      console.error('Token refresh failed:', err);
 
       authService.logout();
       router.navigate(['/login']);

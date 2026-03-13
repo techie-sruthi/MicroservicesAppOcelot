@@ -20,6 +20,9 @@ public class UpdateUserCommandHandler
 
     public async Task<Unit> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
+        if (request.RouteId != request.Id)
+            throw new ArgumentException("Route ID does not match the command ID.");
+
         if (string.IsNullOrWhiteSpace(request.Email) || !EmailRegex.IsMatch(request.Email))
             throw new ArgumentException("Invalid email format. Please enter a valid email (e.g. user@example.com)");
 

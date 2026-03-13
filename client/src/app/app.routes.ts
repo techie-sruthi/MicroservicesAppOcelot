@@ -1,54 +1,63 @@
 import { Routes } from '@angular/router';
-import { LoginComponent } from './features/auth/login/login.component';
-import { RegisterComponent } from './features/auth/register/register.component';
-import { ForgotPasswordComponent } from './features/auth/forgot-password/forgot-password.component';
-import { ResetPasswordComponent } from './features/auth/reset-password/reset-password.component';
-import { AdminUsersComponent } from './features/admin/users/admin-users.component';
-import { AdminProductsComponent } from './features/admin/products/admin-products.component';
-import { UserProductsComponent } from './features/user/products/user-products.component';
-import { ChangePasswordComponent } from './shared/components/change-password/change-password.component';
 import { authGuard } from './core/guards/auth.guard';
 import { roleGuard } from './core/guards/role.guard';
 import { smartRedirectGuard } from './core/guards/smart-redirect.guard';
+import { noAuthGuard } from './core/guards/no-auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
 
-  { path: 'login', component: LoginComponent },
-  { path: 'register', component: RegisterComponent },
-  { path: 'forgot-password', component: ForgotPasswordComponent },
-  { path: 'reset-password', component: ResetPasswordComponent },
+  {
+    path: 'login',
+    canActivate: [noAuthGuard],
+    loadComponent: () => import('./features/auth/components/login/login.component').then(m => m.LoginComponent)
+  },
+  {
+    path: 'register',
+    canActivate: [noAuthGuard],
+    loadComponent: () => import('./features/auth/components/register/register.component').then(m => m.RegisterComponent)
+  },
+  {
+    path: 'forgot-password',
+    canActivate: [noAuthGuard],
+    loadComponent: () => import('./features/auth/components/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent)
+  },
+  {
+    path: 'reset-password',
+    canActivate: [noAuthGuard],
+    loadComponent: () => import('./features/auth/components/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
+  },
 
   {
     path: 'admin/products',
     canActivate: [authGuard, roleGuard],
     data: { role: 'Admin' },
-    component: AdminProductsComponent
+    loadComponent: () => import('./features/admin/components/products/admin-products.component').then(m => m.AdminProductsComponent)
   },
   {
     path: 'admin/users',
     canActivate: [authGuard, roleGuard],
     data: { role: 'Admin' },
-    component: AdminUsersComponent
+    loadComponent: () => import('./features/admin/components/users/admin-users.component').then(m => m.AdminUsersComponent)
   },
   {
     path: 'admin/change-password',
     canActivate: [authGuard, roleGuard],
     data: { role: 'Admin' },
-    component: ChangePasswordComponent
+    loadComponent: () => import('./shared/components/change-password/change-password.component').then(m => m.ChangePasswordComponent)
   },
 
   {
     path: 'user/products',
     canActivate: [authGuard, roleGuard],
     data: { role: 'User' },
-    component: UserProductsComponent
+    loadComponent: () => import('./features/user/components/products/user-products.component').then(m => m.UserProductsComponent)
   },
   {
     path: 'user/change-password',
     canActivate: [authGuard, roleGuard],
     data: { role: 'User' },
-    component: ChangePasswordComponent
+    loadComponent: () => import('./shared/components/change-password/change-password.component').then(m => m.ChangePasswordComponent)
   },
 
   { 

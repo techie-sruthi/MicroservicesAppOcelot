@@ -1,0 +1,23 @@
+ <p-dialog 
+      [(visible)]="visible" 
+      [modal]="true"
+      [dismissableMask]="true"
+      [closable]="true"
+      [style]="{ width: '90vw', height: '90vh' }"
+      [contentStyle]="{ padding: 0, overflow: 'hidden' }"
+      styleClass="image-viewer-dialog">
+      
+      <div class="image-container">
+        <img [src]="imageUrl" [alt]="'Product Image'" class="full-image" />
+      </div>
+      
+      <ng-template pTemplate="footer">
+        <button pButton 
+                type="button" 
+                label="Close" 
+                icon="pi pi-times"
+                (click)="close()"
+                severity="secondary">
+        </button>
+      </ng-template>
+    </p-dialog>

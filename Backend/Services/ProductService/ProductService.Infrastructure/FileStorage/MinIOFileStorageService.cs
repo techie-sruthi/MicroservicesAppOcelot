@@ -8,11 +8,13 @@ using ProductService.Application.Common.Interfaces;
 
 namespace ProductService.Infrastructure.FileStorage;
 
-public class MinIOFileStorageService : IFileStorageService
+public class MinIOFileStorageService : IFileStorageService, IDisposable
 {
     private readonly IAmazonS3 _s3Client;
     private readonly MinIOSettings _settings;
     private readonly ILogger<MinIOFileStorageService> _logger;
+    private bool _bucketEnsured;
+    private bool _disposed;
 
     public MinIOFileStorageService(IOptions<MinIOSettings> settings, ILogger<MinIOFileStorageService> logger)
     {
@@ -28,9 +30,6 @@ public class MinIOFileStorageService : IFileStorageService
         };
 
         _s3Client = new AmazonS3Client(credentials, config);
-
-        // Ensure bucket exists
-        EnsureBucketExistsAsync().GetAwaiter().GetResult();
     }
 
     private async Task EnsureBucketExistsAsync()
@@ -83,6 +82,13 @@ public class MinIOFileStorageService : IFileStorageService
     {
         try
         {
+            // Ensure bucket exists on first use (lazy initialization)
+            if (!_bucketEnsured)
+            {
+                await EnsureBucketExistsAsync();
+                _bucketEnsured = true;
+            }
+
             // Generate unique file name
             var uniqueFileName = $"{Guid.NewGuid()}_{fileName}";
             var key = $"products/{uniqueFileName}";
@@ -96,7 +102,7 @@ public class MinIOFileStorageService : IFileStorageService
                 CannedACL = S3CannedACL.PublicRead
             };
 
-            var transferUtility = new TransferUtility(_s3Client);
+            using var transferUtility = new TransferUtility(_s3Client);
             await transferUtility.UploadAsync(uploadRequest);
 
             // Return the public URL (use PublicEndpoint if set for external accessibility)
@@ -179,6 +185,15 @@ public class MinIOFileStorageService : IFileStorageService
         {
             _logger.LogError(ex, $"Error extracting key from URL: {fileUrl}");
             return null;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (!_disposed)
+        {
+            (_s3Client as IDisposable)?.Dispose();
+            _disposed = true;
         }
     }
 }

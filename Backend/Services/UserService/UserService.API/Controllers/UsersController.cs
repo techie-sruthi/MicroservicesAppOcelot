@@ -12,130 +12,73 @@ using UserService.Application.Users.Commands.DeleteUser;
 using UserService.Application.Users.Commands.Logout;
 using UserService.Application.Users.Queries.GetUserById;
 using UserService.Application.Users.Queries.CheckEmail;
-using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using UserService.API.Helpers;
 
 namespace UserService.API.Controllers;
 
-[ApiController]
-[Route("api/users")]
-public class UsersController : ControllerBase
+public class UsersController : BaseController
 {
-    private readonly IMediator _mediator;
-    private readonly ILogger<UsersController> _logger;
-
-    public UsersController(IMediator mediator, ILogger<UsersController> logger)
-    {
-        _mediator = mediator;
-        _logger = logger;
-    }
-
-    [HttpPost("register")]
+    [HttpPost("[action]")]
     public async Task<IActionResult> Register(RegisterUserCommand command)
-    {
-        var userId = await _mediator.Send(command);
-        return Ok(userId);
-    }
+        => Ok(await Mediator.Send(command));
 
-    [HttpPost("login")]
+    [HttpPost("[action]")]
     public async Task<IActionResult> Login(LoginUserCommand command)
-    {
-        var response = await _mediator.Send(command);
-        return Ok(response);
-    }
+        => Ok(await Mediator.Send(command));
 
-    [HttpPost("verify-otp")]
+    [HttpPost("[action]")]
     public async Task<IActionResult> VerifyOtp(VerifyOtpCommand command)
-    {
-            var response = await _mediator.Send(command);
-            return Ok(response);   
-    }
+        => Ok(await Mediator.Send(command));
 
-
-    [HttpPost("refresh")]
+    [HttpPost("[action]")]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenCommand command)
-    {
-            var response = await _mediator.Send(command);
-            return Ok(response);
-    }
+        => Ok(await Mediator.Send(command));
 
-    [HttpPost("logout")]
+    [HttpPost("[action]")]
     public async Task<IActionResult> Logout([FromBody] LogoutCommand command)
-    {
-        await _mediator.Send(command);
-        return NoContent();
-    }
+        => await SendNoContent(command);
 
-    [HttpPost]
+    [HttpPost("[action]")]
     public async Task<IActionResult> Create(CreateUserCommand command)
-        => Ok(await _mediator.Send(command));
+        => Ok(await Mediator.Send(command));
 
-    [HttpGet]
-    public async Task<IActionResult> GetAll( [FromQuery] GetAllUsersQuery query)
-    {        
-        return Ok(await _mediator.Send(query));
-    }
+    [HttpGet("[action]")]
+    public async Task<IActionResult> GetAll([FromQuery] GetAllUsersQuery query)
+        => Ok(await Mediator.Send(query));
 
-    [HttpGet("{id}")]
+    [HttpGet("[action]/{id}")]
     public async Task<IActionResult> GetById(int id)
-        => Ok(await _mediator.Send(new GetUserByIdQuery(id)));
+        => Ok(await Mediator.Send(new GetUserByIdQuery(id)));
 
-    [HttpPut("{id}")]
+    [HttpPut("[action]/{id}")]
     public async Task<IActionResult> Update(int id, UpdateUserCommand command)
-    {
-        if (id != command.Id) return BadRequest();
-        await _mediator.Send(command);
-        return NoContent();
-    }
+        => Ok(await Mediator.Send(command with { RouteId = id }));
 
-    [HttpDelete("{id}")]
+    [HttpDelete("[action]/{id}")]
     public async Task<IActionResult> Delete(int id)
-    {
-        await _mediator.Send(new DeleteUserCommand(id));
-        return NoContent();
-    }
+        => await SendNoContent(new DeleteUserCommand(id));
 
-    [HttpGet("check-email")]
+    [HttpGet("[action]")]
     public async Task<IActionResult> CheckEmail([FromQuery] string email)
-    {
-        var exists = await _mediator.Send(new CheckEmailQuery { Email = email });
-        return Ok(new { exists });
-    }
+        => Ok(new { exists = await Mediator.Send(new CheckEmailQuery { Email = email }) });
 
-    [HttpPost("forgot-password")]
+    [HttpPost("[action]")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
-    {
-        await _mediator.Send(new ForgotPasswordCommand(request.Email));
-        return Ok(new { message = "If your email exists, you will receive a password reset link." });
-    }
+        => await SendOk(new ForgotPasswordCommand(request.Email), new { message = "If your email exists, you will receive a password reset link." });
 
-    [HttpPost("reset-password")]
+    [HttpPost("[action]")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
-    {
-        await _mediator.Send(new ResetPasswordCommand(request.Token, request.NewPassword));
-        return Ok(new { message = "Password has been reset successfully." });
-    }
+        => await SendOk(new ResetPasswordCommand(request.Token, request.NewPassword), new { message = "Password has been reset successfully." });
 
-    [HttpGet("by-ids")]
+    [HttpGet("[action]")]
     public async Task<IActionResult> GetUsersByIds([FromQuery] string ids)
-    {
-        var result = await _mediator.Send(new GetUserByIdsQuery { Ids = ids });
+        => Ok(await Mediator.Send(new GetUserByIdsQuery { Ids = ids }));
 
-        return Ok(result);
-    }
-
-    [Authorize]
-    [HttpPost("change-password")]
+    [HttpPost("[action]")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
-    {
-        //var userId = JwtHelper.GetUserIdFromToken(this, _logger);
-
-        var command = new ChangePasswordCommand(request.CurrentPassword, request.NewPassword);
-        await _mediator.Send(command);
-        return Ok(new { message = "Password changed successfully." });
-    }
+        => await SendOk(new ChangePasswordCommand(request.CurrentPassword, request.NewPassword), new { message = "Password changed successfully." });
 }
 
 public record ForgotPasswordRequest(string Email);
