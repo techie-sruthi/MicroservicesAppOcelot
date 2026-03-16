@@ -66,11 +66,11 @@ public class UsersController : BaseController
 
     [HttpPost("[action]")]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
-        => await SendOk(new ForgotPasswordCommand(request.Email), new { message = "If your email exists, you will receive a password reset link." });
+        => Ok(await Mediator.Send(new ForgotPasswordCommand(request.Email)));
 
     [HttpPost("[action]")]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
-        => await SendOk(new ResetPasswordCommand(request.Token, request.NewPassword), new { message = "Password has been reset successfully." });
+        => Ok(await Mediator.Send(new ResetPasswordCommand(request.Token, request.NewPassword)));
 
     [HttpGet("[action]")]
     public async Task<IActionResult> GetUsersByIds([FromQuery] string ids)
@@ -78,7 +78,7 @@ public class UsersController : BaseController
 
     [HttpPost("[action]")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
-        => await SendOk(new ChangePasswordCommand(request.CurrentPassword, request.NewPassword), new { message = "Password changed successfully." });
+        => Ok(await Mediator.Send(new ChangePasswordCommand(request.CurrentPassword, request.NewPassword)));
 }
 
 public record ForgotPasswordRequest(string Email);

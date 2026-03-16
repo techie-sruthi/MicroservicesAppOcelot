@@ -1,9 +1,10 @@
 using MediatR;
 using UserService.Application.Common.Interfaces;
+using UserService.Application.Common.Models;
 
 namespace UserService.Application.Users.Commands.ChangePassword;
 
-public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordCommand, bool>
+public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordCommand, MessageResponse>
 {
     private readonly IUserDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
@@ -16,7 +17,7 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
         _currentUser = currentUser;
     }
 
-    public async Task<bool> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
+    public async Task<MessageResponse> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
     {
         var userId = _currentUser.UserId;
         var isAdmin = _currentUser.IsAdmin;
@@ -35,6 +36,6 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
         user.PasswordHash = _passwordHasher.Hash(request.NewPassword);
         await _context.SaveChangesAsync(cancellationToken);
 
-        return true;
+        return new MessageResponse("Password changed successfully.");
     }
 }

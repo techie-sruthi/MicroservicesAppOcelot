@@ -18,12 +18,12 @@ public class ProductsController : BaseController
         => Ok(new { id = await Mediator.Send(command) });
 
     [HttpGet("[action]")]
-    public async Task<IActionResult> GetAllProducts([FromQuery] GetAllProductsQuery query, CancellationToken cancellationToken)
-        => Ok(await Mediator.Send(query, cancellationToken));
+    public async Task<IActionResult> GetAllProducts([FromQuery] GetAllProductsQuery query)
+        => Ok(await Mediator.Send(query));
 
     [HttpGet("[action]")]
-    public async Task<IActionResult> GetMyProducts([FromQuery] GetProductsByUserIdQuery query, CancellationToken cancellationToken)
-        => Ok(await Mediator.Send(query, cancellationToken));
+    public async Task<IActionResult> GetMyProducts([FromQuery] GetProductsByUserIdQuery query)
+        => Ok(await Mediator.Send(query));
 
     [HttpGet("[action]/{id}")]
     public async Task<IActionResult> GetById(string id)
@@ -50,6 +50,7 @@ public class ProductsController : BaseController
 
 
 
+//=> Ok(await Mediator.Send(query, HttpContext.RequestAborted));
 //[HttpGet]
 //public async Task<IActionResult> GetProducts([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
 //{

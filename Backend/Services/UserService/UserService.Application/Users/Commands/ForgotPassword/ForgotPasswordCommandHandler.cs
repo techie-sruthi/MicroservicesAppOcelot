@@ -1,12 +1,13 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using UserService.Application.Common.Interfaces;
+using UserService.Application.Common.Models;
 using UserService.Application.Contracts;
 using System.Security.Cryptography;
 
 namespace UserService.Application.Users.Commands.ForgotPassword;
 
-public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordCommand, bool>
+public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordCommand, MessageResponse>
 {
     private readonly IUserDbContext _context;
     private readonly IEmailService _emailService;
@@ -17,15 +18,15 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
         _emailService = emailService;
     }
 
-    public async Task<bool> Handle(ForgotPasswordCommand request, CancellationToken cancellationToken)
+    public async Task<MessageResponse> Handle(ForgotPasswordCommand request, CancellationToken cancellationToken)
     {
         var user = await _context.Users
             .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
 
         if (user == null)
         {
-            // Return true even if user doesn't exist (security: don't reveal which emails exist)
-            return true;
+            // Return success even if user doesn't exist (security: don't reveal which emails exist)
+            return new MessageResponse("If your email exists, you will receive a password reset link.");
         }
 
         // Generate secure random token
@@ -54,6 +55,6 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
             Console.WriteLine($"[ForgotPassword] Email send failed: {ex.Message}");
         }
 
-        return true;
+        return new MessageResponse("If your email exists, you will receive a password reset link.");
     }
 }
