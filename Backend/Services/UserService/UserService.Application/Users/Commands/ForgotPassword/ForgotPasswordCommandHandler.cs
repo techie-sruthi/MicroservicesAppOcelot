@@ -25,7 +25,7 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
 
         if (user == null)
         {
-            // Return success even if user doesn't exist (security: don't reveal which emails exist)
+            // don't reveal user emails doesnt exist
             return new MessageResponse("If your email exists, you will receive a password reset link.");
         }
 
@@ -41,17 +41,14 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        // Build reset link
         var resetLink = $"http://localhost:4200/reset-password?token={token}";
 
-        // Send email with reset link
         try
         {
             await _emailService.SendPasswordResetEmailAsync(user.Email, resetLink);
         }
         catch (Exception ex)
         {
-            // Log the error but don't expose the token or email
             Console.WriteLine($"[ForgotPassword] Email send failed: {ex.Message}");
         }
 
