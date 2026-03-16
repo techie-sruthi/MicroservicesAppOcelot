@@ -52,7 +52,7 @@ public class LoginUserCommandHandler
         _otpService.StoreOtp(user.Email, otp);
         await _emailService.SendOtpEmailAsync(user.Email, otp);
 
-        _logger.LogDebug("Generated OTP for {Email}: {Otp}", user.Email, otp);
+        _logger.LogDebug("OTP sent to {Email}", user.Email);
 
         return new
         {

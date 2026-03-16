@@ -43,19 +43,15 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
         // Build reset link
         var resetLink = $"http://localhost:4200/reset-password?token={token}";
 
-        Console.WriteLine($"[ForgotPassword] Reset link for {user.Email}: {resetLink}");
-
         // Send email with reset link
         try
         {
             await _emailService.SendPasswordResetEmailAsync(user.Email, resetLink);
-            Console.WriteLine($"[ForgotPassword] Reset email sent to {user.Email}");
         }
         catch (Exception ex)
         {
-            // Log the error but don't fail the request (token is still saved)
+            // Log the error but don't expose the token or email
             Console.WriteLine($"[ForgotPassword] Email send failed: {ex.Message}");
-            Console.WriteLine($"[ForgotPassword] Use this link manually: {resetLink}");
         }
 
         return true;
