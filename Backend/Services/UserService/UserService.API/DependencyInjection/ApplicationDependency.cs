@@ -1,16 +1,12 @@
 using MediatR;
-
+using UserService.Application;
 namespace UserService.API.DependencyInjection;
 
 public static class ApplicationDependency
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        // MediatR for CQRS
-        services.AddMediatR(cfg =>
-        {
-            cfg.RegisterServicesFromAssembly(typeof(Application.AssemblyReference).Assembly);
-        });
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(IAssemblyReference).Assembly));
 
         return services;
     }

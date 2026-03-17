@@ -17,14 +17,13 @@ public class GetProductByIdQueryHandler : IRequestHandler<GetProductByIdQuery, P
 
     public async Task<ProductDto> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)
     {
-        var userId = _currentUser.UserId;
+        var userId = _currentUser.GetUserId();
         var isAdmin = _currentUser.IsAdmin;
         var product = await _repository.GetByIdAsync(request.Id);
 
         if (product == null)
-            throw new Exception("Product not found");
+            throw new KeyNotFoundException($"Product with ID '{request.Id}' was not found.");
 
-        // Authorization: Non-admin users can only view their own products
         if (!isAdmin && product.CreatedByUserId != userId)
         {
             throw new UnauthorizedAccessException($"User {request.CurrentUserId} is not authorized to access product {request.Id}");

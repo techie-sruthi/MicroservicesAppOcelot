@@ -13,18 +13,14 @@ public static class JwtHelper
 
         if (string.IsNullOrEmpty(userIdClaim))
         {
-            logger.LogError("UserId claim not found in JWT token. Available claims: {Claims}",
-                string.Join(", ", controller.User.Claims.Select(c => $"{c.Type}={c.Value}")));
             throw new UnauthorizedAccessException("User ID not found in token");
         }
 
         if (!int.TryParse(userIdClaim, out int userId))
         {
-            logger.LogError($"Invalid userId format in token: {userIdClaim}");
             throw new UnauthorizedAccessException("Invalid user ID format");
         }
 
-        logger.LogInformation($"Extracted userId: {userId} from token");
         return userId;
     }
 

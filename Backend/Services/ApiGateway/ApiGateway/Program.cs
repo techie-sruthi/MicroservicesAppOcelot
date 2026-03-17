@@ -5,6 +5,7 @@ using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 using Microsoft.AspNetCore.Http;
 using ApiGateway;
+using ApiGateway.Exceptions;
 using ApiGateway.Security;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
@@ -18,9 +19,9 @@ var ocelotFile = Environment.GetEnvironmentVariable("OCELOT_CONFIG") ?? "ocelot.
 builder.Configuration.AddJsonFile(ocelotFile, optional: false, reloadOnChange: true);
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
-var keyString = jwtSection["Key"] ?? throw new Exception("JWT Key missing in configuration");
-var issuer = jwtSection["Issuer"] ?? throw new Exception("JWT Issuer missing in configuration");
-var audience = jwtSection["Audience"] ?? throw new Exception("JWT Audience missing in configuration");
+var keyString = jwtSection["Key"] ?? throw new ConfigurationMissingException("JWT Key");
+var issuer = jwtSection["Issuer"] ?? throw new ConfigurationMissingException("JWT Issuer");
+var audience = jwtSection["Audience"] ?? throw new ConfigurationMissingException("JWT Audience");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -44,13 +45,9 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
-//builder.Services.AddHttpClient();
-
 builder.Services
     .AddOcelot(builder.Configuration)
     .AddSingletonDefinedAggregator<ProductUserAggregator>();
-
-//builder.Services.AddOcelot();
 
 builder.Services.AddAuthorization();
 
@@ -74,18 +71,7 @@ var app = builder.Build();
 app.UseCors("AllowAngular");
 app.UseAuthentication();
 app.UseAuthorization();
-//app.Use(async (context, next) =>
-//{
-//    if (context.User.Identity?.IsAuthenticated == true)
-//    {
-//        foreach (var claim in context.User.Claims)
-//        {
-//            Console.WriteLine($"Claim *****: {claim.Type} = {claim.Value}");
-//        }
-//    }
-//    await next();
-//});
-//app.UseMiddleware<RateLimitingMiddleware>();
+
 await app.UseOcelot();
 
-app.Run();
+await app.RunAsync();

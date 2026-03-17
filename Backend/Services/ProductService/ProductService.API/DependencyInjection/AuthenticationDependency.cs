@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using ProductService.API.Middleware;
 using System.Security.Claims;
 using System.Text;
 
@@ -11,11 +12,11 @@ public static class AuthenticationDependency
     {
         var jwtSection = configuration.GetSection("Jwt");
         var keyString = jwtSection["Key"]
-            ?? throw new Exception("JWT Key missing in configuration");
+            ?? throw new ConfigurationMissingException("JWT Key");
         var issuer = jwtSection["Issuer"]
-            ?? throw new Exception("JWT Issuer missing in configuration");
+            ?? throw new ConfigurationMissingException("JWT Issuer");
         var audience = jwtSection["Audience"]
-            ?? throw new Exception("JWT Audience missing in configuration");
+            ?? throw new ConfigurationMissingException("JWT Audience");
 
         services.AddAuthentication(options =>
         {

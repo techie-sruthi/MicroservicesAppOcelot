@@ -18,7 +18,7 @@ public class DeleteUserCommandHandler
         var user = await _context.GetUserByIdAsync(request.Id, cancellationToken);
 
         if (user == null)
-            throw new Exception("User not found");
+            throw new KeyNotFoundException("User not found");
 
         _context.RemoveEntity(user);
         await _context.SaveChangesAsync(cancellationToken);

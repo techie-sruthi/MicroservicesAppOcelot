@@ -11,8 +11,11 @@ COPY ["UserService.Infrastructure/UserService.Infrastructure.csproj", "UserServi
 # Restore dependencies
 RUN dotnet restore "UserService.API/UserService.API.csproj"
 
-# Copy everything else
-COPY . .
+# Copy only the application source
+COPY ["UserService.API/", "UserService.API/"]
+COPY ["UserService.Application/", "UserService.Application/"]
+COPY ["UserService.Domain/", "UserService.Domain/"]
+COPY ["UserService.Infrastructure/", "UserService.Infrastructure/"]
 
 # Build
 WORKDIR "/src/UserService.API"
@@ -25,8 +28,7 @@ RUN dotnet publish "UserService.API.csproj" -c Release -o /app/publish /p:UseApp
 # Stage 3: Runtime
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
-ENV ASPNETCORE_URLS=http://+:80
-EXPOSE 80
+EXPOSE 5100
 
 # Copy published app
 COPY --from=publish /app/publish .

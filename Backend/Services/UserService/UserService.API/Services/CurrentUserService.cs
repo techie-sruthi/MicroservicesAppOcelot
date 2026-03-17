@@ -12,23 +12,20 @@ public class CurrentUserService : ICurrentUserService
 		_httpContextAccessor = httpContextAccessor;
 	}
 
-	public int UserId
+	public int GetUserId()
 	{
-		get
+		var user = _httpContextAccessor.HttpContext?.User;
+
+		var userIdClaim = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+						  ?? user?.FindFirst("sub")?.Value
+						  ?? user?.FindFirst("userId")?.Value;
+
+		if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
 		{
-			var user = _httpContextAccessor.HttpContext?.User;
-
-			var userIdClaim = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value
-							  ?? user?.FindFirst("sub")?.Value
-							  ?? user?.FindFirst("userId")?.Value;
-
-			if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-			{
-				throw new UnauthorizedAccessException("User ID not found or invalid in token");
-			}
-
-			return userId;
+			throw new UnauthorizedAccessException("User ID not found or invalid in token");
 		}
+
+		return userId;
 	}
 
 	public bool IsAdmin =>

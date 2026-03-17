@@ -12,6 +12,7 @@ using UserService.Application.Users.Commands.DeleteUser;
 using UserService.Application.Users.Commands.Logout;
 using UserService.Application.Users.Queries.GetUserById;
 using UserService.Application.Users.Queries.CheckEmail;
+using UserService.Application.Users.Queries.GetUsersByIds;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using UserService.API.Helpers;

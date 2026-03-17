@@ -1,5 +1,5 @@
 namespace UserService.Application;
 
-public class AssemblyReference
+public interface IAssemblyReference
 {
 }

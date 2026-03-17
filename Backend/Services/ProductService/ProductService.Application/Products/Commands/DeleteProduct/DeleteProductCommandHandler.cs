@@ -16,12 +16,12 @@ public class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommand,
 
     public async Task<Unit> Handle(DeleteProductCommand request, CancellationToken cancellationToken)
     {
-        var userId = _currentUser.UserId;
+        var userId = _currentUser.GetUserId();
         var isAdmin = _currentUser.IsAdmin;
         var product = await _repository.GetByIdAsync(request.Id);
 
         if (product == null)
-            throw new Exception("Product not found");
+            throw new KeyNotFoundException($"Product with ID '{request.Id}' was not found.");
 
         // Authorization: Non-admin users can only delete their own products
         if (!isAdmin && product.CreatedByUserId != userId)

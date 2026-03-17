@@ -2,6 +2,6 @@ namespace UserService.Application.Common.Interfaces;
 
 public interface ICurrentUserService
 {
-    int UserId { get; }
+    int GetUserId();
     bool IsAdmin { get; }
 }

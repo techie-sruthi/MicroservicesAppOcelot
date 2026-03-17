@@ -1,0 +1,7 @@
+﻿C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\UserService\UserService.Infrastructure\Persistence\Generated\UserDbContextScaffolded.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\UserService\UserService.Infrastructure\Persistence\Generated\UserDbContextScaffolded.Extended.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\UserService\UserService.Infrastructure\Services\EmailService.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\UserService\UserService.Infrastructure\Services\JwtTokenGenerator.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\UserService\UserService.Infrastructure\Services\OtpService.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\UserService\UserService.Infrastructure\Services\PasswordHasher.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\UserService\UserService.Infrastructure\Settings\EmailSettings.cs

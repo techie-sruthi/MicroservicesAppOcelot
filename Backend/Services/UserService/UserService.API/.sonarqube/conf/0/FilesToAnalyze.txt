@@ -1,0 +1,3 @@
+﻿C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\UserService\UserService.Domain\Entities\Generated\User.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\UserService\UserService.Domain\Entities\User.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\UserService\UserService.Domain\Entities\User.cs.backup

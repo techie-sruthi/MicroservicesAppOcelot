@@ -19,20 +19,21 @@ public class GetProductsByUserIdQueryHandler : IRequestHandler<GetProductsByUser
     public async Task<PagedResult<ProductDto>> Handle(GetProductsByUserIdQuery request, CancellationToken cancellationToken)
     {
 
-        var userId = _currentUser.UserId;
-        var isAdmin = _currentUser.IsAdmin;
+        var userId = _currentUser.GetUserId();
 
-        var pagedResult = await _repository.GetByUserIdPagedAsync(
-            userId, 
-            request.PageNumber, 
-            request.PageSize,
-            request.SearchTerm,
-            request.MinPrice,
-            request.MaxPrice,
-            request.StartDate,
-            request.SortField,
-            request.SortOrder
+        var filter = new UserProductFilter(
+            UserId: userId,
+            PageNumber: request.PageNumber,
+            PageSize: request.PageSize,
+            SearchTerm: request.SearchTerm,
+            MinPrice: request.MinPrice,
+            MaxPrice: request.MaxPrice,
+            StartDate: request.StartDate,
+            SortField: request.SortField,
+            SortOrder: request.SortOrder
         );
+
+        var pagedResult = await _repository.GetByUserIdPagedAsync(filter);
 
         return new PagedResult<ProductDto>
         {

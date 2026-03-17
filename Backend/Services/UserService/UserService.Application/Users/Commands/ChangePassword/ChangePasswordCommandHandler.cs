@@ -19,19 +19,18 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
 
     public async Task<MessageResponse> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
     {
-        var userId = _currentUser.UserId;
-        var isAdmin = _currentUser.IsAdmin;
+        var userId = _currentUser.GetUserId();
 
         var user = await _context.GetUserByIdAsync(userId, cancellationToken);
 
         if (user == null)
-            throw new Exception("User not found.");
+            throw new KeyNotFoundException("User not found.");
 
         if (!_passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
             throw new UnauthorizedAccessException("Current password is incorrect.");
 
         if (request.NewPassword.Length < 6)
-            throw new Exception("New password must be at least 6 characters long.");
+            throw new ArgumentException("New password must be at least 6 characters long.");
 
         user.PasswordHash = _passwordHasher.Hash(request.NewPassword);
         await _context.SaveChangesAsync(cancellationToken);

@@ -3,37 +3,39 @@ using Microsoft.EntityFrameworkCore;
 using UserService.Application.Common.Interfaces;
 using UserService.Application.Users.DTOs;
 
-namespace UserService.Application.Users.Queries.GetUserByIds
+namespace UserService.Application.Users.Queries.GetUsersByIds;
+
+public class GetUserByIdsQueryHandler
+    : IRequestHandler<GetUserByIdsQuery, List<UserDto>>
 {
-    public class GetUserByIdsQueryHandler
-        : IRequestHandler<GetUserByIdsQuery, List<UserDto>>
+    private readonly IUserDbContext _context;
+
+    public GetUserByIdsQueryHandler(IUserDbContext context)
     {
-        private readonly IUserDbContext _context;
+        _context = context;
+    }
 
-        public GetUserByIdsQueryHandler(IUserDbContext context)
-        {
-            _context = context;
-        }
+    public async Task<List<UserDto>> Handle(
+        GetUserByIdsQuery request,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.Ids))
+            return [];
 
-        public async Task<List<UserDto>> Handle(
-            GetUserByIdsQuery request,
-            CancellationToken cancellationToken)
-        {
-            var idList = request.Ids
-                .Split(',')
-                .Select(int.Parse)
-                .ToList();
+        var idList = request.Ids
+            .Split(',')
+            .Select(int.Parse)
+            .ToList();
 
-            var users = await _context.Users
-                .Where(u => idList.Contains(u.Id))
-                .Select(u => new UserDto
-                {
-                    Id = u.Id,
-                    UserName = u.UserName
-                })
-                .ToListAsync(cancellationToken);
+        var users = await _context.Users
+            .Where(u => idList.Contains(u.Id))
+            .Select(u => new UserDto
+            {
+                Id = u.Id,
+                UserName = u.UserName
+            })
+            .ToListAsync(cancellationToken);
 
-            return users;
-        }
+        return users;
     }
 }

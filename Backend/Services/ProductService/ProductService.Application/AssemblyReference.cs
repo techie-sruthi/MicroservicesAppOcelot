@@ -1,5 +1,5 @@
 namespace ProductService.Application;
 
-public class AssemblyReference
+public interface IAssemblyReference
 {
 }

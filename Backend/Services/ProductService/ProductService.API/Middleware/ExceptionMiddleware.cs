@@ -1,5 +1,22 @@
 namespace ProductService.API.Middleware;
 
+public class ConfigurationMissingException : Exception
+{
+    public string ConfigurationKey { get; }
+
+    public ConfigurationMissingException(string configurationKey)
+        : base($"{configurationKey} is missing in configuration.")
+    {
+        ConfigurationKey = configurationKey;
+    }
+
+    public ConfigurationMissingException(string configurationKey, Exception innerException)
+        : base($"{configurationKey} is missing in configuration.", innerException)
+    {
+        ConfigurationKey = configurationKey;
+    }
+}
+
 public class ExceptionMiddleware
 {
     private readonly RequestDelegate _next;
@@ -16,6 +33,15 @@ public class ExceptionMiddleware
         try
         {
             await _next(context);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Resource not found");
+            if (!context.Response.HasStarted)
+            {
+                context.Response.StatusCode = StatusCodes.Status404NotFound;
+                await context.Response.WriteAsJsonAsync(new { error = ex.Message });
+            }
         }
         catch (UnauthorizedAccessException ex)
         {

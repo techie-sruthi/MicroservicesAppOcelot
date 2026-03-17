@@ -5,12 +5,13 @@ using Amazon.Runtime;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using ProductService.Application.Common.Interfaces;
+using System.IO;
 
 namespace ProductService.Infrastructure.FileStorage;
 
 public class MinIOFileStorageService : IFileStorageService, IDisposable
 {
-    private readonly IAmazonS3 _s3Client;
+    private readonly AmazonS3Client _s3Client;
     private readonly MinIOSettings _settings;
     private readonly ILogger<MinIOFileStorageService> _logger;
     private bool _bucketEnsured;
@@ -40,28 +41,33 @@ public class MinIOFileStorageService : IFileStorageService, IDisposable
             try
             {
                 await _s3Client.GetBucketLocationAsync(_settings.BucketName);
-                _logger.LogInformation($"MinIO bucket already exists: {_settings.BucketName}");
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("MinIO bucket already exists: {BucketName}", _settings.BucketName);
+                }
             }
             catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 // Bucket doesn't exist, create it
-                _logger.LogInformation($"Creating MinIO bucket: {_settings.BucketName}");
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation(ex, "Bucket not found. Creating MinIO bucket: {BucketName}", _settings.BucketName);
+                }
                 await _s3Client.PutBucketAsync(_settings.BucketName);
 
                 // Set bucket policy to allow public read
-                var policy = $$"""
+                var policy = @"
                 {
-                    "Version": "2012-10-17",
-                    "Statement": [
+                    ""Version"": ""2012-10-17"",
+                    ""Statement"": [
                         {
-                            "Effect": "Allow",
-                            "Principal": {"AWS": "*"},
-                            "Action": "s3:GetObject",
-                            "Resource": "arn:aws:s3:::{{_settings.BucketName}}/products/*"
+                            ""Effect"": ""Allow"",
+                            ""Principal"": {""AWS"": ""*""},
+                            ""Action"": ""s3:GetObject"",
+                            ""Resource"": ""arn:aws:s3:::" + _settings.BucketName + @"/products/*""
                         }
                     ]
-                }
-                """;
+                }";
 
                 await _s3Client.PutBucketPolicyAsync(new PutBucketPolicyRequest
                 {
@@ -69,7 +75,10 @@ public class MinIOFileStorageService : IFileStorageService, IDisposable
                     Policy = policy
                 });
 
-                _logger.LogInformation($"MinIO bucket created: {_settings.BucketName}");
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+                    _logger.LogInformation("MinIO bucket created: {BucketName}", _settings.BucketName);
+                }
             }
         }
         catch (Exception ex)
@@ -110,18 +119,21 @@ public class MinIOFileStorageService : IFileStorageService, IDisposable
             var host = string.IsNullOrEmpty(_settings.PublicEndpoint) ? _settings.Endpoint : _settings.PublicEndpoint;
             var fileUrl = $"{protocol}://{host}/{_settings.BucketName}/{key}";
 
-            _logger.LogInformation($"File uploaded to MinIO: {fileUrl}");
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("File uploaded to MinIO: {FileUrl}", fileUrl);
+            }
             return fileUrl;
         }
         catch (AmazonS3Exception ex)
         {
             _logger.LogError(ex, "MinIO S3 error uploading file");
-            throw new Exception($"Error uploading file to MinIO: {ex.Message}", ex);
+            throw new IOException($"Error uploading file to MinIO: {ex.Message}", ex);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error uploading file to MinIO");
-            throw new Exception($"Unexpected error during file upload: {ex.Message}", ex);
+            throw new IOException($"Unexpected error during file upload: {ex.Message}", ex);
         }
     }
 
@@ -132,7 +144,7 @@ public class MinIOFileStorageService : IFileStorageService, IDisposable
             var key = ExtractKeyFromUrl(fileUrl);
             if (string.IsNullOrEmpty(key))
             {
-                _logger.LogWarning($"Could not extract key from URL: {fileUrl}");
+                _logger.LogWarning("Could not extract key from URL: {FileUrl}", fileUrl);
                 return false;
             }
 
@@ -143,7 +155,10 @@ public class MinIOFileStorageService : IFileStorageService, IDisposable
             };
 
             await _s3Client.DeleteObjectAsync(deleteRequest);
-            _logger.LogInformation($"File deleted from MinIO: {key}");
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("File deleted from MinIO: {Key}", key);
+            }
             return true;
         }
         catch (AmazonS3Exception ex)
@@ -183,16 +198,25 @@ public class MinIOFileStorageService : IFileStorageService, IDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error extracting key from URL: {fileUrl}");
+            _logger.LogError(ex, "Error extracting key from URL: {FileUrl}", fileUrl);
             return null;
         }
     }
 
     public void Dispose()
     {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
         if (!_disposed)
         {
-            (_s3Client as IDisposable)?.Dispose();
+            if (disposing)
+            {
+                _s3Client?.Dispose();
+            }
             _disposed = true;
         }
     }

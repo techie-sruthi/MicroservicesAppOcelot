@@ -4,6 +4,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
+using ApiGateway.Exceptions;
 
 namespace ApiGateway.Aggregator
 {
@@ -26,7 +27,7 @@ namespace ApiGateway.Aggregator
             if (userResponse == null)
             {
                _logger.LogError("User service response is null or failed. Status Code: {StatusCode}", userResponse?.StatusCode);
-                throw new Exception("User service response is null or failed.");
+                throw new ServiceResponseException("UserService", "User service response was null or the call failed.", (int?)userResponse?.StatusCode);
             }
 
             var usersJson = await userResponse.Content.ReadAsStringAsync();
@@ -34,13 +35,6 @@ namespace ApiGateway.Aggregator
             var productsRoot = JsonSerializer.Deserialize<JsonElement>(productsJson);
 
             var productItems = productsRoot.GetProperty("items").EnumerateArray().ToList();
-
-            var userIds = productItems
-                .Select(p => p.GetProperty("createdByUserId").GetInt32())
-                .Distinct()
-                .ToList();
-
-            //_logger.LogInformation("User IDs: {UserIds}", string.Join(",", userIds));
 
             var usersRoot = JsonSerializer.Deserialize<JsonElement>(usersJson);
             var userItems = usersRoot.GetProperty("items").EnumerateArray().ToList();
@@ -66,28 +60,6 @@ namespace ApiGateway.Aggregator
                     imageUrl = product.GetProperty("imageUrl").GetString()
                 }).ToList();
 
-
-            //            var userDictionary = userItems.ToDictionary(
-            //                u => u.GetProperty("id").GetInt32(),
-            //                u => u.GetProperty("userName").GetString()
-            //            );
-
-            //            // Join products with users
-            //            var mergedItems = productItems.Select(product =>
-            //            {
-            //                var createdByUserId = product.GetProperty("createdByUserId").GetInt32();
-
-            //                userDictionary.TryGetValue(createdByUserId, out string? userName);
-
-            //                var productDict = JsonSerializer.Deserialize<Dictionary<string, object>>(
-            //                    product.GetRawText());
-
-            //                productDict["createdByUserName"] = userName;
-
-            //                return productDict;
-            //            }).ToList();
-
-
             var finalResult = new
             {
                 items = mergedItems,
@@ -100,7 +72,6 @@ namespace ApiGateway.Aggregator
             };
 
             var content = JsonSerializer.Serialize(finalResult);
-            //_logger.LogInformation("finalResult: {Content}", content);
 
             return new DownstreamResponse(
                 new StringContent(content, Encoding.UTF8, "application/json"),

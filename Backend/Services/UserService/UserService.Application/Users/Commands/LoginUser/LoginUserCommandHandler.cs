@@ -2,7 +2,6 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using UserService.Application.Common.Interfaces;
-using UserService.Application.Users.DTOs;
 using UserService.Application.Contracts;
 
 namespace UserService.Application.Users.Commands.LoginUser;
@@ -12,7 +11,6 @@ public class LoginUserCommandHandler
 {
     private readonly IUserDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
-    private readonly IJwtService _jwtService;
     private readonly IOtpService _otpService;
     private readonly IEmailService _emailService;
     private readonly ILogger<LoginUserCommandHandler> _logger;
@@ -21,7 +19,6 @@ public class LoginUserCommandHandler
     public LoginUserCommandHandler(
         IUserDbContext context,
         IPasswordHasher passwordHasher,
-        IJwtService jwtService,
         IOtpService otpService,
         IEmailService emailService,
         ILogger<LoginUserCommandHandler> logger)
@@ -29,11 +26,10 @@ public class LoginUserCommandHandler
     {
         _context = context;
         _passwordHasher = passwordHasher;
-        _jwtService = jwtService;
         _otpService = otpService;
         _emailService = emailService;
         _logger = logger;
-       
+
     }
 
 
@@ -52,7 +48,10 @@ public class LoginUserCommandHandler
         _otpService.StoreOtp(user.Email, otp);
         await _emailService.SendOtpEmailAsync(user.Email, otp);
 
-        _logger.LogDebug("OTP sent to {Email}", user.Email);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("OTP sent to {Email}", user.Email);
+        }
 
         return new
         {

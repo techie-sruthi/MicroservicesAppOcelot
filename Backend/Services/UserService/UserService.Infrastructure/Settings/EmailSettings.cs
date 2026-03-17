@@ -6,7 +6,7 @@ public class EmailSettings
     public int SmtpPort { get; set; }
     public string SenderEmail { get; set; } = string.Empty;
     public string SenderName { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
+    public string SmtpAppPassword { get; set; } = string.Empty;
     public bool EnableSSL { get; set; }
 }
 

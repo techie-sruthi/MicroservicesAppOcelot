@@ -1,0 +1,1 @@
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\ApiGateway\ApiGateway\.sonarqube\out\0

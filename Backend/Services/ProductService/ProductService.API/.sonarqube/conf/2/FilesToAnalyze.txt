@@ -1,0 +1,5 @@
+﻿C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\ProductService\ProductService.Infrastructure\Data\MongoDbSettings.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\ProductService\ProductService.Infrastructure\Data\MongoMappings.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\ProductService\ProductService.Infrastructure\FileStorage\MinIOFileStorageService.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\ProductService\ProductService.Infrastructure\FileStorage\MinIOSettings.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\ProductService\ProductService.Infrastructure\Repositories\ProductRepository.cs

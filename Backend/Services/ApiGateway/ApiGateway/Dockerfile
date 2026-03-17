@@ -8,8 +8,8 @@ COPY ["ApiGateway/ApiGateway.csproj", "ApiGateway/"]
 # Restore dependencies
 RUN dotnet restore "ApiGateway/ApiGateway.csproj"
 
-# Copy everything else
-COPY . .
+# Copy only the application source
+COPY ["ApiGateway/", "ApiGateway/"]
 
 # Build
 WORKDIR "/src/ApiGateway"
@@ -28,4 +28,5 @@ EXPOSE 80
 # Copy published output
 COPY --from=publish /app/publish .
 
+USER $APP_UID
 ENTRYPOINT ["dotnet", "ApiGateway.dll"]

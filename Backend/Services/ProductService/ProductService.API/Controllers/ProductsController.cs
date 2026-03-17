@@ -45,36 +45,3 @@ public class ProductsController : BaseController
     public async Task<IActionResult> CheckProductName([FromQuery] CheckProductNameQuery query)
         => Ok(new { exists = await Mediator.Send(query) });
 }
-
-
-
-
-
-//=> Ok(await Mediator.Send(query, HttpContext.RequestAborted));
-//[HttpGet]
-//public async Task<IActionResult> GetProducts([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
-//{
-//_logger.LogInformation("🔍 GetAllProducts called by user {UserId}", User.GetUserId());
-//var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-//var roles = User.FindAll(ClaimTypes.Role)
-//                .Select(r => r.Value)
-//                .ToList();
-
-//_logger.LogInformation("🔍 GetAllProducts called by UserId: {UserId}, Roles: {Roles}",
-//    userId, string.Join(",", roles));
-//// log role
-//if (User.IsAdmin())
-//{
-//    _logger.LogInformation("👑 User is admin");
-//}
-//else
-//{
-//    _logger.LogInformation("👤 User is not admin");
-//}   
-//    var query = User.IsAdmin()
-//        ? new GetAllProductsQuery(pageNumber, pageSize)
-//        : (object)new GetProductsByUserIdQuery(User.GetUserId(), pageNumber, pageSize);
-
-//    return Ok(await _mediator.Send(query));
-//}

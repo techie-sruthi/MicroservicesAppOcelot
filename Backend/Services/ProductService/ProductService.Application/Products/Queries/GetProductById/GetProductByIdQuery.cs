@@ -5,7 +5,7 @@ namespace ProductService.Application.Products.Queries.GetProductById;
 
 public class GetProductByIdQuery : IRequest<ProductDto>
 {
-    public string Id { get; set; } = default!;
+    public string Id { get; set; }
 
     // Authorization context
     public int CurrentUserId { get; set; }

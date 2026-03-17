@@ -12,7 +12,10 @@ var port = Environment.GetEnvironmentVariable("PRODUCTSERVICE_PORT")
     ?? builder.Configuration["ServiceSettings:Port"]
     ?? "5050";
 
-builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+if (builder.Environment.IsProduction())
+    builder.WebHost.UseUrls($"https://*:{port}");
+else
+    builder.WebHost.UseUrls($"http://*:{port}");
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -42,11 +45,10 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors("AllowAngular");
 
-// Global exception handling middleware
 app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();

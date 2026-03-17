@@ -6,11 +6,18 @@ using UserService.Application.Common.Interfaces;
 
 namespace UserService.Infrastructure.Persistence;
 
-// Partial class extension to implement IUserDbContext methods
 public partial class UserDbContextScaffolded
 {
-    // Explicitly implement Users property to return IQueryable
     IQueryable<User> IUserDbContext.Users => Users.AsQueryable();
+
+    static partial void OnModelCreatingPartial(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.Email).IsUnique();
+        });
+    }
 
     public async Task<bool> UserExistsAsync(string email, CancellationToken cancellationToken)
     {
@@ -59,31 +66,25 @@ public partial class UserDbContextScaffolded
         string? sortOrder,
         CancellationToken cancellationToken)
     {
-        // Start with base query
         var query = Users.AsNoTracking();
 
-        // Apply search filter (search by username or email)
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
-            var searchLower = searchTerm.ToLower();
+            var pattern = $"%{searchTerm}%";
             query = query.Where(u => 
-                u.UserName.ToLower().Contains(searchLower) || 
-                u.Email.ToLower().Contains(searchLower));
+                EF.Functions.Like(u.UserName, pattern) || 
+                EF.Functions.Like(u.Email, pattern));
         }
 
-        // Apply role filter
         if (!string.IsNullOrWhiteSpace(roleFilter) && roleFilter != "all")
         {
             query = query.Where(u => u.Role == roleFilter);
         }
 
-        // Get total count with filters
         var totalCount = await query.CountAsync(cancellationToken);
 
-        // Apply sorting
         query = ApplySorting(query, sortField, sortOrder);
 
-        // Apply pagination
         var items = await query
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
@@ -106,9 +107,8 @@ public partial class UserDbContextScaffolded
         };
     }
 
-    private IQueryable<User> ApplySorting(IQueryable<User> query, string? sortField, string? sortOrder)
+    private static IQueryable<User> ApplySorting(IQueryable<User> query, string? sortField, string? sortOrder)
     {
-        // Default sort: CreatedAt descending (newest first)
         if (string.IsNullOrWhiteSpace(sortField))
         {
             return query.OrderByDescending(u => u.CreatedAt);

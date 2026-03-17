@@ -4,14 +4,13 @@ using UserService.Application.Common.Interfaces;
 
 namespace UserService.Application.Users.Commands.UpdateUser;
 
-public class UpdateUserCommandHandler
+public partial class UpdateUserCommandHandler
     : IRequestHandler<UpdateUserCommand, Unit>
 {
     private readonly IUserDbContext _context;
 
-    private static readonly Regex EmailRegex = new(
-        @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
-        RegexOptions.Compiled);
+    [GeneratedRegex(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")]
+    private static partial Regex EmailRegex();
 
     public UpdateUserCommandHandler(IUserDbContext context)
     {
@@ -23,13 +22,13 @@ public class UpdateUserCommandHandler
         if (request.RouteId != request.Id)
             throw new ArgumentException("Route ID does not match the command ID.");
 
-        if (string.IsNullOrWhiteSpace(request.Email) || !EmailRegex.IsMatch(request.Email))
-            throw new ArgumentException("Invalid email format. Please enter a valid email (e.g. user@example.com)");
+       if (string.IsNullOrWhiteSpace(request.Email) || !EmailRegex().IsMatch(request.Email))
+            throw new ArgumentException("Invalid email format. Please enter a valid email address.");
 
         var user = await _context.GetUserByIdAsync(request.Id, cancellationToken);
 
         if (user == null)
-            throw new Exception("User not found");
+            throw new KeyNotFoundException("User not found");
 
         user.UserName = request.UserName;
         user.Email = request.Email;

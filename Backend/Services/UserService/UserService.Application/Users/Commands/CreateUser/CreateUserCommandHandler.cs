@@ -7,16 +7,15 @@ using UserService.Domain.Entities;
 
 namespace UserService.Application.Users.Commands.CreateUser;
 
-public class CreateUserCommandHandler
+public partial class CreateUserCommandHandler
     : IRequestHandler<CreateUserCommand, int>
 {
     private readonly IUserDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IEmailService _emailService;
 
-    private static readonly Regex EmailRegex = new(
-        @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
-        RegexOptions.Compiled);
+    [GeneratedRegex(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")]
+    private static partial Regex EmailRegex();
 
     public CreateUserCommandHandler(
         IUserDbContext context,
@@ -30,13 +29,13 @@ public class CreateUserCommandHandler
 
     public async Task<int> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(request.Email) || !EmailRegex.IsMatch(request.Email))
-            throw new ArgumentException("Invalid email format. Please enter a valid email (e.g. user@example.com)");
+        if (string.IsNullOrWhiteSpace(request.Email) || !EmailRegex().IsMatch(request.Email))
+            throw new ArgumentException(
+                "Invalid email format. Please enter a valid email");
 
         var exists = await _context.UserExistsAsync(request.Email, cancellationToken);
-
         if (exists)
-            throw new Exception("User already exists");
+            throw new InvalidOperationException("User already exists");
 
         var generatedPassword = GenerateStrongPassword(16);
 
@@ -68,6 +67,7 @@ public class CreateUserCommandHandler
 
         var password = new char[length];
         var bytes = new byte[length];
+
         RandomNumberGenerator.Fill(bytes);
 
         password[0] = upper[bytes[0] % upper.Length];

@@ -27,7 +27,7 @@ public class RegisterUserCommandHandler
             .AnyAsync(x => x.Email == request.Email, cancellationToken);
 
         if (exists)
-            throw new Exception("User already exists");
+            throw new InvalidOperationException("User already exists");
 
         var user = new User
         {

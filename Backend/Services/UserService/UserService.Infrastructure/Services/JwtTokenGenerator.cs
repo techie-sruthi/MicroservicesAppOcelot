@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using UserService.Application.Common.Exceptions;
 using UserService.Application.Common.Interfaces;
 
 namespace UserService.Infrastructure.Services;
@@ -19,13 +20,13 @@ public class JwtTokenGenerator : IJwtService
     {
         var jwt = configuration.GetSection("Jwt");
         _keyString = jwt["Key"]
-            ?? throw new Exception("JWT Key missing in configuration");
+            ?? throw new ConfigurationMissingException("JWT Key");
         _issuer = jwt["Issuer"]
-            ?? throw new Exception("JWT Issuer missing in configuration");
+            ?? throw new ConfigurationMissingException("JWT Issuer");
         _audience = jwt["Audience"]
-            ?? throw new Exception("JWT Audience missing in configuration");
+            ?? throw new ConfigurationMissingException("JWT Audience");
         _expiryMinutes = int.Parse(jwt["ExpiryMinutes"]
-            ?? throw new Exception("JWT ExpiryMinutes missing in configuration"));
+            ?? throw new ConfigurationMissingException("JWT ExpiryMinutes"));
     }
 
     public string GenerateToken(int userId, string email, string role)

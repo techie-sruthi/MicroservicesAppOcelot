@@ -4,7 +4,7 @@ namespace ProductService.Application.Products.Commands.DeleteProduct;
 
 public class DeleteProductCommand : IRequest<Unit>
 {
-    public string Id { get; set; } = default!;
+    public string Id { get; set; }
 
     // Authorization context
     public int CurrentUserId { get; set; }

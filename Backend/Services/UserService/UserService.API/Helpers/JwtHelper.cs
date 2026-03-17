@@ -21,11 +21,14 @@ public static class JwtHelper
 
         if (!int.TryParse(userIdClaim, out int userId))
         {
-            logger.LogError($"Invalid userId format in token: {userIdClaim}");
+            logger.LogError("Invalid userId format in token: {UserIdClaim}",userIdClaim);
             throw new UnauthorizedAccessException("Invalid user ID format");
         }
 
-        logger.LogInformation($"Extracted userId: {userId} from token");
+        if (logger.IsEnabled(LogLevel.Information))
+        {
+            logger.LogInformation("Extracted userId: {UserId} from token", userId);
+        }
         return userId;
     }
 

@@ -11,8 +11,11 @@ COPY ["ProductService.Infrastructure/ProductService.Infrastructure.csproj", "Pro
 # Restore dependencies
 RUN dotnet restore "ProductService.API/ProductService.API.csproj"
 
-# Copy everything else
-COPY . .
+# Copy only the application source
+COPY ["ProductService.API/", "ProductService.API/"]
+COPY ["ProductService.Application/", "ProductService.Application/"]
+COPY ["ProductService.Domain/", "ProductService.Domain/"]
+COPY ["ProductService.Infrastructure/", "ProductService.Infrastructure/"]
 
 # Build
 WORKDIR "/src/ProductService.API"

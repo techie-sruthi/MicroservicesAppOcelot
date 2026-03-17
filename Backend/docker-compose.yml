@@ -58,12 +58,13 @@ services:
 
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:80
       - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=UserServiceDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True
       - Jwt__Key=THIS_IS_MY_SUPER_SECRET_KEY_12345
       - Jwt__Issuer=UserService
       - Jwt__Audience=MicroserviceUsers
       - Jwt__ExpiryMinutes=60
+      - EmailSettings__SenderEmail=${SMTP_SENDER_EMAIL}
+      - EmailSettings__SmtpAppPassword=${SMTP_APP_PASSWORD}
     depends_on:
       - sqlserver
     networks:

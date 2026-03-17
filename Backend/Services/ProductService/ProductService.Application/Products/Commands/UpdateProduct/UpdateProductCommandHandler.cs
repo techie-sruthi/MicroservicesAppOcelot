@@ -20,13 +20,13 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
         if (request.RouteId != request.Id)
             throw new ArgumentException("Route ID does not match the command ID.");
 
-        var userId = _currentUser.UserId;
+        var userId = _currentUser.GetUserId();
         var isAdmin = _currentUser.IsAdmin;
 
         var product = await _repository.GetByIdAsync(request.Id);
 
         if (product == null)
-            throw new Exception("Product not found");
+            throw new KeyNotFoundException($"Product with ID '{request.Id}' was not found.");
 
         // Authorization: Non-admin users can only update their own products
         if (!isAdmin && product.CreatedByUserId != userId)

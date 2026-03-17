@@ -115,8 +115,8 @@ public class EmailService : IEmailService
     {
         using var client = new SmtpClient(_emailSettings.SmtpServer, _emailSettings.SmtpPort)
         {
-            EnableSsl = _emailSettings.EnableSSL,
-            Credentials = new NetworkCredential(_emailSettings.SenderEmail, _emailSettings.Password)
+            EnableSsl = true,
+            Credentials = new NetworkCredential(_emailSettings.SenderEmail, _emailSettings.SmtpAppPassword)
         };
 
         using var mailMessage = new MailMessage

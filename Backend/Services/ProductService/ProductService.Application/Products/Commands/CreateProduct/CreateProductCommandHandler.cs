@@ -17,8 +17,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
 
     public async Task<string> Handle(CreateProductCommand request, CancellationToken cancellationToken)
     {
-        var userId = _currentUser.UserId;
-        var isAdmin = _currentUser.IsAdmin;
+        var userId = _currentUser.GetUserId();
 
         var allProducts = await _repository.GetAllAsync();
         var nameExists = allProducts.Any(p =>

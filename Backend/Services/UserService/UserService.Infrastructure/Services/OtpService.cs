@@ -3,6 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using UserService.Application.Contracts;
 using UserService.Infrastructure.Settings;
+using System.Text;
 
 namespace UserService.Infrastructure.Services;
 
@@ -19,12 +20,11 @@ public class OtpService : IOtpService
 
     public string GenerateOtp()
     {
-        var otp = "";
+        var sb = new StringBuilder(_otpSettings.Length);
         for (int i = 0; i < _otpSettings.Length; i++)
-        {
-            otp += RandomNumberGenerator.GetInt32(0, 10).ToString();
-        }
-        return otp;
+            sb.Append(RandomNumberGenerator.GetInt32(10));
+
+        return sb.ToString();
     }
 
     public void StoreOtp(string email, string otp)

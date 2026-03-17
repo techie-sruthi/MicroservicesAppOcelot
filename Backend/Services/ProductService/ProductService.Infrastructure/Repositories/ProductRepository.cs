@@ -102,27 +102,18 @@ public class ProductRepository : IProductRepository
         };
     }
 
-    public async Task<PagedResult<Product>> GetByUserIdPagedAsync(
-        int userId,
-        int pageNumber,
-        int pageSize,
-        string? searchTerm = null,
-        decimal? minPrice = null,
-        decimal? maxPrice = null,
-        DateTime? startDate = null,
-        string? sortField = null,
-        string? sortOrder = null)
+    public async Task<PagedResult<Product>> GetByUserIdPagedAsync(UserProductFilter filter)
     {
         var filterBuilder = Builders<Product>.Filter;
 
         var filters = new List<FilterDefinition<Product>>
         {
-            filterBuilder.Eq(p => p.CreatedByUserId, userId)
+            filterBuilder.Eq(p => p.CreatedByUserId, filter.UserId)
         };
 
-        if (!string.IsNullOrWhiteSpace(searchTerm))
+        if (!string.IsNullOrWhiteSpace(filter.SearchTerm))
         {
-            var regex = new BsonRegularExpression(searchTerm, "i");
+            var regex = new BsonRegularExpression(filter.SearchTerm, "i");
 
             filters.Add(filterBuilder.Or(
                 filterBuilder.Regex(p => p.Name, regex),
@@ -130,14 +121,14 @@ public class ProductRepository : IProductRepository
             ));
         }
 
-        if (minPrice.HasValue)
-            filters.Add(filterBuilder.Gte(p => p.Price, minPrice.Value));
+        if (filter.MinPrice.HasValue)
+            filters.Add(filterBuilder.Gte(p => p.Price, filter.MinPrice.Value));
 
-        if (maxPrice.HasValue)
-            filters.Add(filterBuilder.Lte(p => p.Price, maxPrice.Value));
+        if (filter.MaxPrice.HasValue)
+            filters.Add(filterBuilder.Lte(p => p.Price, filter.MaxPrice.Value));
 
-        if (startDate.HasValue)
-            filters.Add(filterBuilder.Gte(p => p.DateOfManufacture, startDate.Value));
+        if (filter.StartDate.HasValue)
+            filters.Add(filterBuilder.Gte(p => p.DateOfManufacture, filter.StartDate.Value));
 
         var combinedFilter = filterBuilder.And(filters);
 
@@ -146,9 +137,9 @@ public class ProductRepository : IProductRepository
         var findOptions = new FindOptions<Product>
         {
             Collation = new Collation("en", strength: CollationStrength.Secondary),
-            Skip = (pageNumber - 1) * pageSize,
-            Limit = pageSize,
-            Sort = GetSortDefinition(sortField, sortOrder)
+            Skip = (filter.PageNumber - 1) * filter.PageSize,
+            Limit = filter.PageSize,
+            Sort = GetSortDefinition(filter.SortField, filter.SortOrder)
         };
 
         var cursor = await _products.FindAsync(combinedFilter, findOptions);
@@ -158,8 +149,8 @@ public class ProductRepository : IProductRepository
         {
             Items = items,
             TotalCount = (int)totalCount,
-            PageNumber = pageNumber,
-            PageSize = pageSize
+            PageNumber = filter.PageNumber,
+            PageSize = filter.PageSize
         };
     }
 

@@ -20,5 +20,5 @@ public partial class UserDbContextScaffolded : DbContext, IUserDbContext
         OnModelCreatingPartial(modelBuilder);
     }
 
-    partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+    static partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
 }
