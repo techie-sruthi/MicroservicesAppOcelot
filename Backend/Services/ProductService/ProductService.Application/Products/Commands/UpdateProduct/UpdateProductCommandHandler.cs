@@ -17,9 +17,6 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
 
     public async Task<Unit> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
     {
-        if (request.RouteId != request.Id)
-            throw new ArgumentException("Route ID does not match the command ID.");
-
         var userId = _currentUser.GetUserId();
         var isAdmin = _currentUser.IsAdmin;
 
@@ -28,7 +25,6 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
         if (product == null)
             throw new KeyNotFoundException($"Product with ID '{request.Id}' was not found.");
 
-        // Authorization: Non-admin users can only update their own products
         if (!isAdmin && product.CreatedByUserId != userId)
         {
             throw new UnauthorizedAccessException($"User {userId} is not authorized to update product {request.Id}");

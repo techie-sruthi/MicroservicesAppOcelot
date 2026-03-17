@@ -53,7 +53,6 @@ public class OtpService : IOtpService
         _cache.Remove(cacheKey);
     }
 
-    // Dev/testing helper: retrieve stored OTP if present
     public string? GetOtp(string email)
     {
         var cacheKey = $"OTP_{email}";
@@ -62,7 +61,6 @@ public class OtpService : IOtpService
         return null;
     }
 
-    // Return expiry in seconds for client consumption
     public int GetExpirySeconds()
     {
         return _otpSettings.ExpiryMinutes * 60;

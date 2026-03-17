@@ -20,146 +20,6 @@
   </Settings>
   <Rules>
     <Rule>
-      <Key>S1110</Key>
-    </Rule>
-    <Rule>
-      <Key>S1123</Key>
-    </Rule>
-    <Rule>
-      <Key>S1125</Key>
-    </Rule>
-    <Rule>
-      <Key>S1133</Key>
-    </Rule>
-    <Rule>
-      <Key>S1134</Key>
-    </Rule>
-    <Rule>
-      <Key>S1135</Key>
-    </Rule>
-    <Rule>
-      <Key>S1479</Key>
-      <Parameters>
-        <Parameter>
-          <Key>maximum</Key>
-          <Value>30</Value>
-        </Parameter>
-      </Parameters>
-    </Rule>
-    <Rule>
-      <Key>S1481</Key>
-    </Rule>
-    <Rule>
-      <Key>S1940</Key>
-    </Rule>
-    <Rule>
-      <Key>S1944</Key>
-    </Rule>
-    <Rule>
-      <Key>S2225</Key>
-    </Rule>
-    <Rule>
-      <Key>S2234</Key>
-    </Rule>
-    <Rule>
-      <Key>S2340</Key>
-    </Rule>
-    <Rule>
-      <Key>S2342</Key>
-      <Parameters>
-        <Parameter>
-          <Key>format</Key>
-          <Value>^([A-Z]{1,3}[a-z0-9]+)*([A-Z]{2})?$</Value>
-        </Parameter>
-        <Parameter>
-          <Key>flagsAttributeFormat</Key>
-          <Value>^([A-Z]{1,3}[a-z0-9]+)*([A-Z]{2})?s$</Value>
-        </Parameter>
-      </Parameters>
-    </Rule>
-    <Rule>
-      <Key>S2344</Key>
-    </Rule>
-    <Rule>
-      <Key>S2345</Key>
-    </Rule>
-    <Rule>
-      <Key>S2346</Key>
-    </Rule>
-    <Rule>
-      <Key>S2347</Key>
-      <Parameters>
-        <Parameter>
-          <Key>format</Key>
-          <Value>^(([a-z][a-z0-9]*)?([A-Z]{1,3}[a-z0-9]+)*([A-Z]{2})?_)?([A-Z]{1,3}[a-z0-9]+)*([A-Z]{2})?$</Value>
-        </Parameter>
-      </Parameters>
-    </Rule>
-    <Rule>
-      <Key>S2349</Key>
-    </Rule>
-    <Rule>
-      <Key>S2352</Key>
-    </Rule>
-    <Rule>
-      <Key>S2355</Key>
-    </Rule>
-    <Rule>
-      <Key>S2358</Key>
-    </Rule>
-    <Rule>
-      <Key>S2359</Key>
-    </Rule>
-    <Rule>
-      <Key>S2692</Key>
-    </Rule>
-    <Rule>
-      <Key>S3358</Key>
-    </Rule>
-    <Rule>
-      <Key>S3431</Key>
-    </Rule>
-    <Rule>
-      <Key>S3449</Key>
-    </Rule>
-    <Rule>
-      <Key>S3598</Key>
-    </Rule>
-    <Rule>
-      <Key>S3776</Key>
-      <Parameters>
-        <Parameter>
-          <Key>threshold</Key>
-          <Value>15</Value>
-        </Parameter>
-        <Parameter>
-          <Key>propertyThreshold</Key>
-          <Value>3</Value>
-        </Parameter>
-      </Parameters>
-    </Rule>
-    <Rule>
-      <Key>S4507</Key>
-    </Rule>
-    <Rule>
-      <Key>S5042</Key>
-    </Rule>
-    <Rule>
-      <Key>S5856</Key>
-    </Rule>
-    <Rule>
-      <Key>S6145</Key>
-    </Rule>
-    <Rule>
-      <Key>S6146</Key>
-    </Rule>
-    <Rule>
-      <Key>S6930</Key>
-    </Rule>
-    <Rule>
-      <Key>S6931</Key>
-    </Rule>
-    <Rule>
       <Key>S101</Key>
       <Parameters>
         <Parameter>
@@ -190,7 +50,25 @@
       <Key>S108</Key>
     </Rule>
     <Rule>
+      <Key>S1110</Key>
+    </Rule>
+    <Rule>
       <Key>S112</Key>
+    </Rule>
+    <Rule>
+      <Key>S1123</Key>
+    </Rule>
+    <Rule>
+      <Key>S1125</Key>
+    </Rule>
+    <Rule>
+      <Key>S1133</Key>
+    </Rule>
+    <Rule>
+      <Key>S1134</Key>
+    </Rule>
+    <Rule>
+      <Key>S1135</Key>
     </Rule>
     <Rule>
       <Key>S114</Key>
@@ -235,6 +113,18 @@
       <Key>S1313</Key>
     </Rule>
     <Rule>
+      <Key>S1479</Key>
+      <Parameters>
+        <Parameter>
+          <Key>maximum</Key>
+          <Value>30</Value>
+        </Parameter>
+      </Parameters>
+    </Rule>
+    <Rule>
+      <Key>S1481</Key>
+    </Rule>
+    <Rule>
       <Key>S1542</Key>
       <Parameters>
         <Parameter>
@@ -274,6 +164,12 @@
       <Key>S1871</Key>
     </Rule>
     <Rule>
+      <Key>S1940</Key>
+    </Rule>
+    <Rule>
+      <Key>S1944</Key>
+    </Rule>
+    <Rule>
       <Key>S2068</Key>
       <Parameters>
         <Parameter>
@@ -286,13 +182,16 @@
       <Key>S2077</Key>
     </Rule>
     <Rule>
-      <Key>S2094</Key>
-    </Rule>
-    <Rule>
       <Key>S2166</Key>
     </Rule>
     <Rule>
       <Key>S2178</Key>
+    </Rule>
+    <Rule>
+      <Key>S2225</Key>
+    </Rule>
+    <Rule>
+      <Key>S2234</Key>
     </Rule>
     <Rule>
       <Key>S2257</Key>
@@ -305,6 +204,55 @@
           <Value>^([A-Z]{1,3}[a-z0-9]+)*([A-Z]{2})?(\.([A-Z]{1,3}[a-z0-9]+)*([A-Z]{2})?)*$</Value>
         </Parameter>
       </Parameters>
+    </Rule>
+    <Rule>
+      <Key>S2340</Key>
+    </Rule>
+    <Rule>
+      <Key>S2342</Key>
+      <Parameters>
+        <Parameter>
+          <Key>flagsAttributeFormat</Key>
+          <Value>^([A-Z]{1,3}[a-z0-9]+)*([A-Z]{2})?s$</Value>
+        </Parameter>
+        <Parameter>
+          <Key>format</Key>
+          <Value>^([A-Z]{1,3}[a-z0-9]+)*([A-Z]{2})?$</Value>
+        </Parameter>
+      </Parameters>
+    </Rule>
+    <Rule>
+      <Key>S2344</Key>
+    </Rule>
+    <Rule>
+      <Key>S2345</Key>
+    </Rule>
+    <Rule>
+      <Key>S2346</Key>
+    </Rule>
+    <Rule>
+      <Key>S2347</Key>
+      <Parameters>
+        <Parameter>
+          <Key>format</Key>
+          <Value>^(([a-z][a-z0-9]*)?([A-Z]{1,3}[a-z0-9]+)*([A-Z]{2})?_)?([A-Z]{1,3}[a-z0-9]+)*([A-Z]{2})?$</Value>
+        </Parameter>
+      </Parameters>
+    </Rule>
+    <Rule>
+      <Key>S2349</Key>
+    </Rule>
+    <Rule>
+      <Key>S2352</Key>
+    </Rule>
+    <Rule>
+      <Key>S2355</Key>
+    </Rule>
+    <Rule>
+      <Key>S2358</Key>
+    </Rule>
+    <Rule>
+      <Key>S2359</Key>
     </Rule>
     <Rule>
       <Key>S2365</Key>
@@ -337,6 +285,9 @@
       <Key>S2612</Key>
     </Rule>
     <Rule>
+      <Key>S2692</Key>
+    </Rule>
+    <Rule>
       <Key>S2737</Key>
     </Rule>
     <Rule>
@@ -355,10 +306,19 @@
       <Key>S3011</Key>
     </Rule>
     <Rule>
+      <Key>S3358</Key>
+    </Rule>
+    <Rule>
       <Key>S3363</Key>
     </Rule>
     <Rule>
       <Key>S3385</Key>
+    </Rule>
+    <Rule>
+      <Key>S3431</Key>
+    </Rule>
+    <Rule>
+      <Key>S3449</Key>
     </Rule>
     <Rule>
       <Key>S3453</Key>
@@ -370,7 +330,23 @@
       <Key>S3466</Key>
     </Rule>
     <Rule>
+      <Key>S3598</Key>
+    </Rule>
+    <Rule>
       <Key>S3603</Key>
+    </Rule>
+    <Rule>
+      <Key>S3776</Key>
+      <Parameters>
+        <Parameter>
+          <Key>propertyThreshold</Key>
+          <Value>3</Value>
+        </Parameter>
+        <Parameter>
+          <Key>threshold</Key>
+          <Value>15</Value>
+        </Parameter>
+      </Parameters>
     </Rule>
     <Rule>
       <Key>S3869</Key>
@@ -430,9 +406,6 @@
       <Key>S4260</Key>
     </Rule>
     <Rule>
-      <Key>S4275</Key>
-    </Rule>
-    <Rule>
       <Key>S4277</Key>
     </Rule>
     <Rule>
@@ -440,6 +413,9 @@
     </Rule>
     <Rule>
       <Key>S4428</Key>
+    </Rule>
+    <Rule>
+      <Key>S4507</Key>
     </Rule>
     <Rule>
       <Key>S4545</Key>
@@ -461,6 +437,9 @@
     </Rule>
     <Rule>
       <Key>S4830</Key>
+    </Rule>
+    <Rule>
+      <Key>S5042</Key>
     </Rule>
     <Rule>
       <Key>S5443</Key>
@@ -490,7 +469,16 @@
       <Key>S5753</Key>
     </Rule>
     <Rule>
+      <Key>S5856</Key>
+    </Rule>
+    <Rule>
       <Key>S5944</Key>
+    </Rule>
+    <Rule>
+      <Key>S6145</Key>
+    </Rule>
+    <Rule>
+      <Key>S6146</Key>
     </Rule>
     <Rule>
       <Key>S6418</Key>
@@ -545,13 +533,25 @@
       <Key>S6617</Key>
     </Rule>
     <Rule>
+      <Key>S6930</Key>
+    </Rule>
+    <Rule>
+      <Key>S6931</Key>
+    </Rule>
+    <Rule>
       <Key>S907</Key>
     </Rule>
     <Rule>
       <Key>S927</Key>
     </Rule>
     <Rule>
+      <Key>S2094</Key>
+    </Rule>
+    <Rule>
       <Key>S3063</Key>
+    </Rule>
+    <Rule>
+      <Key>S4275</Key>
     </Rule>
   </Rules>
   <Files>

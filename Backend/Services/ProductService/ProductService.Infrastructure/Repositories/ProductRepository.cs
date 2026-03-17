@@ -223,7 +223,6 @@ public class ProductRepository : IProductRepository
 
         var indexModels = new List<CreateIndexModel<Product>>
     {
-        // Index on Name (Ascending)
         new CreateIndexModel<Product>(
             indexKeys.Ascending(p => p.Name),
             new CreateIndexOptions

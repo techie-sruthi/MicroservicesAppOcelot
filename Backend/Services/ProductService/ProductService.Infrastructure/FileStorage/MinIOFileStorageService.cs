@@ -22,7 +22,6 @@ public class MinIOFileStorageService : IFileStorageService, IDisposable
         _settings = settings.Value;
         _logger = logger;
 
-        // Create MinIO S3 client
         var credentials = new BasicAWSCredentials(_settings.AccessKey, _settings.SecretKey);
         var config = new AmazonS3Config
         {
@@ -37,7 +36,6 @@ public class MinIOFileStorageService : IFileStorageService, IDisposable
     {
         try
         {
-            // Check if bucket exists by trying to get its location
             try
             {
                 await _s3Client.GetBucketLocationAsync(_settings.BucketName);
@@ -48,14 +46,12 @@ public class MinIOFileStorageService : IFileStorageService, IDisposable
             }
             catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                // Bucket doesn't exist, create it
                 if (_logger.IsEnabled(LogLevel.Information))
                 {
                     _logger.LogInformation(ex, "Bucket not found. Creating MinIO bucket: {BucketName}", _settings.BucketName);
                 }
                 await _s3Client.PutBucketAsync(_settings.BucketName);
 
-                // Set bucket policy to allow public read
                 var policy = @"
                 {
                     ""Version"": ""2012-10-17"",
@@ -91,14 +87,12 @@ public class MinIOFileStorageService : IFileStorageService, IDisposable
     {
         try
         {
-            // Ensure bucket exists on first use (lazy initialization)
             if (!_bucketEnsured)
             {
                 await EnsureBucketExistsAsync();
                 _bucketEnsured = true;
             }
 
-            // Generate unique file name
             var uniqueFileName = $"{Guid.NewGuid()}_{fileName}";
             var key = $"products/{uniqueFileName}";
 
@@ -114,7 +108,6 @@ public class MinIOFileStorageService : IFileStorageService, IDisposable
             using var transferUtility = new TransferUtility(_s3Client);
             await transferUtility.UploadAsync(uploadRequest);
 
-            // Return the public URL (use PublicEndpoint if set for external accessibility)
             var protocol = _settings.UseSSL ? "https" : "http";
             var host = string.IsNullOrEmpty(_settings.PublicEndpoint) ? _settings.Endpoint : _settings.PublicEndpoint;
             var fileUrl = $"{protocol}://{host}/{_settings.BucketName}/{key}";
@@ -187,7 +180,6 @@ public class MinIOFileStorageService : IFileStorageService, IDisposable
         try
         {
             var uri = new Uri(fileUrl);
-            // Remove bucket name and leading slash
             var path = uri.AbsolutePath;
             var bucketPrefix = $"/{_settings.BucketName}/";
             if (path.StartsWith(bucketPrefix))

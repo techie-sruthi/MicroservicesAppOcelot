@@ -145,12 +145,10 @@ export class UserProductsComponent implements OnInit, OnDestroy {
           );
         }),
         tap((response) => {
+          this.checkingName = false;
           this.nameError = response.exists
             ? 'A product with this name already exists'
             : '';
-        }),
-        finalize(() => {
-          this.checkingName = false;
           this.cdr.detectChanges();
         })
       )

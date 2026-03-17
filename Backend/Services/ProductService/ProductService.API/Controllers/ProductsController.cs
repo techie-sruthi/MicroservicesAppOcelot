@@ -31,7 +31,7 @@ public class ProductsController : BaseController
 
     [HttpPut("[action]/{id}")]
     public async Task<IActionResult> Update(string id, UpdateProductCommand command)
-    { command.RouteId = id; return await SendNoContent(command); }
+    { command.Id = id; return await SendNoContent(command); }
 
     [HttpDelete("[action]/{id}")]
     public async Task<IActionResult> Delete(string id)

@@ -14,9 +14,7 @@ public class CheckEmailQueryHandler : IRequestHandler<CheckEmailQuery, bool>
 
     public async Task<bool> Handle(CheckEmailQuery request, CancellationToken cancellationToken)
     {
-        // Check if email already exists (case-insensitive)
         var exists = await _context.UserExistsAsync(request.Email, cancellationToken);
-        
-        return exists; // Returns true if email is already taken
+        return exists;
     }
 }

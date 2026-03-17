@@ -25,11 +25,10 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
 
         if (user == null)
         {
-            // don't reveal user emails doesnt exist
+            // Don't reveal whether the email exists
             return new MessageResponse("If your email exists, you will receive a password reset link.");
         }
 
-        // Generate secure random token
         var tokenBytes = RandomNumberGenerator.GetBytes(32);
         var token = Convert.ToBase64String(tokenBytes)
             .Replace("+", "-")

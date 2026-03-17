@@ -23,7 +23,6 @@ public class DeleteProductCommandHandler : IRequestHandler<DeleteProductCommand,
         if (product == null)
             throw new KeyNotFoundException($"Product with ID '{request.Id}' was not found.");
 
-        // Authorization: Non-admin users can only delete their own products
         if (!isAdmin && product.CreatedByUserId != userId)
         {
             throw new UnauthorizedAccessException($"User {userId} is not authorized to delete product {request.Id}");

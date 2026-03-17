@@ -12,7 +12,7 @@
   <HasBeginStepCommandLineTruststorePassword>false</HasBeginStepCommandLineTruststorePassword>
   <SonarQubeHostUrl>http://localhost:9000</SonarQubeHostUrl>
   <SonarQubeVersion>26.3.0.120487</SonarQubeVersion>
-  <SonarProjectKey>product_api3</SonarProjectKey>
+  <SonarProjectKey>product_api</SonarProjectKey>
   <AdditionalConfig>
     <ConfigSetting Id="BuildUri" />
     <ConfigSetting Id="TfsUri" />
@@ -150,8 +150,8 @@
     <Property Name="sonaranalyzer-vbnet.pluginKey">vbnet</Property>
     <Property Name="sonar.java.jvmframeworkconfig.activate">true</Property>
     <Property Name="sonar.updatecenter.url">https://downloads.sonarsource.com/sonarqube/update/update-center.properties</Property>
-    <Property Name="sonar.core.id">147B411E-AZz1sbrCKyFrR37Xh86b</Property>
-    <Property Name="sonar.core.startTime">3/16/2026 12:57:18 PM</Property>
+    <Property Name="sonar.core.startTime">3/17/2026 11:22:57 AM</Property>
+    <Property Name="sonar.core.id">147B411E-AZz6rSsPX62OWjKg273C</Property>
   </ServerSettings>
   <LocalSettings>
     <Property Name="sonar.host.url">http://localhost:9000</Property>

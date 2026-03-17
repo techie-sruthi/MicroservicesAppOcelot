@@ -14,7 +14,6 @@ public static class InfrastructureDependency
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        // Bind MongoDB settings
         services.Configure<MongoDbSettings>(
             configuration.GetSection("MongoDB"));
 

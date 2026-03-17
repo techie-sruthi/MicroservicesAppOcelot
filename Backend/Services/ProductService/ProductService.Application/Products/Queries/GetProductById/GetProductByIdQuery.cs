@@ -7,7 +7,6 @@ public class GetProductByIdQuery : IRequest<ProductDto>
 {
     public string Id { get; set; }
 
-    // Authorization context
     public int CurrentUserId { get; set; }
     public bool IsAdmin { get; set; }
 

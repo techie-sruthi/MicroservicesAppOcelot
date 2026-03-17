@@ -146,7 +146,7 @@
         <ng-template pTemplate="body" let-product>
           <tr>
             <td>
-              <div *ngIf="product.imageUrl" class="product-image-cell">
+              <!-- <div *ngIf="product.imageUrl" class="product-image-cell">
                 <img
                   [src]="product.imageUrl"
                   [alt]="product.name"
@@ -156,12 +156,28 @@
                 />
               </div>
               <div *ngIf="!product.imageUrl" class="no-image-cell">
-                <!-- <i class="pi pi-image" style="font-size: 2rem; color: #ccc;"></i> -->
                 <i class="pi pi-image" style="font-size: 1.5rem; color: #ccc"></i>
                 <span style="font-size: 0.7rem; color: #ccc; display: block; margin-top: 2px"
                   >No Image</span
                 >
+              </div> -->
+
+              
+              <div *ngIf="product.imageUrl">
+                <p-button
+                  icon="pi pi-eye"
+                  label="View"
+                  [text]="true"
+                  size="small"
+                  (onClick)="viewImage(product.imageUrl)"
+                  title="View image of {{ product.name }}"
+                  [attr.aria-label]="'View image of ' + product.name"
+                ></p-button>
               </div>
+              <div *ngIf="!product.imageUrl" style="text-align: center">
+                <span style="font-size: 0.8rem; color: #999">No image</span>
+              </div>
+              
             </td>
             <td>{{ product.name }}</td>
             <td>
