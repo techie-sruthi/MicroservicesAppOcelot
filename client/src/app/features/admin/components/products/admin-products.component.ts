@@ -102,6 +102,9 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
   private filter$ = new Subject<void>();
   nameError: string = '';
   checkingName: boolean = false;
+  originalProductName: string = '';
+  hasEditedNameInEditMode: boolean = false;
+  hasAttemptedNameEditInEditMode: boolean = false;
 
   productForm: IProductForm = {
     name: '',
@@ -138,10 +141,14 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
         distinctUntilChanged(),
 
         tap(() => {
-          this.checkingName = true;
+          this.checkingName = !this.isEditMode || this.hasEditedNameInEditMode;
         }),
 
         switchMap((name) => {
+          if (this.isEditMode && !this.hasEditedNameInEditMode) {
+            return of({ exists: false });
+          }
+
           if (!name || name.trim().length < 2) {
             return of({ exists: false });
           }
@@ -157,7 +164,13 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
 
         tap((response) => {
           this.checkingName = false;
-          this.nameError = response.exists ? 'A product with this name already exists' : '';
+
+          if (this.isEditMode && !this.hasEditedNameInEditMode) {
+            this.nameError = '';
+          } else {
+            this.nameError = response.exists ? 'A product with this name already exists' : '';
+          }
+
           this.cdr.detectChanges();
         }),
       )
@@ -193,7 +206,44 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
   }
 
   onProductNameChange(name: string): void {
+    if (this.isEditMode) {
+      const normalizedName = (name ?? '').trim();
+      this.hasEditedNameInEditMode = normalizedName !== this.originalProductName;
+
+      if (!this.hasEditedNameInEditMode) {
+        this.nameError = '';
+        this.checkingName = false;
+      }
+    }
+
     this.productNameCheck$.next(name);
+  }
+
+  onProductNameKeydown(event: KeyboardEvent): void {
+    if (!this.isEditMode) {
+      return;
+    }
+
+    const ignoredKeys = new Set([
+      'Tab',
+      'Shift',
+      'Control',
+      'Alt',
+      'Meta',
+      'CapsLock',
+      'ArrowLeft',
+      'ArrowRight',
+      'ArrowUp',
+      'ArrowDown',
+      'Home',
+      'End',
+      'Escape',
+      'Enter',
+    ]);
+
+    if (!ignoredKeys.has(event.key)) {
+      this.hasAttemptedNameEditInEditMode = true;
+    }
   }
 
   loadRefreshProducts(): void {
@@ -346,6 +396,9 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
     this.imagePreview = null;
     this.nameError = '';
     this.checkingName = false;
+    this.originalProductName = '';
+    this.hasEditedNameInEditMode = false;
+    this.hasAttemptedNameEditInEditMode = false;
     this.productNameCheck$.next('');
     this.displayDialog = true;
   }
@@ -363,6 +416,9 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
     this.imagePreview = product.imageUrl || null;
     this.nameError = '';
     this.checkingName = false;
+    this.originalProductName = (product.name || '').trim();
+    this.hasEditedNameInEditMode = false;
+    this.hasAttemptedNameEditInEditMode = false;
     this.productNameCheck$.next('');
     this.displayDialog = true;
     this.cdr.detectChanges();
@@ -530,6 +586,9 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
     this.imagePreview = null;
     this.nameError = '';
     this.checkingName = false;
+    this.originalProductName = '';
+    this.hasEditedNameInEditMode = false;
+    this.hasAttemptedNameEditInEditMode = false;
   }
 
   onSearch() {

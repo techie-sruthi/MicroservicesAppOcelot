@@ -100,7 +100,6 @@ export class RegisterComponent implements OnInit, OnDestroy {
   }
 
   onRegister() {
-    // Check for email validation error
     if (this.emailError) {
       this.messageService.add({
         severity: 'error',

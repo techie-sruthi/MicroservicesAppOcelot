@@ -443,6 +443,16 @@
     max-width: 95vw !important;
   }
 
+  ::ng-deep .p-confirmdialog.p-dialog {
+    height: auto !important;
+    max-height: 82vh !important;
+  }
+
+  ::ng-deep .p-confirmdialog.p-dialog .p-dialog-content {
+    max-height: calc(82vh - 7rem) !important;
+    overflow-y: auto !important;
+  }
+
   /* Table scrollable */
   ::ng-deep .p-datatable-wrapper {
     overflow-x: auto;
@@ -551,7 +561,7 @@
   }
 
   /* Dialog full screen */
-  ::ng-deep .p-dialog {
+  ::ng-deep .p-dialog:not(.p-confirmdialog) {
     width: 100vw !important;
     height: 100vh !important;
     max-height: 100vh !important;
@@ -559,8 +569,21 @@
     border-radius: 0 !important;
   }
 
-  ::ng-deep .p-dialog .p-dialog-content {
+  ::ng-deep .p-dialog:not(.p-confirmdialog) .p-dialog-content {
     max-height: calc(100vh - 150px) !important;
+  }
+
+  ::ng-deep .p-confirmdialog.p-dialog {
+    width: 88vw !important;
+    height: auto !important;
+    max-height: 74vh !important;
+    border-radius: 12px !important;
+    margin: 0 auto !important;
+  }
+
+  ::ng-deep .p-confirmdialog.p-dialog .p-dialog-content {
+    max-height: calc(74vh - 6.5rem) !important;
+    overflow-y: auto !important;
   }
 
   /* Table actions vertical */
@@ -572,13 +595,23 @@
 
 /* Landscape orientation fixes for phones */
 @media (max-height: 500px) and (orientation: landscape) {
-  ::ng-deep .p-dialog {
+  ::ng-deep .p-dialog:not(.p-confirmdialog) {
     height: 100vh !important;
     max-height: 100vh !important;
   }
 
-  ::ng-deep .p-dialog .p-dialog-content {
+  ::ng-deep .p-dialog:not(.p-confirmdialog) .p-dialog-content {
     max-height: calc(100vh - 120px) !important;
+    overflow-y: auto !important;
+  }
+
+  ::ng-deep .p-confirmdialog.p-dialog {
+    height: auto !important;
+    max-height: 86vh !important;
+  }
+
+  ::ng-deep .p-confirmdialog.p-dialog .p-dialog-content {
+    max-height: calc(86vh - 6rem) !important;
     overflow-y: auto !important;
   }
 }

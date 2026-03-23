@@ -1,6 +1,10 @@
 <app-layout>
   <p-toast class="custom-toast"></p-toast>
-  <p-confirmDialog [style]="{ width: '450px' }" [baseZIndex]="10000"></p-confirmDialog>
+  <p-confirmDialog
+    [style]="{ width: '28rem' }"
+    [breakpoints]="{ '768px': '82vw', '480px': '74vw' }"
+    [baseZIndex]="10000"
+  ></p-confirmDialog>
 
   <div class="dashboard-container">
     <p-card header="All Products">
@@ -273,24 +277,29 @@
           pInputText
           id="productName"
           [(ngModel)]="productForm.name"
+          (keydown)="onProductNameKeydown($event)"
           (ngModelChange)="onProductNameChange($event)"
           placeholder="Enter product name"
           class="w-full"
-          [maxlength]="20"
+          [maxlength]="50"
           [class.p-invalid]="nameError && !checkingName"
         />
 
         <small
-          *ngIf="productForm.name && productForm.name.length >= 20"
+          *ngIf="
+            productForm.name &&
+            productForm.name.length >= 50 &&
+            (!isEditMode || hasEditedNameInEditMode || hasAttemptedNameEditInEditMode)
+          "
           class="p-error"
           style="color: #e24c4c; display: flex; align-items: center; gap: 4px; margin-top: 4px"
         >
           <i class="pi pi-exclamation-triangle" style="color: #e24c4c"></i>
-          Product name cannot exceed 20 characters
+          Product name cannot exceed 50 characters
         </small>
 
         <small
-          *ngIf="checkingName"
+          *ngIf="checkingName && (!isEditMode || hasEditedNameInEditMode)"
           style="color: #6366f1; display: flex; align-items: center; gap: 4px; margin-top: 4px"
         >
           <i class="pi pi-spin pi-spinner" style="font-size: 0.8rem"></i>
@@ -298,7 +307,7 @@
         </small>
 
         <small
-          *ngIf="nameError && !checkingName"
+          *ngIf="nameError && !checkingName && (!isEditMode || hasEditedNameInEditMode)"
           class="p-error"
           style="display: flex; align-items: center; gap: 4px; margin-top: 4px"
         >
@@ -308,7 +317,11 @@
 
         <small
           *ngIf="
-            !nameError && !checkingName && productForm.name && productForm.name.trim().length > 2
+            !nameError &&
+            !checkingName &&
+            productForm.name &&
+            productForm.name.trim().length > 2 &&
+            (!isEditMode || hasEditedNameInEditMode)
           "
           style="color: #22c55e; display: flex; align-items: center; gap: 4px; margin-top: 4px"
         >
