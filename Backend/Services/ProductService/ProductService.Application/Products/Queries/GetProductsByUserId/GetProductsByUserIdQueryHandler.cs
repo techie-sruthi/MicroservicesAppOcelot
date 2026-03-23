@@ -2,10 +2,12 @@ using MediatR;
 using ProductService.Application.Common.Interfaces;
 using ProductService.Application.Common.Models;
 using ProductService.Application.Products.DTOs;
+using Shared.Kernel.Models;
+using Shared.Kernel.Results;
 
 namespace ProductService.Application.Products.Queries.GetProductsByUserId;
 
-public class GetProductsByUserIdQueryHandler : IRequestHandler<GetProductsByUserIdQuery, PagedResult<ProductDto>>
+public class GetProductsByUserIdQueryHandler : IRequestHandler<GetProductsByUserIdQuery, Result<PagedResult<ProductDto>>>
 {
     private readonly IProductRepository _repository;
     private readonly ICurrentUserService _currentUser;
@@ -16,8 +18,13 @@ public class GetProductsByUserIdQueryHandler : IRequestHandler<GetProductsByUser
         _currentUser = currentUser;
     }
 
-    public async Task<PagedResult<ProductDto>> Handle(GetProductsByUserIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PagedResult<ProductDto>>> Handle(GetProductsByUserIdQuery request, CancellationToken cancellationToken)
     {
+        request = request with
+        {
+            PageNumber = PaginationParams.ClampPageNumber(request.PageNumber),
+            PageSize = PaginationParams.ClampPageSize(request.PageSize)
+        };
 
         var userId = _currentUser.GetUserId();
 
@@ -35,21 +42,8 @@ public class GetProductsByUserIdQueryHandler : IRequestHandler<GetProductsByUser
 
         var pagedResult = await _repository.GetByUserIdPagedAsync(filter);
 
-        return new PagedResult<ProductDto>
-        {
-            Items = pagedResult.Items.Select(p => new ProductDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description,
-                Price = p.Price,
-                DateOfManufacture = p.DateOfManufacture,
-                CreatedByUserId = p.CreatedByUserId,
-                ImageUrl = p.ImageUrl
-            }).ToList(),
-            TotalCount = pagedResult.TotalCount,
-            PageNumber = pagedResult.PageNumber,
-            PageSize = pagedResult.PageSize
-        };
+        return Result<PagedResult<ProductDto>>.Success(
+            pagedResult.ToDtoPage(),
+            "Products fetched successfully.");
     }
 }

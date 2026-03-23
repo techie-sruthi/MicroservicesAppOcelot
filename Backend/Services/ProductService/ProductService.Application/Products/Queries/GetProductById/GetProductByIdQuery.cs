@@ -1,9 +1,10 @@
 using MediatR;
 using ProductService.Application.Products.DTOs;
+using Shared.Kernel.Results;
 
 namespace ProductService.Application.Products.Queries.GetProductById;
 
-public class GetProductByIdQuery : IRequest<ProductDto>
+public class GetProductByIdQuery : IRequest<Result<ProductDto>>
 {
     public string Id { get; set; }
 

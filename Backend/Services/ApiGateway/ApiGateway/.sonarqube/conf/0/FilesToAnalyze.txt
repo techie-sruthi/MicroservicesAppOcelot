@@ -13,8 +13,6 @@ C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\Ap
 C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\ApiGateway\ApiGateway\appsettings.json
 C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\ApiGateway\ApiGateway\ocelot.docker.json
 C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\ApiGateway\ApiGateway\ocelot.json
-C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\ApiGateway\ApiGateway\ocelotold.docker.json
-C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\ApiGateway\ApiGateway\OcelotOld.json
 C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\ApiGateway\ApiGateway\Aggregator\note.txt
 C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\ApiGateway\ApiGateway\Aggregator\productAggregator.txt
 C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\ApiGateway\ApiGateway\ApiGateway.http

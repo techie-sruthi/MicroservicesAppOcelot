@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using UserService.Application.Common.Exceptions;
+using Shared.Kernel.Exceptions;
 using UserService.Application.Common.Interfaces;
 
 namespace UserService.Infrastructure.Services;

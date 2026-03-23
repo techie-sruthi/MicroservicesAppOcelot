@@ -2,23 +2,25 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Copy solution and project files
-COPY ["ProductService.API/ProductService.API.csproj", "ProductService.API/"]
-COPY ["ProductService.Application/ProductService.Application.csproj", "ProductService.Application/"]
-COPY ["ProductService.Domain/ProductService.Domain.csproj", "ProductService.Domain/"]
-COPY ["ProductService.Infrastructure/ProductService.Infrastructure.csproj", "ProductService.Infrastructure/"]
+# Copy project files and shared library
+COPY ["Services/ProductService/ProductService.API/ProductService.API.csproj", "Services/ProductService/ProductService.API/"]
+COPY ["Services/ProductService/ProductService.Application/ProductService.Application.csproj", "Services/ProductService/ProductService.Application/"]
+COPY ["Services/ProductService/ProductService.Domain/ProductService.Domain.csproj", "Services/ProductService/ProductService.Domain/"]
+COPY ["Services/ProductService/ProductService.Infrastructure/ProductService.Infrastructure.csproj", "Services/ProductService/ProductService.Infrastructure/"]
+COPY ["Shared/Shared.Kernel/Shared.Kernel.csproj", "Shared/Shared.Kernel/"]
 
 # Restore dependencies
-RUN dotnet restore "ProductService.API/ProductService.API.csproj"
+RUN dotnet restore "Services/ProductService/ProductService.API/ProductService.API.csproj"
 
-# Copy only the application source
-COPY ["ProductService.API/", "ProductService.API/"]
-COPY ["ProductService.Application/", "ProductService.Application/"]
-COPY ["ProductService.Domain/", "ProductService.Domain/"]
-COPY ["ProductService.Infrastructure/", "ProductService.Infrastructure/"]
+# Copy source code
+COPY ["Services/ProductService/ProductService.API/", "Services/ProductService/ProductService.API/"]
+COPY ["Services/ProductService/ProductService.Application/", "Services/ProductService/ProductService.Application/"]
+COPY ["Services/ProductService/ProductService.Domain/", "Services/ProductService/ProductService.Domain/"]
+COPY ["Services/ProductService/ProductService.Infrastructure/", "Services/ProductService/ProductService.Infrastructure/"]
+COPY ["Shared/Shared.Kernel/", "Shared/Shared.Kernel/"]
 
 # Build
-WORKDIR "/src/ProductService.API"
+WORKDIR "/src/Services/ProductService/ProductService.API"
 RUN dotnet build "ProductService.API.csproj" -c Release -o /app/build
 
 # Stage 2: Publish

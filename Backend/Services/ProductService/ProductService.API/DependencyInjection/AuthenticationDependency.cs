@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using ProductService.API.Middleware;
+using Shared.Kernel.Exceptions;
 using System.Security.Claims;
 using System.Text;
 

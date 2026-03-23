@@ -1,11 +1,12 @@
 using MediatR;
+using Shared.Kernel.Results;
 using UserService.Application.Common.Interfaces;
 using UserService.Application.Users.DTOs;
 
 namespace UserService.Application.Users.Commands.RefreshToken;
 
 public class RefreshTokenCommandHandler
-    : IRequestHandler<RefreshTokenCommand, LoginResponse>
+    : IRequestHandler<RefreshTokenCommand, Result<LoginResponse>>
 {
     private readonly IUserDbContext _context;
     private readonly IJwtService _jwtService;
@@ -18,7 +19,7 @@ public class RefreshTokenCommandHandler
         _jwtService = jwtService;
     }
 
-    public async Task<LoginResponse> Handle(
+    public async Task<Result<LoginResponse>> Handle(
         RefreshTokenCommand request,
         CancellationToken cancellationToken)
     {
@@ -27,10 +28,10 @@ public class RefreshTokenCommandHandler
             cancellationToken);
 
         if (user == null)
-            throw new UnauthorizedAccessException("Invalid refresh token");
+            return Result<LoginResponse>.Failure("Invalid refresh token");
 
         if (user.RefreshTokenExpiryTime <= DateTime.UtcNow)
-            throw new UnauthorizedAccessException("Refresh token expired");
+            return Result<LoginResponse>.Failure("Refresh token expired");
 
         var accessToken = _jwtService.GenerateToken(
             user.Id,
@@ -42,14 +43,14 @@ public class RefreshTokenCommandHandler
 
         user.RefreshToken = newRefreshToken;
         user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-        
+
         await _context.SaveChangesAsync(cancellationToken);
 
-        return new LoginResponse
+        return Result<LoginResponse>.Success(new LoginResponse
         {
             AccessToken = accessToken,
             RefreshToken = newRefreshToken,
             ExpiresIn = 3600  // 60 minutes in seconds
-        };
+        }, "Token refreshed successfully.");
     }
 }

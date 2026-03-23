@@ -8,6 +8,7 @@ using ProductService.Application.Common.Models;
 using ProductService.Domain.Entities;
 using ProductService.Infrastructure.Data;
 using ProductService.Application.Products.Queries.GetAllProducts;
+using Shared.Kernel.Models;
 
 namespace ProductService.Infrastructure.Repositories;
 

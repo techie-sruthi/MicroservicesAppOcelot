@@ -13,12 +13,23 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { Table } from 'primeng/table';
-import { ProductService, IProduct, IPagedResult } from '../../../../shared/services/product.service';
+import {
+  ProductService,
+  IProduct,
+  IPagedResult,
+} from '../../../../shared/services/product.service';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ImageViewerComponent } from '../../../../shared/components/image-viewer/image-viewer.component';
 import { Textarea } from 'primeng/textarea';
 import { Subject, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, catchError, tap, finalize } from 'rxjs/operators';
+import {
+  debounceTime,
+  distinctUntilChanged,
+  switchMap,
+  catchError,
+  tap,
+  finalize,
+} from 'rxjs/operators';
 
 interface IProductForm {
   id?: string;
@@ -47,14 +58,13 @@ interface IProductForm {
     TooltipModule,
     ConfirmDialogModule,
     ImageViewerComponent,
-    Textarea
+    Textarea,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './user-products.component.html',
-  styleUrl: './user-products.component.css'
+  styleUrl: './user-products.component.css',
 })
 export class UserProductsComponent implements OnInit, OnDestroy {
-
   products: IProduct[] = [];
   loading = false;
 
@@ -101,7 +111,7 @@ export class UserProductsComponent implements OnInit, OnDestroy {
     description: '',
     price: 0,
     dateOfManufacture: '',
-    imageUrl: undefined
+    imageUrl: undefined,
   };
 
   @ViewChild('dt') table!: Table;
@@ -111,7 +121,6 @@ export class UserProductsComponent implements OnInit, OnDestroy {
   private messageService = inject(MessageService);
   private confirmationService = inject(ConfirmationService);
   private cdr = inject(ChangeDetectorRef);
-
 
   ngOnInit(): void {
     this.setupNameValidation();
@@ -133,7 +142,7 @@ export class UserProductsComponent implements OnInit, OnDestroy {
         tap(() => {
           this.checkingName = true;
         }),
-        switchMap(name => {
+        switchMap((name) => {
           if (!name || name.trim().length < 2) {
             return of({ exists: false });
           }
@@ -141,40 +150,42 @@ export class UserProductsComponent implements OnInit, OnDestroy {
           return this.productService.checkProductName(name.trim(), excludeId).pipe(
             catchError(() => {
               return of({ exists: false });
-            })
+            }),
           );
         }),
         tap((response) => {
           this.checkingName = false;
-          this.nameError = response.exists
-            ? 'A product with this name already exists'
-            : '';
+          this.nameError = response.exists ? 'A product with this name already exists' : '';
           this.cdr.detectChanges();
-        })
+        }),
       )
       .subscribe();
   }
 
   setupSearchDebounce(): void {
-    this.search$.pipe(
-      debounceTime(1000),
-      tap(() => {
-        this.pageNumber = 1;
-        this.first = 0;
-        this.loadProducts();
-      })
-    ).subscribe();
+    this.search$
+      .pipe(
+        debounceTime(1000),
+        tap(() => {
+          this.pageNumber = 1;
+          this.first = 0;
+          this.loadProducts();
+        }),
+      )
+      .subscribe();
   }
 
   setupFilterDebounce(): void {
-    this.filter$.pipe(
-      debounceTime(1000),
-      tap(() => {
-        this.pageNumber = 1;
-        this.first = 0;
-        this.loadProducts();
-      })
-    ).subscribe();
+    this.filter$
+      .pipe(
+        debounceTime(1000),
+        tap(() => {
+          this.pageNumber = 1;
+          this.first = 0;
+          this.loadProducts();
+        }),
+      )
+      .subscribe();
   }
 
   onProductNameChange(name: string): void {
@@ -200,7 +211,7 @@ export class UserProductsComponent implements OnInit, OnDestroy {
     this.maxPrice = null;
     this.startDate = '';
     this.pageNumber = 1;
-    this.first = 0;   
+    this.first = 0;
     this.sortField = null;
     this.sortOrder = null;
     this.showFilters = false;
@@ -224,33 +235,37 @@ export class UserProductsComponent implements OnInit, OnDestroy {
     const sortField = this.sortField || undefined;
     const sortOrder = this.sortOrder || undefined;
 
-    this.productService.getMyProducts(
-      this.pageNumber, 
-      this.pageSize,
-      searchTerm,
-      minPrice,
-      maxPrice,
-      startDate,
-      sortField,
-      sortOrder
-    ).pipe(
-      tap((data: IPagedResult<IProduct>) => {
-        this.products = data.items;
-        this.totalRecords = data.totalCount;
-      }),
-      catchError(() => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Failed to load products', styleClass: 'my-custom-toast'
-        });
-        return of(null);
-      }),
-      finalize(() => {
-        this.loading = false;
-        this.cdr.detectChanges();
-      })
-    ).subscribe();
+    this.productService
+      .getMyProducts(
+        this.pageNumber,
+        this.pageSize,
+        searchTerm,
+        minPrice,
+        maxPrice,
+        startDate,
+        sortField,
+        sortOrder,
+      )
+      .pipe(
+        tap((data: IPagedResult<IProduct>) => {
+          this.products = data.items;
+          this.totalRecords = data.totalCount;
+        }),
+        catchError((err: any) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: err.error?.message || 'Failed to load products',
+            styleClass: 'my-custom-toast',
+          });
+          return of(null);
+        }),
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe();
   }
 
   showCreateDialog(): void {
@@ -270,7 +285,7 @@ export class UserProductsComponent implements OnInit, OnDestroy {
       description: product.description,
       price: product.price,
       dateOfManufacture: product.dateOfManufacture?.split('T')[0] || '',
-      imageUrl: product.imageUrl
+      imageUrl: product.imageUrl,
     };
     this.imagePreview = product.imageUrl || null;
     this.nameError = '';
@@ -280,12 +295,12 @@ export class UserProductsComponent implements OnInit, OnDestroy {
   }
 
   saveProduct(): void {
-
     if (this.nameError) {
       this.messageService.add({
         severity: 'error',
         summary: 'Validation Error',
-        detail: this.nameError, styleClass: 'my-custom-toast'
+        detail: this.nameError,
+        styleClass: 'my-custom-toast',
       });
       return;
     }
@@ -294,30 +309,35 @@ export class UserProductsComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'warn',
         summary: 'Validation',
-        detail: 'Please fill required fields', styleClass: 'my-custom-toast'
+        detail: 'Please fill required fields',
+        styleClass: 'my-custom-toast',
       });
       return;
     }
 
     if (this.selectedFile) {
       this.uploading = true;
-      this.productService.uploadImage(this.selectedFile).pipe(
-        tap((response: { imageUrl: string | undefined; }) => {
-          this.productForm.imageUrl = response.imageUrl;
-          this.saveProductData();
-        }),
-        catchError(() => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Upload Failed',
-            detail: 'Failed to upload image', styleClass: 'my-custom-toast'
-          });
-          return of(null);
-        }),
-        finalize(() => {
-          this.uploading = false;
-        })
-      ).subscribe();
+      this.productService
+        .uploadImage(this.selectedFile)
+        .pipe(
+          tap((response: any) => {
+            this.productForm.imageUrl = response.data;
+            this.saveProductData();
+          }),
+          catchError((err: any) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Upload Failed',
+              detail: err.error?.message || 'Failed to upload image',
+              styleClass: 'my-custom-toast',
+            });
+            return of(null);
+          }),
+          finalize(() => {
+            this.uploading = false;
+          }),
+        )
+        .subscribe();
     } else {
       this.saveProductData();
     }
@@ -327,56 +347,66 @@ export class UserProductsComponent implements OnInit, OnDestroy {
     const productData = {
       ...this.productForm,
       dateOfManufacture: this.productForm.dateOfManufacture + 'T00:00:00.000Z',
-      imageUrl: this.productForm.imageUrl
+      imageUrl: this.productForm.imageUrl,
     };
 
     if (this.isEditMode && this.productForm.id) {
       const updatedId = this.productForm.id;
-      this.productService.update(updatedId, productData).pipe(
-        tap(() => {
-          this.products = this.products.map(p =>
-            p.id === updatedId ? { ...productData, id: updatedId } as IProduct : p
-          );
-          this.cdr.detectChanges();
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Success',
-            detail: 'Product updated successfully', styleClass: 'my-custom-toast'
-          });
-          this.displayDialog = false;
-        }),
-        catchError(() => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to update product', styleClass: 'my-custom-toast'
-          });
-          return of(null);
-        })
-      ).subscribe();
+      this.productService
+        .update(updatedId, productData)
+        .pipe(
+          tap((response: any) => {
+            this.products = this.products.map((p) =>
+              p.id === updatedId ? ({ ...productData, id: updatedId } as IProduct) : p,
+            );
+            this.cdr.detectChanges();
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Success',
+              detail: response.message || 'Product updated successfully',
+              styleClass: 'my-custom-toast',
+            });
+            this.displayDialog = false;
+          }),
+          catchError((err: any) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: err.error?.message || 'Failed to update product',
+              styleClass: 'my-custom-toast',
+            });
+            return of(null);
+          }),
+        )
+        .subscribe();
     } else {
-      this.productService.create(productData as IProduct).pipe(
-        tap((response: { id: any; }) => {
-          const createdProduct: IProduct = { ...productData, id: response.id } as IProduct;
-          this.products = [createdProduct, ...this.products];
-          this.totalRecords++;
-          this.cdr.detectChanges();
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Success',
-            detail: 'Product created successfully', styleClass: 'my-custom-toast'
-          });
-          this.displayDialog = false;
-        }),
-        catchError(() => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to create product', styleClass: 'my-custom-toast'
-          });
-          return of(null);
-        })
-      ).subscribe();
+      this.productService
+        .create(productData as IProduct)
+        .pipe(
+          tap((response: any) => {
+            const createdProduct: IProduct = { ...productData, id: response.data } as IProduct;
+            this.products = [createdProduct, ...this.products];
+            this.totalRecords++;
+            this.cdr.detectChanges();
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Success',
+              detail: response.message || 'Product created successfully',
+              styleClass: 'my-custom-toast',
+            });
+            this.displayDialog = false;
+          }),
+          catchError((err: any) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: err.error?.message || 'Failed to create product',
+              styleClass: 'my-custom-toast',
+            });
+            return of(null);
+          }),
+        )
+        .subscribe();
     }
   }
 
@@ -388,27 +418,32 @@ export class UserProductsComponent implements OnInit, OnDestroy {
       acceptButtonStyleClass: 'p-button-danger',
       rejectButtonStyleClass: 'p-button-secondary',
       accept: () => {
-        this.productService.delete(id).pipe(
-          tap(() => {
-            this.products = this.products.filter(p => p.id !== id);
-            this.totalRecords--;
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Deleted',
-              detail: 'Product deleted successfully', styleClass: 'my-custom-toast'
-            });
-            this.cdr.detectChanges();
-          }),
-          catchError(() => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: 'Failed to delete product', styleClass: 'my-custom-toast'
-            });
-            return of(null);
-          })
-        ).subscribe();
-      }
+        this.productService
+          .delete(id)
+          .pipe(
+            tap((response: any) => {
+              this.products = this.products.filter((p) => p.id !== id);
+              this.totalRecords--;
+              this.messageService.add({
+                severity: 'success',
+                summary: 'Deleted',
+                detail: response.message || 'Product deleted successfully',
+                styleClass: 'my-custom-toast',
+              });
+              this.cdr.detectChanges();
+            }),
+            catchError((err: any) => {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: err.error?.message || 'Failed to delete product',
+                styleClass: 'my-custom-toast',
+              });
+              return of(null);
+            }),
+          )
+          .subscribe();
+      },
     });
   }
 
@@ -418,7 +453,7 @@ export class UserProductsComponent implements OnInit, OnDestroy {
       description: '',
       price: 0,
       dateOfManufacture: '',
-      imageUrl: undefined
+      imageUrl: undefined,
     };
     this.selectedFile = null;
     this.imagePreview = null;
@@ -439,17 +474,19 @@ export class UserProductsComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'error',
         summary: 'Invalid File',
-        detail: 'Only image files are allowed', styleClass: 'my-custom-toast'
+        detail: 'Only image files are allowed',
+        styleClass: 'my-custom-toast',
       });
       event.target.value = '';
       return;
     }
 
-        if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 5 * 1024 * 1024) {
       this.messageService.add({
         severity: 'error',
         summary: 'File Too Large',
-        detail: 'Image size must be under 5MB', styleClass: 'my-custom-toast'
+        detail: 'Image size must be under 5MB',
+        styleClass: 'my-custom-toast',
       });
       event.target.value = '';
       return;
@@ -466,7 +503,8 @@ export class UserProductsComponent implements OnInit, OnDestroy {
     this.messageService.add({
       severity: 'success',
       summary: 'Image Selected',
-      detail: `${file.name} (${this.formatFileSize(file.size)})`, styleClass: 'my-custom-toast'
+      detail: `${file.name} (${this.formatFileSize(file.size)})`,
+      styleClass: 'my-custom-toast',
     });
   }
 
@@ -504,7 +542,8 @@ export class UserProductsComponent implements OnInit, OnDestroy {
     this.messageService.add({
       severity: 'info',
       summary: 'Filters Cleared',
-      detail: 'All filters have been reset', styleClass: 'my-custom-toast'
+      detail: 'All filters have been reset',
+      styleClass: 'my-custom-toast',
     });
   }
 
@@ -513,7 +552,6 @@ export class UserProductsComponent implements OnInit, OnDestroy {
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   }
 }
-

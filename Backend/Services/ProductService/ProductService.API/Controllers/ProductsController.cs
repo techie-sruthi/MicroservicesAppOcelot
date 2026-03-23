@@ -8,40 +8,40 @@ using ProductService.Application.Products.Queries.GetProductsByUserId;
 using ProductService.Application.Products.Queries.CheckProductName;
 using ProductService.Application.Products.Commands.UploadImage;
 using ProductService.API.Helpers;
-
+using Microsoft.Extensions.Logging;
 namespace ProductService.API.Controllers;
 
 public class ProductsController : BaseController
 {
     [HttpPost("[action]")]
     public async Task<IActionResult> Create(CreateProductCommand command)
-        => Ok(new { id = await Mediator.Send(command) });
+        => ToActionResult(await Mediator.Send(command));
 
     [HttpGet("[action]")]
     public async Task<IActionResult> GetAllProducts([FromQuery] GetAllProductsQuery query)
-        => Ok(await Mediator.Send(query));
+        => ToActionResult(await Mediator.Send(query));
 
     [HttpGet("[action]")]
     public async Task<IActionResult> GetMyProducts([FromQuery] GetProductsByUserIdQuery query)
-        => Ok(await Mediator.Send(query));
+        => ToActionResult(await Mediator.Send(query));
 
     [HttpGet("[action]/{id}")]
     public async Task<IActionResult> GetById(string id)
-        => Ok(await Mediator.Send(new GetProductByIdQuery(id)));
+        => ToActionResult(await Mediator.Send(new GetProductByIdQuery(id)));
 
     [HttpPut("[action]/{id}")]
     public async Task<IActionResult> Update(string id, UpdateProductCommand command)
-    { command.Id = id; return await SendNoContent(command); }
-
+        => ToActionResult(await Mediator.Send(command));
+    
     [HttpDelete("[action]/{id}")]
     public async Task<IActionResult> Delete(string id)
-        => await SendNoContent(new DeleteProductCommand(id) { CurrentUserId = User.GetUserId(), IsAdmin = User.IsAdmin() });
+        => ToActionResult(await Mediator.Send(new DeleteProductCommand(id)));
 
     [HttpPost("[action]")]
     public async Task<IActionResult> UploadImage(IFormFile file)
-        => Ok(new { imageUrl = await Mediator.Send(new UploadImageCommand(file)) });
+        => ToActionResult(await Mediator.Send(new UploadImageCommand(file)));
 
     [HttpGet("[action]")]
     public async Task<IActionResult> CheckProductName([FromQuery] CheckProductNameQuery query)
-        => Ok(new { exists = await Mediator.Send(query) });
+        => ToActionResult(await Mediator.Send(query));
 }

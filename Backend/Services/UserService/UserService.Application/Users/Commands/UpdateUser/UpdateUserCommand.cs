@@ -1,4 +1,5 @@
 using MediatR;
+using Shared.Kernel.Results;
 
 namespace UserService.Application.Users.Commands.UpdateUser;
 
@@ -7,7 +8,7 @@ public record UpdateUserCommand(
     string UserName,
     string Email,
     string Role
-) : IRequest<Unit>
+) : IRequest<Result>
 {
     public int RouteId { get; set; }
 }

@@ -1,10 +1,11 @@
 using MediatR;
 using ProductService.Application.Common.Interfaces;
 using ProductService.Domain.Entities;
+using Shared.Kernel.Results;
 
 namespace ProductService.Application.Products.Commands.CreateProduct;
 
-public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand, string>
+public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand, Result<string>>
 {
     private readonly IProductRepository _repository;
     private readonly ICurrentUserService _currentUser;
@@ -15,8 +16,14 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         _currentUser = currentUser;
     }
 
-    public async Task<string> Handle(CreateProductCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(CreateProductCommand request, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return Result<string>.Failure("Product name is required.");
+
+        if (request.Price <= 0)
+            return Result<string>.Failure("Price must be greater than zero.");
+
         var userId = _currentUser.GetUserId();
 
         var allProducts = await _repository.GetAllAsync();
@@ -24,7 +31,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             p.Name.Equals(request.Name, StringComparison.OrdinalIgnoreCase));
 
         if (nameExists)
-            throw new ArgumentException("A product with the same name already exists.");
+            return Result<string>.Failure("A product with the same name already exists.");
 
         var product = new Product
         {
@@ -38,6 +45,6 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         };
 
         var id = await _repository.AddAsync(product);
-        return id;
+        return Result<string>.Success(id, "Product created successfully.");
     }
 }

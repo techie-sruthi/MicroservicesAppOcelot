@@ -64,8 +64,8 @@ services:
   # UserService API
   userservice:
     build:
-      context: ./Services/UserService
-      dockerfile: UserService.API/Dockerfile
+      context: .
+      dockerfile: Services/UserService/UserService.API/Dockerfile
     image: productapp/userservice:latest
     container_name: userservice
     restart: unless-stopped
@@ -93,8 +93,8 @@ services:
   # ProductService API
   productservice:
     build:
-      context: ./Services/ProductService
-      dockerfile: ProductService.API/Dockerfile
+      context: .
+      dockerfile: Services/ProductService/ProductService.API/Dockerfile
     image: productapp/productservice:latest
     container_name: productservice
     restart: unless-stopped

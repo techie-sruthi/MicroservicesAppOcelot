@@ -1,12 +1,13 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Shared.Kernel.Results;
 using UserService.Application.Common.Interfaces;
 using UserService.Application.Contracts;
 using UserService.Application.Users.DTOs;
 
 namespace UserService.Application.Users.Commands.VerifyOtp;
 
-public class VerifyOtpCommandHandler : IRequestHandler<VerifyOtpCommand, LoginResponse>
+public class VerifyOtpCommandHandler : IRequestHandler<VerifyOtpCommand, Result<LoginResponse>>
 {
     private readonly IUserDbContext _context;
     private readonly IJwtService _jwtService;
@@ -22,20 +23,16 @@ public class VerifyOtpCommandHandler : IRequestHandler<VerifyOtpCommand, LoginRe
         _otpService = otpService;
     }
 
-    public async Task<LoginResponse> Handle(VerifyOtpCommand request, CancellationToken cancellationToken)
+    public async Task<Result<LoginResponse>> Handle(VerifyOtpCommand request, CancellationToken cancellationToken)
     {
         if (!_otpService.ValidateOtp(request.Email, request.Otp))
-        {
-            throw new UnauthorizedAccessException("Invalid or expired OTP");
-        }
+            return Result<LoginResponse>.Failure("Invalid or expired OTP");
 
         var user = await _context.Users
             .FirstOrDefaultAsync(x => x.Email == request.Email, cancellationToken);
 
         if (user == null)
-        {
-            throw new KeyNotFoundException("User not found");
-        }
+            return Result<LoginResponse>.Failure("User not found");
 
         _otpService.ClearOtp(request.Email);
 
@@ -47,11 +44,11 @@ public class VerifyOtpCommandHandler : IRequestHandler<VerifyOtpCommand, LoginRe
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        return new LoginResponse
+        return Result<LoginResponse>.Success(new LoginResponse
         {
             AccessToken = accessToken,
             RefreshToken = refreshToken,
             ExpiresIn = 3600
-        };
+        }, "OTP verified successfully.");
     }
 }

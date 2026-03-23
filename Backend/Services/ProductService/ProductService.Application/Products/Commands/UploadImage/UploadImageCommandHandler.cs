@@ -1,9 +1,10 @@
 using MediatR;
 using ProductService.Application.Common.Interfaces;
+using Shared.Kernel.Results;
 
 namespace ProductService.Application.Products.Commands.UploadImage;
 
-public class UploadImageCommandHandler : IRequestHandler<UploadImageCommand, string>
+public class UploadImageCommandHandler : IRequestHandler<UploadImageCommand, Result<string>>
 {
     private static readonly string[] AllowedImageTypes =
     [
@@ -23,20 +24,21 @@ public class UploadImageCommandHandler : IRequestHandler<UploadImageCommand, str
         _fileStorageService = fileStorageService;
     }
 
-    public async Task<string> Handle(UploadImageCommand request, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(UploadImageCommand request, CancellationToken cancellationToken)
     {
         var file = request.File;
 
         if (file == null || file.Length == 0)
-            throw new ArgumentException("No file uploaded");
+            return Result<string>.Failure("No file uploaded");
 
         if (!AllowedImageTypes.Contains(file.ContentType.ToLower()))
-            throw new ArgumentException("Invalid file type. Only images are allowed (JPEG, PNG, GIF, WEBP)");
+            return Result<string>.Failure("Invalid file type. Only images are allowed (JPEG, PNG, GIF, WEBP)");
 
         if (file.Length > MaxFileSizeInBytes)
-            throw new ArgumentException("File size exceeds 5MB limit");
+            return Result<string>.Failure("File size exceeds 5MB limit");
 
         using var stream = file.OpenReadStream();
-        return await _fileStorageService.UploadFileAsync(stream, file.FileName, file.ContentType);
+        var url = await _fileStorageService.UploadFileAsync(stream, file.FileName, file.ContentType);
+        return Result<string>.Success(url, "Image uploaded successfully.");
     }
 }

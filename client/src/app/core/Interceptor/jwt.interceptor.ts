@@ -71,7 +71,7 @@ function handle401Error(
     switchMap((response: any) => {
       isRefreshing = false;
 
-      const clonedRequest = addTokenToRequest(request, response.accessToken);
+      const clonedRequest = addTokenToRequest(request, response.data.accessToken);
       return next(clonedRequest);
     }),
     catchError((err) => {

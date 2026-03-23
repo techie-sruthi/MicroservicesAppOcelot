@@ -1,8 +1,9 @@
 using MediatR;
+using Shared.Kernel.Results;
 
 namespace ProductService.Application.Products.Commands.UpdateProduct;
 
-public class UpdateProductCommand : IRequest<Unit>
+public class UpdateProductCommand : IRequest<Result>
 {
     public string Id { get; set; } = default!;
     public string Name { get; set; } = default!;

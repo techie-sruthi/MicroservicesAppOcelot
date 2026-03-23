@@ -10,7 +10,15 @@ namespace ApiGateway.Aggregator
 {
     public class ProductUserAggregator : IDefinedAggregator
     {
+        private const string ProductServiceName = "ProductService";
+        private const string UserServiceName = "UserService";
+
         private readonly ILogger<ProductUserAggregator> _logger;
+
+        private static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true
+        };
 
         public ProductUserAggregator(ILogger<ProductUserAggregator> logger)
         {
@@ -27,48 +35,70 @@ namespace ApiGateway.Aggregator
             if (userResponse == null)
             {
                _logger.LogError("User service response is null or failed. Status Code: {StatusCode}", userResponse?.StatusCode);
-                throw new ServiceResponseException("UserService", "User service response was null or the call failed.", (int?)userResponse?.StatusCode);
+                throw new ServiceResponseException(UserServiceName,
+    "User service response was null or the call failed.",
+    (int?)userResponse?.StatusCode);
             }
 
             var usersJson = await userResponse.Content.ReadAsStringAsync();
 
-            var productsRoot = JsonSerializer.Deserialize<JsonElement>(productsJson);
+            var productsWrapper = JsonSerializer.Deserialize<ServiceResponse<PagedData<ProductItem>>>(productsJson, JsonOptions)
+                ?? throw new ServiceResponseException(ProductServiceName,
+    "Failed to deserialize product service response.", null);
 
-            var productItems = productsRoot.GetProperty("items").EnumerateArray().ToList();
+            if (!productsWrapper.Success)
+            {
+                _logger.LogError("Product service returned failure. Message: {Message}, Errors: {Errors}",
+                    productsWrapper.Message, productsWrapper.Errors is { Count: > 0 } prodErrors ? string.Join(", ", prodErrors) : null);
+                throw new ServiceResponseException(ProductServiceName, productsWrapper.Message ?? "Product service returned failure.", null);
+            }
 
-            var usersRoot = JsonSerializer.Deserialize<JsonElement>(usersJson);
-            var userItems = usersRoot.GetProperty("items").EnumerateArray().ToList();
+            var productsData = productsWrapper.Data
+                ?? throw new ServiceResponseException(ProductServiceName, "Product service response data was null.", null);
 
-            var mergedItems = (
-                from product in productItems
-                join user in userItems
-                on product.GetProperty("createdByUserId").GetInt32()
-                equals user.GetProperty("id").GetInt32()
-                into userGroup
-                from matchedUser in userGroup.DefaultIfEmpty()
-                select new
-                {
-                    id = product.GetProperty("id").GetString(),
-                    name = product.GetProperty("name").GetString(),
-                    description = product.GetProperty("description").GetString(),
-                    price = product.GetProperty("price").GetDecimal(),
-                    dateOfManufacture = product.GetProperty("dateOfManufacture").GetString(),
-                    createdByUserId = product.GetProperty("createdByUserId").GetInt32(),
-                    createdByUserName = matchedUser.ValueKind != JsonValueKind.Undefined
-                        ? matchedUser.GetProperty("userName").GetString()
-                        : null,
-                    imageUrl = product.GetProperty("imageUrl").GetString()
-                }).ToList();
+            var usersWrapper = JsonSerializer.Deserialize<ServiceResponse<PagedData<UserItem>>>(usersJson, JsonOptions)
+                ?? throw new ServiceResponseException(UserServiceName,
+    "Failed to deserialize user service response.", null);
+
+            if (!usersWrapper.Success)
+            {
+                _logger.LogError("User service returned failure. Message: {Message}, Errors: {Errors}",
+                    usersWrapper.Message, usersWrapper.Errors is { Count: > 0 } userErrors ? string.Join(", ", userErrors) : null);
+                throw new ServiceResponseException(UserServiceName, usersWrapper.Message ?? "User service returned failure.", null);
+            }
+
+            var usersData = usersWrapper.Data
+                ?? throw new ServiceResponseException(UserServiceName, "User service response data was null.", null);
+
+            var userLookup = usersData.Items.ToDictionary(u => u.Id, u => u.UserName);
+
+            var mergedItems = productsData.Items.Select(product => new
+            {
+                id = product.Id,
+                name = product.Name,
+                description = product.Description,
+                price = product.Price,
+                dateOfManufacture = product.DateOfManufacture,
+                createdByUserId = product.CreatedByUserId,
+                createdByUserName = userLookup.GetValueOrDefault(product.CreatedByUserId),
+                imageUrl = product.ImageUrl
+            }).ToList();
 
             var finalResult = new
             {
-                items = mergedItems,
-                totalCount = productsRoot.GetProperty("totalCount").GetInt32(),
-                pageNumber = productsRoot.GetProperty("pageNumber").GetInt32(),
-                pageSize = productsRoot.GetProperty("pageSize").GetInt32(),
-                totalPages = productsRoot.GetProperty("totalPages").GetInt32(),
-                hasPreviousPage = productsRoot.GetProperty("hasPreviousPage").GetBoolean(),
-                hasNextPage = productsRoot.GetProperty("hasNextPage").GetBoolean()
+                success = true,
+                message = "Products with users fetched successfully.",
+                data = new
+                {
+                    items = mergedItems,
+                    totalCount = productsData.TotalCount,
+                    pageNumber = productsData.PageNumber,
+                    pageSize = productsData.PageSize,
+                    totalPages = productsData.TotalPages,
+                    hasPreviousPage = productsData.HasPreviousPage,
+                    hasNextPage = productsData.HasNextPage
+                },
+                errors = (List<string>?)null
             };
 
             var content = JsonSerializer.Serialize(finalResult);
@@ -80,6 +110,38 @@ namespace ApiGateway.Aggregator
                 "OK"
             );
         }
+
+        private sealed record ServiceResponse<T>(
+            bool Success,
+            string? Message,
+            T? Data,
+            List<string>? Errors
+        );
+
+        private sealed record PagedData<T>(
+            List<T> Items,
+            int TotalCount,
+            int PageNumber,
+            int PageSize,
+            int TotalPages,
+            bool HasPreviousPage,
+            bool HasNextPage
+        );
+
+        private sealed record ProductItem(
+            string? Id,
+            string? Name,
+            string? Description,
+            decimal Price,
+            string? DateOfManufacture,
+            int CreatedByUserId,
+            string? ImageUrl
+        );
+
+        private sealed record UserItem(
+            int Id,
+            string? UserName
+        );
     }
 }
 

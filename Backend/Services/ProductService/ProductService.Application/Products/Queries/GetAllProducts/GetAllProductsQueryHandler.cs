@@ -1,12 +1,13 @@
 using MediatR;
 using ProductService.Application.Common.Interfaces;
-using ProductService.Application.Common.Models;
+using Shared.Kernel.Models;
 using ProductService.Application.Products.DTOs;
+using Shared.Kernel.Results;
 
 namespace ProductService.Application.Products.Queries.GetAllProducts;
 
 public class GetAllProductsQueryHandler
-    : IRequestHandler<GetAllProductsQuery, PagedResult<ProductDto>>
+    : IRequestHandler<GetAllProductsQuery, Result<PagedResult<ProductDto>>>
 {
     private readonly IProductRepository _repository;
 
@@ -15,28 +16,20 @@ public class GetAllProductsQueryHandler
         _repository = repository;
     }
 
-    public async Task<PagedResult<ProductDto>> Handle(
+    public async Task<Result<PagedResult<ProductDto>>> Handle(
         GetAllProductsQuery request,
         CancellationToken cancellationToken)
     {
+        request = request with
+        {
+            PageNumber = PaginationParams.ClampPageNumber(request.PageNumber),
+            PageSize = PaginationParams.ClampPageSize(request.PageSize)
+        };
+
         var pagedResult = await _repository.GetAllPagedWithFiltersAsync(request, cancellationToken);
 
-        return new PagedResult<ProductDto>
-        {
-            Items = pagedResult.Items.Select(p => new ProductDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Description = p.Description,
-                Price = p.Price,
-                DateOfManufacture = p.DateOfManufacture,
-                CreatedByUserId = p.CreatedByUserId,
-                ImageUrl = p.ImageUrl
-            }).ToList(),
-
-            TotalCount = pagedResult.TotalCount,
-            PageNumber = pagedResult.PageNumber,
-            PageSize = pagedResult.PageSize
-        };
+        return Result<PagedResult<ProductDto>>.Success(
+            pagedResult.ToDtoPage(),
+            "Products fetched successfully.");
     }
 }

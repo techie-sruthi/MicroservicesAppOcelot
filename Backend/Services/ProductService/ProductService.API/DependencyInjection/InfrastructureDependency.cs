@@ -1,10 +1,10 @@
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using ProductService.API.Services;
 using ProductService.Application.Common.Interfaces;
 using ProductService.Infrastructure.Data;
 using ProductService.Infrastructure.FileStorage;
 using ProductService.Infrastructure.Repositories;
-using ProductService.API.Services;
 
 namespace ProductService.API.DependencyInjection;
 

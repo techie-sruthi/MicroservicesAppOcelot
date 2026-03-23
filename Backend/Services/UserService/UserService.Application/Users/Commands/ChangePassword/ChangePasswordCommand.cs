@@ -1,9 +1,10 @@
 using MediatR;
-using UserService.Application.Common.Models;
+using Shared.Kernel.Results;
+using Shared.Kernel.Models;
 
 namespace UserService.Application.Users.Commands.ChangePassword;
 
 public record ChangePasswordCommand(
     string CurrentPassword,
     string NewPassword
-) : IRequest<MessageResponse>;
+) : IRequest<Result<MessageResponse>>;

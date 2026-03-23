@@ -1,10 +1,11 @@
 using MediatR;
+using Shared.Kernel.Results;
 using UserService.Application.Common.Interfaces;
 
 namespace UserService.Application.Users.Commands.DeleteUser;
 
 public class DeleteUserCommandHandler
-    : IRequestHandler<DeleteUserCommand, Unit>
+    : IRequestHandler<DeleteUserCommand, Result>
 {
     private readonly IUserDbContext _context;
 
@@ -13,16 +14,16 @@ public class DeleteUserCommandHandler
         _context = context;
     }
 
-    public async Task<Unit> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
+    public async Task<Result> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
     {
         var user = await _context.GetUserByIdAsync(request.Id, cancellationToken);
 
         if (user == null)
-            throw new KeyNotFoundException("User not found");
+            return Result.Failure("User not found");
 
         _context.RemoveEntity(user);
         await _context.SaveChangesAsync(cancellationToken);
 
-        return Unit.Value;
+        return Result.Success("User deleted successfully.");
     }
 }

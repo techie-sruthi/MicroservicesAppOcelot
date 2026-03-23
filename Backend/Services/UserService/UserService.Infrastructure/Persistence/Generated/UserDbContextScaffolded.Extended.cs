@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using UserService.Domain.Entities;
-using UserService.Application.Common.Models;
+using Shared.Kernel.Models;
 using UserService.Application.Users.DTOs;
 using UserService.Application.Common.Interfaces;
 

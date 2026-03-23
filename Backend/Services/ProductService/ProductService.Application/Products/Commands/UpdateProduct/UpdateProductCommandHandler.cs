@@ -1,10 +1,11 @@
 using MediatR;
 using ProductService.Application.Common.Interfaces;
 using ProductService.Domain.Entities;
+using Shared.Kernel.Results;
 
 namespace ProductService.Application.Products.Commands.UpdateProduct;
 
-public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand, Unit>
+public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand, Result>
 {
     private readonly IProductRepository _repository;
     private readonly ICurrentUserService _currentUser;
@@ -15,20 +16,24 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
         _currentUser = currentUser;
     }
 
-    public async Task<Unit> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
+    public async Task<Result> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(request.Name))
+            return Result.Failure("Product name is required.");
+
+        if (request.Price <= 0)
+            return Result.Failure("Price must be greater than zero.");
+
         var userId = _currentUser.GetUserId();
         var isAdmin = _currentUser.IsAdmin;
 
         var product = await _repository.GetByIdAsync(request.Id);
 
         if (product == null)
-            throw new KeyNotFoundException($"Product with ID '{request.Id}' was not found.");
+            return Result.Failure($"Product with ID '{request.Id}' was not found.");
 
         if (!isAdmin && product.CreatedByUserId != userId)
-        {
-            throw new UnauthorizedAccessException($"User {userId} is not authorized to update product {request.Id}");
-        }
+            return Result.Failure($"User {userId} is not authorized to update product {request.Id}");
 
         product.Name = request.Name;
         product.Description = request.Description;
@@ -37,6 +42,6 @@ public class UpdateProductCommandHandler : IRequestHandler<UpdateProductCommand,
         product.ImageUrl = request.ImageUrl;
 
         await _repository.UpdateAsync(product);
-        return Unit.Value;
+        return Result.Success("Product updated successfully.");
     }
 }

@@ -1,5 +1,6 @@
 using MediatR;
-using UserService.Application.Common.Models;
+using Shared.Kernel.Results;
+using Shared.Kernel.Models;
 using UserService.Application.Users.DTOs;
 
 namespace UserService.Application.Users.Queries.GetAllUsers;
@@ -11,4 +12,4 @@ public record GetAllUsersQuery(
     string? RoleFilter = null,
     string? SortField = null,
     string? SortOrder = null
-) : IRequest<PagedResult<UserDto>>;
+) : IRequest<Result<PagedResult<UserDto>>>;

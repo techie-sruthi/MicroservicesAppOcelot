@@ -49,8 +49,8 @@ services:
 
   userservice:
     build:
-      context: ./Services/UserService
-      dockerfile: UserService.API/Dockerfile
+      context: .
+      dockerfile: Services/UserService/UserService.API/Dockerfile
     container_name: userservice
     restart: unless-stopped
     ports:
@@ -72,8 +72,8 @@ services:
 
   productservice:
     build:
-      context: ./Services/ProductService
-      dockerfile: ProductService.API/Dockerfile
+      context: .
+      dockerfile: Services/ProductService/ProductService.API/Dockerfile
     container_name: productservice
     restart: unless-stopped
     ports:

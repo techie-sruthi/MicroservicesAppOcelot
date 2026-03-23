@@ -74,8 +74,8 @@ export class LoginComponent implements OnDestroy {
     this.loading = true;
     this.authService.login(this.loginForm.value).pipe(
       tap((response: any) => {
-        if (response.otpRequired) {
-          this.userEmail = response.email;
+        if (response.data?.otpRequired) {
+          this.userEmail = response.data.email;
           this.showOtpDialog = true;
           this.messageService.add({
             severity: 'info',
@@ -84,7 +84,7 @@ export class LoginComponent implements OnDestroy {
             styleClass: 'my-custom-toast',
           });
 
-          const expiry = response.expirySeconds ?? 300;
+          const expiry = response.data.expirySeconds ?? 300;
           //const expiry = 10;
 
           this.startOtpTimer(expiry);
@@ -93,18 +93,18 @@ export class LoginComponent implements OnDestroy {
 
         // DIRECT LOGIN (OTP BYPASSED)
 
-        if (response.accessToken && response.refreshToken) {
-          this.authService.setTokens(response.accessToken, response.refreshToken);
+        if (response.data?.accessToken && response.data?.refreshToken) {
+          this.authService.setTokens(response.data.accessToken, response.data.refreshToken);
 
-          this.handleLoginSuccess(response);
+          this.handleLoginSuccess(response.data);
         }
       }),
       catchError((err: any) => {
         let errorMessage = 'Invalid credentials';
         let errorSummary = 'Login Failed';
 
-        if (err.error?.error) {
-          errorMessage = err.error.error;
+        if (err.error?.message) {
+          errorMessage = err.error.message;
 
           if (errorMessage.toLowerCase().includes('user not found')) {
             errorSummary = 'User Not Found';
@@ -145,19 +145,19 @@ export class LoginComponent implements OnDestroy {
       tap((response: any) => {
         this.stopOtpTimer();
         this.showOtpDialog = false;
-        this.handleLoginSuccess(response);
+        this.handleLoginSuccess(response.data);
         this.messageService.add({
           severity: 'success',
           summary: 'Success',
-          detail: 'Login successful!',
+          detail: response.message || 'Login successful!',
           styleClass: 'my-custom-toast',
         });
       }),
-      catchError((err: { error: { error: any; }; }) => {
+      catchError((err: any) => {
         this.messageService.add({
           severity: 'error',
           summary: 'Verification Failed',
-          detail: err.error?.error || 'Invalid or expired OTP',
+          detail: err.error?.message || 'Invalid or expired OTP',
           styleClass: 'my-custom-toast',
         });
         return of(null);

@@ -1,1 +1,12 @@
-﻿C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Services\ProductService\ProductService.Domain\Entities\Product.cs
+﻿C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Shared\Shared.Kernel\Controllers\ResultBaseController.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Shared\Shared.Kernel\Exceptions\ConfigurationMissingException.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Shared\Shared.Kernel\Extensions\ClaimsPrincipalExtensions.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Shared\Shared.Kernel\Extensions\CorsExtensions.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Shared\Shared.Kernel\Interfaces\ICurrentUserService.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Shared\Shared.Kernel\Middleware\GlobalExceptionMiddleware.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Shared\Shared.Kernel\Models\MessageResponse.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Shared\Shared.Kernel\Models\PagedResult.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Shared\Shared.Kernel\Models\PaginationParams.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Shared\Shared.Kernel\Responses\ApiResponse.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Shared\Shared.Kernel\Results\Result.cs
+C:\Users\sruthi.boban\source\repos\MicroservicesAppEncrypted\Backend\Shared\Shared.Kernel\Services\CurrentUserService.cs

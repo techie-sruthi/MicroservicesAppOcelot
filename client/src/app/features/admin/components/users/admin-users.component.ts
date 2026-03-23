@@ -111,11 +111,11 @@ export class AdminUsersComponent implements OnInit {
           this.users = data.items;
           this.totalRecords = data.totalCount;
         }),
-        catchError(() => {
+        catchError((err: any) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'Failed to load users',
+            detail: err.error?.message || 'Failed to load users',
             styleClass: 'my-custom-toast',
           });
           return of(null);
@@ -203,12 +203,12 @@ export class AdminUsersComponent implements OnInit {
 
     if (this.isEditMode && this.selectedUser.id) {
       this.userService.updateUser(this.selectedUser.id, this.selectedUser).pipe(
-        tap(() => {
+        tap((response: any) => {
           if (autoLogoutAfter) {
             this.messageService.add({
               severity: 'success',
               summary: 'Role Changed',
-              detail: 'Your role has been updated. Logging out in 3 seconds...',
+              detail: response.message || 'Your role has been updated. Logging out in 3 seconds...',
               life: 3000,
               styleClass: 'my-custom-toast',
             });
@@ -225,7 +225,7 @@ export class AdminUsersComponent implements OnInit {
             this.messageService.add({
               severity: 'success',
               summary: 'Success',
-              detail: 'User updated successfully',
+              detail: response.message || 'User updated successfully',
               styleClass: 'my-custom-toast',
             });
             this.resetForm();
@@ -235,7 +235,7 @@ export class AdminUsersComponent implements OnInit {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: err.error?.error || err.error?.message || 'Failed to update user',
+            detail: err.error?.message || 'Failed to update user',
             styleClass: 'my-custom-toast',
           });
           return of(null);
@@ -253,7 +253,7 @@ export class AdminUsersComponent implements OnInit {
         tap((response: any) => {
           const createdUser: IUser = {
             ...this.selectedUser,
-            id: typeof response === 'number' ? response : (response?.id ?? 0),
+            id: typeof response.data === 'number' ? response.data : (response.data?.id ?? 0),
           };
           this.totalRecords++;
           this.users = [createdUser, ...this.users];
@@ -261,7 +261,7 @@ export class AdminUsersComponent implements OnInit {
           this.messageService.add({
             severity: 'success',
             summary: 'Success',
-            detail: 'User created successfully. Password has been sent to their email.',
+            detail: response.message || 'User created successfully. Password has been sent to their email.',
             styleClass: 'my-custom-toast',
           });
           this.resetForm();
@@ -270,7 +270,7 @@ export class AdminUsersComponent implements OnInit {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: err.error?.error || err.error?.message || 'Failed to create user',
+            detail: err.error?.message || 'Failed to create user',
             styleClass: 'my-custom-toast',
           });
           return of(null);
@@ -297,14 +297,14 @@ export class AdminUsersComponent implements OnInit {
       rejectButtonStyleClass: 'p-button-secondary',
       accept: () => {
         this.userService.deleteUser(id).pipe(
-          tap(() => {
+          tap((response: any) => {
             this.users = this.users.filter((u) => u.id !== id);
             this.totalRecords--;
             this.cdr.detectChanges();
             this.messageService.add({
               severity: 'success',
               summary: 'Success',
-              detail: 'User deleted successfully',
+              detail: response.message || 'User deleted successfully',
               styleClass: 'my-custom-toast',
             });
           }),

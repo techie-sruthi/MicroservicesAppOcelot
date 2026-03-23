@@ -1,6 +1,7 @@
 using MediatR;
-using ProductService.Application.Common.Models;
+using Shared.Kernel.Models;
 using ProductService.Application.Products.DTOs;
+using Shared.Kernel.Results;
 
 namespace ProductService.Application.Products.Queries.GetProductsByUserId;
 
@@ -14,4 +15,4 @@ public record GetProductsByUserIdQuery(
     DateTime? StartDate = null,
     string? SortField = null,
     string? SortOrder = null
-) : IRequest<PagedResult<ProductDto>>;
+) : IRequest<Result<PagedResult<ProductDto>>>;

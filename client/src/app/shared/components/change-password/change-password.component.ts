@@ -73,12 +73,12 @@ export class ChangePasswordComponent {
 this.userService
   .changePassword(this.currentPassword, this.newPassword)
   .pipe(
-    
-    tap(() => {
+
+    tap((response) => {
       this.messageService.add({
         severity: 'success',
         summary: 'Success',
-        detail: 'Password changed successfully',
+        detail: response.message || 'Password changed successfully',
         styleClass: 'my-custom-toast',
       });
 
@@ -89,7 +89,7 @@ this.userService
       this.messageService.add({
         severity: 'error',
         summary: 'Error',
-        detail: err.error?.error || err.error?.message || 'Failed to change password',
+        detail: err.error?.message || 'Failed to change password',
         styleClass: 'my-custom-toast',
       });
 

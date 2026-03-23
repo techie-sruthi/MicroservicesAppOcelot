@@ -1,8 +1,9 @@
 using MediatR;
+using Shared.Kernel.Results;
 
 namespace ProductService.Application.Products.Commands.DeleteProduct;
 
-public class DeleteProductCommand : IRequest<Unit>
+public class DeleteProductCommand : IRequest<Result>
 {
     public string Id { get; set; }
 

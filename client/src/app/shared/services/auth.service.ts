@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, catchError, of } from 'rxjs';
+import { Observable, tap, catchError, of, map } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
+import { ApiResponse } from '../models/api-response.model';
 
 interface ILoginResponse {
   accessToken: string;
@@ -25,23 +26,23 @@ export class AuthService {
 
   constructor(private http: HttpClient, private router: Router) { }
 
-  login(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/Login`, data);
+  login(data: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/Login`, data);
   }
 
-  verifyOtp(email: string, otp: string): Observable<ILoginResponse> {
-    return this.http.post<ILoginResponse>(`${this.apiUrl}/VerifyOtp`, { email, otp })
+  verifyOtp(email: string, otp: string): Observable<ApiResponse<ILoginResponse>> {
+    return this.http.post<ApiResponse<ILoginResponse>>(`${this.apiUrl}/VerifyOtp`, { email, otp })
       .pipe(
         tap(response => {
-          if (response.accessToken && response.refreshToken) {
-            this.setTokens(response.accessToken, response.refreshToken);
+          if (response.data?.accessToken && response.data?.refreshToken) {
+            this.setTokens(response.data.accessToken, response.data.refreshToken);
           }
         })
       );
   }
 
-  register(data: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/Register`, data);
+  register(data: any): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/Register`, data);
   }
 
   setTokens(accessToken: string, refreshToken: string): void {
@@ -104,17 +105,17 @@ export class AuthService {
     }
   }
 
-  refreshToken(): Observable<ILoginResponse> {
+  refreshToken(): Observable<ApiResponse<ILoginResponse>> {
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
 
-    return this.http.post<ILoginResponse>(`${this.apiUrl}/Refresh`, { refreshToken })
+    return this.http.post<ApiResponse<ILoginResponse>>(`${this.apiUrl}/Refresh`, { refreshToken })
       .pipe(
         tap(response => {
-          if (response.accessToken && response.refreshToken) {
-            this.setTokens(response.accessToken, response.refreshToken);
+          if (response.data?.accessToken && response.data?.refreshToken) {
+            this.setTokens(response.data.accessToken, response.data.refreshToken);
           }
         })
       );
@@ -137,11 +138,12 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
- 
   checkEmail(email: string): Observable<{ exists: boolean }> {
-    return this.http.get<{ exists: boolean }>(`${this.apiUrl}/CheckEmail`, {
+    return this.http.get<ApiResponse<boolean>>(`${this.apiUrl}/CheckEmail`, {
       params: { email }
-    });
+    }).pipe(
+      map(res => ({ exists: res.data ?? false }))
+    );
   }
 
   isAuthenticated(): boolean {
@@ -166,11 +168,11 @@ export class AuthService {
     return this.isAuthenticated();
   }
 
-  forgotPassword(email: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/ForgotPassword`, { email });
+  forgotPassword(email: string): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/ForgotPassword`, { email });
   }
 
-  resetPassword(token: string, newPassword: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/ResetPassword`, { token, newPassword });
+  resetPassword(token: string, newPassword: string): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/ResetPassword`, { token, newPassword });
   }
 }

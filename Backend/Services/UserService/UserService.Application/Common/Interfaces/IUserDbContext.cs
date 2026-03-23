@@ -1,4 +1,4 @@
-using UserService.Application.Common.Models;
+using Shared.Kernel.Models;
 using UserService.Domain.Entities;
 using UserService.Application.Users.DTOs;
 

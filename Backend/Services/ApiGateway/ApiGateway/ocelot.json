@@ -11,7 +11,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
+          "Host": "userservice",
           "Port": 5100
         }
       ]
@@ -23,7 +23,34 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
+          "Host": "userservice",
+          "Port": 5100
+        }
+      ]
+    },
+    {
+      "UpstreamPathTemplate": "/users/ChangePassword",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/api/users/ChangePassword",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "userservice",
+          "Port": 5100
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      }
+    },
+    {
+      "UpstreamPathTemplate": "/users/Logout",
+      "UpstreamHttpMethod": [ "POST" ],
+      "DownstreamPathTemplate": "/api/users/Logout",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "userservice",
           "Port": 5100
         }
       ]
@@ -35,7 +62,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
+          "Host": "userservice",
           "Port": 5100
         }
       ]
@@ -47,7 +74,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
+          "Host": "userservice",
           "Port": 5100
         }
       ]
@@ -59,7 +86,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
+          "Host": "userservice",
           "Port": 5100
         }
       ]
@@ -71,7 +98,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
+          "Host": "userservice",
           "Port": 5100
         }
       ]
@@ -83,7 +110,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
+          "Host": "userservice",
           "Port": 5100
         }
       ]
@@ -98,8 +125,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5000
+          "Host": "userservice",
+          "Port": 5100
         }
       ],
       "AuthenticationOptions": {
@@ -107,7 +134,8 @@
       },
       "RouteClaimsRequirement": {
         "role": "Admin"
-      }
+      },
+      "Key": "UserRoute"
     },
 
     // ---------- AUTHENTICATED USERS ----------
@@ -119,8 +147,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5000
+          "Host": "userservice",
+          "Port": 5100
         }
       ],
       "AuthenticationOptions": {
@@ -136,8 +164,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5000
+          "Host": "userservice",
+          "Port": 5100
         }
       ],
       "AuthenticationOptions": {
@@ -151,8 +179,8 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5000
+          "Host": "userservice",
+          "Port": 5100
         }
       ],
       "AuthenticationOptions": {
@@ -166,52 +194,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
-          "Port": 5000
-        }
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      }
-    },
-    {
-      "UpstreamPathTemplate": "/users/Logout",
-      "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "/api/users/Logout",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5100
-        }
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      }
-    },
-    {
-      "UpstreamPathTemplate": "/users/GetUsersByIds",
-      "UpstreamHttpMethod": [ "GET" ],
-      "DownstreamPathTemplate": "/api/users/GetUsersByIds",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
-          "Port": 5100
-        }
-      ],
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer"
-      }
-    },
-    {
-      "UpstreamPathTemplate": "/users/ChangePassword",
-      "UpstreamHttpMethod": [ "POST" ],
-      "DownstreamPathTemplate": "/api/users/ChangePassword",
-      "DownstreamScheme": "http",
-      "DownstreamHostAndPorts": [
-        {
-          "Host": "localhost",
+          "Host": "userservice",
           "Port": 5100
         }
       ],
@@ -225,7 +208,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "userservice",
-          "Port": 80
+          "Port": 5100
         }
       ],
       "UpstreamPathTemplate": "/gateway/users/{everything}",
@@ -234,6 +217,26 @@
         "AuthenticationProviderKey": "Bearer",
         "AllowedScopes": []
       }
+    },
+
+    {
+      "UpstreamPathTemplate": "/users/GetUsersByIds",
+      "UpstreamHttpMethod": [ "GET" ],
+      "DownstreamPathTemplate": "/api/users/GetUsersByIds",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "userservice",
+          "Port": 5100
+        }
+      ],
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer"
+      },
+      "RouteClaimsRequirement": {
+        "role": "Admin"
+      },
+      "Key": "UserByIdsRoute"
     },
 
     // 
@@ -249,7 +252,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
+          "Host": "productservice",
           "Port": 5050
         }
       ],
@@ -258,7 +261,8 @@
       },
       "RouteClaimsRequirement": {
         "role": "Admin"
-      }
+      },
+      "Key": "ProductRoute"
     },
 
     // ---------- USER ONLY ----------
@@ -270,7 +274,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
+          "Host": "productservice",
           "Port": 5050
         }
       ],
@@ -291,7 +295,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
+          "Host": "productservice",
           "Port": 5050
         }
       ],
@@ -307,7 +311,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
+          "Host": "productservice",
           "Port": 5050
         }
       ],
@@ -325,15 +329,12 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
+          "Host": "productservice",
           "Port": 5050
         }
       ],
       "AuthenticationOptions": {
         "AuthenticationProviderKey": "Bearer"
-      },
-      "RouteClaimsRequirement": {
-        "role": "Admin"
       }
     },
 
@@ -345,7 +346,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
+          "Host": "productservice",
           "Port": 5050
         }
       ],
@@ -360,7 +361,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
+          "Host": "productservice",
           "Port": 5050
         }
       ],
@@ -375,7 +376,7 @@
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
-          "Host": "localhost",
+          "Host": "productservice",
           "Port": 5050
         }
       ],
@@ -389,7 +390,7 @@
       "DownstreamHostAndPorts": [
         {
           "Host": "productservice",
-          "Port": 80
+          "Port": 5050
         }
       ],
       "UpstreamPathTemplate": "/gateway/products/{everything}",
@@ -399,9 +400,15 @@
         "AllowedScopes": []
       }
     }
-
   ],
-
+  "Aggregates": [
+    {
+      "RouteKeys": [ "ProductRoute", "UserRoute" ],
+      "UpstreamPathTemplate": "/products-with-user",
+      "UpstreamHttpMethod": [ "GET" ],
+      "Aggregator": "ProductUserAggregator"
+    }
+  ],
   "GlobalConfiguration": {
     "BaseUrl": "http://localhost:5200"
   }

@@ -49,19 +49,19 @@ export class ForgotPasswordComponent {
 
     this.loading = true;
     this.authService.forgotPassword(this.email).pipe(
-      tap(() => {
+      tap((response: any) => {
         this.emailSent = true;
         this.messageService.add({
           severity: 'success',
           summary: 'Email Sent',
-          detail: 'If your email exists, you will receive a password reset link.', styleClass: 'my-custom-toast'
+          detail: response.message || 'If your email exists, you will receive a password reset link.', styleClass: 'my-custom-toast'
         });
       }),
-      catchError(() => {
+      catchError((err: any) => {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
-          detail: 'Something went wrong. Please try again.', styleClass: 'my-custom-toast'
+          detail: err.error?.message || 'Something went wrong. Please try again.', styleClass: 'my-custom-toast'
         });
         return of(null);
       }),

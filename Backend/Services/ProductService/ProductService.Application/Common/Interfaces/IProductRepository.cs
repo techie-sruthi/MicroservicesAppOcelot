@@ -1,6 +1,7 @@
 using ProductService.Application.Common.Models;
 using ProductService.Domain.Entities;
 using ProductService.Application.Products.Queries.GetAllProducts;
+using Shared.Kernel.Models;
 
 namespace ProductService.Application.Common.Interfaces;
 

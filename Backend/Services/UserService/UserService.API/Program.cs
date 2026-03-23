@@ -1,5 +1,6 @@
 using UserService.API.DependencyInjection;
-using UserService.API.Middleware;
+using Shared.Kernel.Extensions;
+using Shared.Kernel.Middleware;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -37,7 +38,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseMiddleware<ExceptionMiddleware>();
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseCors("AllowAngular");
 app.UseAuthentication();

@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { ApiResponse } from '../models/api-response.model';
 
 export interface IUser {
   id: number;
@@ -54,22 +56,24 @@ export class UserService {
       params = params.set('sortOrder', sortOrder);
     }
     
-    return this.http.get<IPagedResult<IUser>>(`${this.apiUrl}/GetAll`, { params });
+    return this.http.get<ApiResponse<IPagedResult<IUser>>>(`${this.apiUrl}/GetAll`, { params }).pipe(
+      map(res => res.data!)
+    );
   }
 
-  deleteUser(id: number) {
-    return this.http.delete(`${this.apiUrl}/Delete/${id}`);
+  deleteUser(id: number): Observable<ApiResponse<object>> {
+    return this.http.delete<ApiResponse<object>>(`${this.apiUrl}/Delete/${id}`);
   }
 
-  updateUser(id: number, user: IUser) {
-    return this.http.put<IUser>(`${this.apiUrl}/Update/${id}`, user);
+  updateUser(id: number, user: IUser): Observable<ApiResponse<object>> {
+    return this.http.put<ApiResponse<object>>(`${this.apiUrl}/Update/${id}`, user);
   }
 
-  createUser(user: IUser): Observable<IUser> {
-    return this.http.post<IUser>(`${this.apiUrl}/Create`, user);
+  createUser(user: IUser): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/Create`, user);
   }
 
-  changePassword(currentPassword: string, newPassword: string): Observable<{ message: string }> {
-    return this.http.post<{ message: string }>(`${this.apiUrl}/ChangePassword`, { currentPassword, newPassword });
+  changePassword(currentPassword: string, newPassword: string): Observable<ApiResponse<{ message: string }>> {
+    return this.http.post<ApiResponse<{ message: string }>>(`${this.apiUrl}/ChangePassword`, { currentPassword, newPassword });
   }
 }

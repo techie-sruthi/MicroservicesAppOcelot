@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using MediatR;
+using Shared.Kernel.Results;
 using UserService.Application.Common.Interfaces;
 using UserService.Application.Contracts;
 using UserService.Domain.Entities;
@@ -8,14 +9,14 @@ using UserService.Domain.Entities;
 namespace UserService.Application.Users.Commands.CreateUser;
 
 public partial class CreateUserCommandHandler
-    : IRequestHandler<CreateUserCommand, int>
+    : IRequestHandler<CreateUserCommand, Result<int>>
 {
+    [GeneratedRegex(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$", RegexOptions.CultureInvariant)]
+    private static partial Regex EmailRegex();
+
     private readonly IUserDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IEmailService _emailService;
-
-    [GeneratedRegex(@"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")]
-    private static partial Regex EmailRegex();
 
     public CreateUserCommandHandler(
         IUserDbContext context,
@@ -27,15 +28,21 @@ public partial class CreateUserCommandHandler
         _emailService = emailService;
     }
 
-    public async Task<int> Handle(CreateUserCommand request, CancellationToken cancellationToken)
+    public async Task<Result<int>> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
+        if (string.IsNullOrWhiteSpace(request.UserName))
+            return Result<int>.Failure("Username is required.");
+
         if (string.IsNullOrWhiteSpace(request.Email) || !EmailRegex().IsMatch(request.Email))
-            throw new ArgumentException(
+            return Result<int>.Failure(
                 "Invalid email format. Please enter a valid email");
+
+        if (string.IsNullOrWhiteSpace(request.Role) || (request.Role != "User" && request.Role != "Admin"))
+            return Result<int>.Failure("Role must be either 'User' or 'Admin'.");
 
         var exists = await _context.UserExistsAsync(request.Email, cancellationToken);
         if (exists)
-            throw new InvalidOperationException("User already exists");
+            return Result<int>.Failure("User already exists");
 
         var generatedPassword = GenerateStrongPassword(16);
 
@@ -54,7 +61,7 @@ public partial class CreateUserCommandHandler
         await _emailService.SendNewUserCredentialsEmailAsync(
             request.Email, request.UserName, generatedPassword);
 
-        return user.Id;
+        return Result<int>.Success(user.Id, "User created successfully.");
     }
 
     private static string GenerateStrongPassword(int length)

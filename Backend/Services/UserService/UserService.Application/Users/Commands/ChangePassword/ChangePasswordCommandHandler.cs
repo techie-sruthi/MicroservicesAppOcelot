@@ -1,10 +1,12 @@
 using MediatR;
+using Shared.Kernel.Interfaces;
+using Shared.Kernel.Models;
+using Shared.Kernel.Results;
 using UserService.Application.Common.Interfaces;
-using UserService.Application.Common.Models;
 
 namespace UserService.Application.Users.Commands.ChangePassword;
 
-public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordCommand, MessageResponse>
+public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordCommand, Result<MessageResponse>>
 {
     private readonly IUserDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
@@ -17,24 +19,24 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
         _currentUser = currentUser;
     }
 
-    public async Task<MessageResponse> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
+    public async Task<Result<MessageResponse>> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
     {
         var userId = _currentUser.GetUserId();
 
         var user = await _context.GetUserByIdAsync(userId, cancellationToken);
 
         if (user == null)
-            throw new KeyNotFoundException("User not found.");
+            return Result<MessageResponse>.Failure("User not found.");
 
         if (!_passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
-            throw new UnauthorizedAccessException("Current password is incorrect.");
+            return Result<MessageResponse>.Failure("Current password is incorrect.");
 
         if (request.NewPassword.Length < 6)
-            throw new ArgumentException("New password must be at least 6 characters long.");
+            return Result<MessageResponse>.Failure("New password must be at least 6 characters long.");
 
         user.PasswordHash = _passwordHasher.Hash(request.NewPassword);
         await _context.SaveChangesAsync(cancellationToken);
 
-        return new MessageResponse("Password changed successfully.");
+        return Result<MessageResponse>.Success(new MessageResponse("Password changed successfully."), "Password changed successfully.");
     }
 }

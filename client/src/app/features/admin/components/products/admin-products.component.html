@@ -130,8 +130,8 @@
             <th pSortableColumn="dateOfManufacture">
               Date of Manufacture <p-sortIcon field="dateOfManufacture" />
             </th>
-            <!-- <th pSortableColumn="createdByUserId">Created By User ID </th> -->
-            <th style="width: 150px">Actions</th>
+            <th pSortableColumn="createdByUserName">Created By</th>
+            <th style="width: 150px; text-align: center">Actions</th> 
           </tr>
         </ng-template>
 
@@ -207,7 +207,9 @@
             </td>
             <td>{{ product.price | number: '1.2-2' }}</td>
             <td>{{ product.dateOfManufacture | date: 'MM/dd/yyyy' : 'UTC' }}</td>
-            <!-- <td>{{ product.createdByUserId }}</td> -->
+            <td [ngStyle]="{ color: product.createdByUserName ? 'inherit' : 'grey' }">
+              {{ product.createdByUserName || 'Deleted User' }}
+            </td>
             <td>
               <div class="flex gap-2">
                 <p-button

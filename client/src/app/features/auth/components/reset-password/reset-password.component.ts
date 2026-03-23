@@ -83,16 +83,16 @@ export class ResetPasswordComponent implements OnInit {
 
     this.loading = true;
     this.authService.resetPassword(this.token, this.newPassword).pipe(
-      tap(() => {
+      tap((response: any) => {
         this.resetSuccess = true;
         this.messageService.add({
           severity: 'success',
           summary: 'Password Reset',
-          detail: 'Your password has been reset successfully!',
+          detail: response.message || 'Your password has been reset successfully!',
           styleClass: 'my-custom-toast',
         });
       }),
-      catchError((err: { error: { message: string; }; }) => {
+      catchError((err: any) => {
         const message =
           err.error?.message || 'Invalid or expired reset token. Please request a new one.';
         this.messageService.add({

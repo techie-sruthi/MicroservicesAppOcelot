@@ -1,8 +1,9 @@
 using MediatR;
+using Shared.Kernel.Results;
 
 namespace ProductService.Application.Products.Commands.CreateProduct;
 
-public class CreateProductCommand : IRequest<string>
+public class CreateProductCommand : IRequest<Result<string>>
 {
     public string Name { get; set; } = default!;
     public string? Description { get; set; }

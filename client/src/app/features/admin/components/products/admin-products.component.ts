@@ -24,7 +24,7 @@ import { ImageViewerComponent } from '../../../../shared/components/image-viewer
 import { Textarea } from 'primeng/textarea';
 import { Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs/operators';
-import {tap, finalize} from 'rxjs/operators';
+import { tap, finalize } from 'rxjs/operators';
 
 interface IProductForm {
   id?: string;
@@ -131,65 +131,65 @@ export class AdminProductsComponent implements OnInit, OnDestroy {
     this.filter$.complete();
   }
 
-setupNameValidation(): void {
-  this.productNameCheck$
-    .pipe(
-      debounceTime(500),
-      distinctUntilChanged(),
+  setupNameValidation(): void {
+    this.productNameCheck$
+      .pipe(
+        debounceTime(500),
+        distinctUntilChanged(),
 
-      tap(() => {
-        this.checkingName = true;
-      }),
+        tap(() => {
+          this.checkingName = true;
+        }),
 
-      switchMap((name) => {
-        if (!name || name.trim().length < 2) {
-          return of({ exists: false });
-        }
+        switchMap((name) => {
+          if (!name || name.trim().length < 2) {
+            return of({ exists: false });
+          }
 
-        const excludeId = this.isEditMode ? this.productForm.id : undefined;
+          const excludeId = this.isEditMode ? this.productForm.id : undefined;
 
-        return this.productService
-          .checkProductName(name.trim(), excludeId)
-          .pipe(
+          return this.productService.checkProductName(name.trim(), excludeId).pipe(
             catchError(() => {
               return of({ exists: false });
-            })
+            }),
           );
-      }),
+        }),
 
-      tap((response) => {
-        this.checkingName = false;
-        this.nameError = response.exists
-          ? 'A product with this name already exists'
-          : '';
-        this.cdr.detectChanges();
-      })
-    )
-    .subscribe();
-}
+        tap((response) => {
+          this.checkingName = false;
+          this.nameError = response.exists ? 'A product with this name already exists' : '';
+          this.cdr.detectChanges();
+        }),
+      )
+      .subscribe();
+  }
 
   setupSearchDebounce(): void {
-    this.search$.pipe(
-      debounceTime(1000),
-      tap(() => {
-        this.pageNumber = 1;
-        this.first = 0;
-        this.cdr.detectChanges();
-        this.loadProducts();
-      })
-    ).subscribe();
+    this.search$
+      .pipe(
+        debounceTime(1000),
+        tap(() => {
+          this.pageNumber = 1;
+          this.first = 0;
+          this.cdr.detectChanges();
+          this.loadProducts();
+        }),
+      )
+      .subscribe();
   }
 
   setupFilterDebounce(): void {
-    this.filter$.pipe(
-      debounceTime(1000),
-      tap(() => {
-        this.pageNumber = 1;
-        this.first = 0;
-        this.cdr.detectChanges();
-        this.loadProducts();
-      })
-    ).subscribe();
+    this.filter$
+      .pipe(
+        debounceTime(1000),
+        tap(() => {
+          this.pageNumber = 1;
+          this.first = 0;
+          this.cdr.detectChanges();
+          this.loadProducts();
+        }),
+      )
+      .subscribe();
   }
 
   onProductNameChange(name: string): void {
@@ -216,6 +216,58 @@ setupNameValidation(): void {
     this.loadProducts();
   }
 
+  // loadMergedProducts(): void {
+  //   this.loading = true;
+
+  //   const searchTerm = this.searchValue || undefined;
+  //   const minPrice = this.minPrice || undefined;
+  //   const maxPrice = this.maxPrice || undefined;
+  //   const startDate = this.startDate || undefined;
+  //   const sortField = this.sortField || undefined;
+  //   const sortOrder = this.sortOrder || undefined;
+
+  //   this.productService
+  //     .getAllProductsWithUserIds(
+  //       this.pageNumber,
+  //       this.pageSize,
+  //       searchTerm,
+  //       minPrice,
+  //       maxPrice,
+  //       startDate,
+  //       sortField,
+  //       sortOrder,
+  //     )
+  //     .pipe(
+  //       tap((data: IPagedResult<IMergedProduct>) => {
+  //          this.products = data.items;
+  //         this.totalRecords = data.totalCount;
+
+  //         if (data.items.length === 0 && data.totalCount === 0) {
+  //           this.messageService.add({
+  //             severity: 'info',
+  //             summary: 'No Products',
+  //             detail: 'No products found matching your criteria.',
+  //             styleClass: 'my-custom-toast',
+  //           });
+  //         }
+  //       }),
+  //       catchError((err: any) => {
+  //         this.messageService.add({
+  //           severity: 'error',
+  //           summary: 'Error',
+  //           detail: err.error?.message || 'Failed to load merged products',
+  //           styleClass: 'my-custom-toast',
+  //         });
+  //         return of(null);
+  //       }),
+  //       finalize(() => {
+  //         this.loading = false;
+  //         this.cdr.detectChanges();
+  //       }),
+  //     )
+  //     .subscribe();
+  // }
+
   loadProducts(): void {
     this.loading = true;
 
@@ -227,7 +279,7 @@ setupNameValidation(): void {
     const sortOrder = this.sortOrder || undefined;
 
     this.productService
-      .getAllProducts(
+      .getAllProductsWithUserIds(
         this.pageNumber,
         this.pageSize,
         searchTerm,
@@ -251,11 +303,11 @@ setupNameValidation(): void {
             });
           }
         }),
-        catchError(() => {
+        catchError((err: any) => {
           this.messageService.add({
             severity: 'error',
             summary: 'Error',
-            detail: 'Failed to load products',
+            detail: err.error?.message || 'Failed to load products',
             styleClass: 'my-custom-toast',
           });
           return of(null);
@@ -263,7 +315,7 @@ setupNameValidation(): void {
         finalize(() => {
           this.loading = false;
           this.cdr.detectChanges();
-        })
+        }),
       )
       .subscribe();
   }
@@ -342,11 +394,11 @@ setupNameValidation(): void {
       this.uploading = true;
       try {
         const uploadResult = await this.productService.uploadImage(this.selectedFile).toPromise();
-        imageUrl = uploadResult?.imageUrl;
+        imageUrl = uploadResult?.data ?? undefined;
         this.messageService.add({
           severity: 'success',
           summary: 'Image Uploaded',
-          detail: 'Product image uploaded successfully',
+          detail: uploadResult?.message || 'Product image uploaded successfully',
           styleClass: 'my-custom-toast',
         });
       } catch (error) {
@@ -370,55 +422,61 @@ setupNameValidation(): void {
 
     if (this.isEditMode && this.productForm.id) {
       const updatedId = this.productForm.id;
-      this.productService.update(updatedId, productData).pipe(
-        tap(() => {
-          this.products = this.products.map((p) =>
-            p.id === updatedId ? ({ ...productData, id: updatedId } as IProduct) : p,
-          );
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Success',
-            detail: 'Product updated successfully',
-            styleClass: 'my-custom-toast',
-          });
-          this.hideDialog();
-          this.cdr.detectChanges();
-        }),
-        catchError((err) => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Failed to update product',
-            styleClass: 'my-custom-toast',
-          });
-          return of(null);
-        })
-      ).subscribe();
+      this.productService
+        .update(updatedId, productData)
+        .pipe(
+          tap((res: any) => {
+            this.products = this.products.map((p) =>
+              p.id === updatedId ? ({ ...productData, id: updatedId } as IProduct) : p,
+            );
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Success',
+              detail: res?.message || 'Product updated successfully',
+              styleClass: 'my-custom-toast',
+            });
+            this.hideDialog();
+            this.cdr.detectChanges();
+          }),
+          catchError((err: any) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: err.error?.message || 'Failed to update product',
+              styleClass: 'my-custom-toast',
+            });
+            return of(null);
+          }),
+        )
+        .subscribe();
     } else {
-      this.productService.create(productData as IProduct).pipe(
-        tap((response) => {
-          const createdProduct: IProduct = { ...productData, id: response.id } as IProduct;
-          this.products = [createdProduct, ...this.products];
-          this.totalRecords++;
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Success',
-            detail: 'Product created successfully',
-            styleClass: 'my-custom-toast',
-          });
-          this.hideDialog();
-          this.cdr.detectChanges();
-        }),
-        catchError((err) => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: err instanceof Error ? err.message : 'Failed to create product',
-            styleClass: 'my-custom-toast',
-          });
-          return of(null);
-        })
-      ).subscribe();
+      this.productService
+        .create(productData as IProduct)
+        .pipe(
+          tap((response: any) => {
+            const createdProduct: IProduct = { ...productData, id: response.data } as IProduct;
+            this.products = [createdProduct, ...this.products];
+            this.totalRecords++;
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Success',
+              detail: response.message || 'Product created successfully',
+              styleClass: 'my-custom-toast',
+            });
+            this.hideDialog();
+            this.cdr.detectChanges();
+          }),
+          catchError((err: any) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: err.error?.message || 'Failed to create product',
+              styleClass: 'my-custom-toast',
+            });
+            return of(null);
+          }),
+        )
+        .subscribe();
     }
   }
 
@@ -430,28 +488,31 @@ setupNameValidation(): void {
       acceptButtonStyleClass: 'p-button-danger',
       rejectButtonStyleClass: 'p-button-secondary',
       accept: () => {
-        this.productService.delete(id).pipe(
-          tap(() => {
-            this.products = this.products.filter((p) => p.id !== id);
-            this.totalRecords--;
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Success',
-              detail: 'Product deleted successfully',
-              styleClass: 'my-custom-toast',
-            });
-            this.cdr.detectChanges();
-          }),
-          catchError((err) => {
-            this.messageService.add({
-              severity: 'error',
-              summary: 'Error',
-              detail: err instanceof Error ? err.message : 'Failed to delete product',
-              styleClass: 'my-custom-toast',
-            });
-            return of(null);
-          })
-        ).subscribe();
+        this.productService
+          .delete(id)
+          .pipe(
+            tap((res) => {
+              this.products = this.products.filter((p) => p.id !== id);
+              this.totalRecords--;
+              this.messageService.add({
+                severity: 'success',
+                summary: 'Success',
+                detail: res?.message || 'Product deleted successfully',
+                styleClass: 'my-custom-toast',
+              });
+              this.cdr.detectChanges();
+            }),
+            catchError((err: any) => {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: err.error?.message || 'Failed to delete product',
+                styleClass: 'my-custom-toast',
+              });
+              return of(null);
+            }),
+          )
+          .subscribe();
       },
     });
   }

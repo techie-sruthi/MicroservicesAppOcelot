@@ -1,13 +1,14 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Shared.Kernel.Results;
 using UserService.Application.Common.Interfaces;
-using UserService.Application.Common.Models;
+using Shared.Kernel.Models;
 using UserService.Application.Contracts;
 using System.Security.Cryptography;
 
 namespace UserService.Application.Users.Commands.ForgotPassword;
 
-public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordCommand, MessageResponse>
+public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordCommand, Result<MessageResponse>>
 {
     private readonly IUserDbContext _context;
     private readonly IEmailService _emailService;
@@ -18,7 +19,7 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
         _emailService = emailService;
     }
 
-    public async Task<MessageResponse> Handle(ForgotPasswordCommand request, CancellationToken cancellationToken)
+    public async Task<Result<MessageResponse>> Handle(ForgotPasswordCommand request, CancellationToken cancellationToken)
     {
         var user = await _context.Users
             .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
@@ -26,7 +27,8 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
         if (user == null)
         {
             // Don't reveal whether the email exists
-            return new MessageResponse("If your email exists, you will receive a password reset link.");
+            return Result<MessageResponse>.Success(
+                new MessageResponse("If your email exists, you will receive a password reset link."), "Password reset link sent if email exists.");
         }
 
         var tokenBytes = RandomNumberGenerator.GetBytes(32);
@@ -51,6 +53,7 @@ public class ForgotPasswordCommandHandler : IRequestHandler<ForgotPasswordComman
             Console.WriteLine($"[ForgotPassword] Email send failed: {ex.Message}");
         }
 
-        return new MessageResponse("If your email exists, you will receive a password reset link.");
+        return Result<MessageResponse>.Success(
+            new MessageResponse("If your email exists, you will receive a password reset link."), "Password reset link sent if email exists.");
     }
 }

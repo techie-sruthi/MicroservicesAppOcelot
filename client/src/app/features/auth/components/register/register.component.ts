@@ -91,7 +91,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
   }
 
   isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     return emailRegex.test(email);
   }
 
@@ -145,7 +145,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
         this.messageService.add({
           severity: 'success',
           summary: 'Success',
-          detail: 'Registration successful! Please login.',
+          detail: response.message || 'Registration successful! Please login.',
           styleClass: 'my-custom-toast',
           life: 3000,
         });
@@ -153,7 +153,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
           this.router.navigate(['/login']);
         }, 2000);
       }),
-      catchError((err: { error: { message: any; }; }) => {
+      catchError((err: any) => {
         this.messageService.add({
           severity: 'error',
           summary: 'Registration Failed',

@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { map } from 'rxjs/operators';
+import { ApiResponse } from '../models/api-response.model';
 
 export interface IProduct {
   id?: string;
@@ -47,7 +48,9 @@ export class ProductService {
     const params = new HttpParams()
       .set('pageNumber', pageNumber.toString())
       .set('pageSize', pageSize.toString());
-    return this.http.get<IPagedResult<IProduct>>(this.apiUrl, { params });
+    return this.http.get<ApiResponse<IPagedResult<IProduct>>>(this.apiUrl, { params }).pipe(
+      map(res => res.data!)
+    );
   }
 
   getAllProducts(
@@ -83,7 +86,9 @@ export class ProductService {
       params = params.set('sortOrder', sortOrder);
     }
 
-    return this.http.get<IPagedResult<IProduct>>(`${this.apiUrl}/GetAllProducts`, { params });
+    return this.http.get<ApiResponse<IPagedResult<IProduct>>>(`${this.apiUrl}/GetAllProducts`, { params }).pipe(
+      map(res => res.data!)
+    );
   }
 
   getMyProducts(
@@ -119,33 +124,39 @@ export class ProductService {
       params = params.set('sortOrder', sortOrder);
     }
 
-    return this.http.get<IPagedResult<IProduct>>(`${this.apiUrl}/GetMyProducts`, { params });
+    return this.http.get<ApiResponse<IPagedResult<IProduct>>>(`${this.apiUrl}/GetMyProducts`, { params }).pipe(
+      map(res => res.data!)
+    );
   }
 
   getById(id: string): Observable<IProduct> {
-    return this.http.get<IProduct>(`${this.apiUrl}/GetById/${id}`);
+    return this.http.get<ApiResponse<IProduct>>(`${this.apiUrl}/GetById/${id}`).pipe(
+      map(res => res.data!)
+    );
   }
 
   getByUserId(userId: number): Observable<IProduct[]> {
-    return this.http.get<IProduct[]>(`${this.apiUrl}/user/${userId}`);
+    return this.http.get<ApiResponse<IProduct[]>>(`${this.apiUrl}/user/${userId}`).pipe(
+      map(res => res.data!)
+    );
   }
 
-  create(product: IProduct): Observable<{ id: string }> {
-    return this.http.post<{ id: string }>(`${this.apiUrl}/Create`, product);
+  create(product: IProduct): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/Create`, product);
   }
 
-  update(id: string, product: IProduct): Observable<void> {
-    return this.http.put<void>(`${this.apiUrl}/Update/${id}`, { ...product, id });
+  update(id: string, product: IProduct): Observable<ApiResponse<object>> {
+    return this.http.put<ApiResponse<object>>(`${this.apiUrl}/Update/${id}`, { ...product, id });
   }
 
-  delete(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/Delete/${id}`);
-  }
+  delete(id: string): Observable<ApiResponse<object>> {
+  return this.http.delete<ApiResponse<object>>(`${this.apiUrl}/Delete/${id}`);
+}
 
-  uploadImage(file: File): Observable<{ imageUrl: string }> {
+  uploadImage(file: File): Observable<ApiResponse<string>> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<{ imageUrl: string }>(`${this.apiUrl}/UploadImage`, formData);
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/UploadImage`, formData);
   }
 
   checkProductName(name: string, excludeId?: string): Observable<{ exists: boolean }> {
@@ -153,7 +164,9 @@ export class ProductService {
     if (excludeId) {
       params = params.set('excludeId', excludeId);
     }
-    return this.http.get<{ exists: boolean }>(`${this.apiUrl}/CheckProductName`, { params });
+    return this.http.get<ApiResponse<boolean>>(`${this.apiUrl}/CheckProductName`, { params }).pipe(
+      map(res => ({ exists: res.data ?? false }))
+    );
   }
 
   getAllProductsWithUserIds(
@@ -189,8 +202,10 @@ export class ProductService {
       params = params.set('sortOrder', sortOrder);
     }
 
-    return this.http.get<IPagedResult<IMergedProduct>>(`${environment.apiUrl}/products-with-user`, {
+    return this.http.get<ApiResponse<IPagedResult<IMergedProduct>>>(`${environment.apiUrl}/products-with-user`, {
       params,
-    });
+    }).pipe(
+      map(res => res.data!)
+    );
   }
 }

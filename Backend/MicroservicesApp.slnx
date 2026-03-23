@@ -15,4 +15,7 @@
     <Project Path="Services/UserService/UserService.Domain/UserService.Domain.csproj" />
     <Project Path="Services/UserService/UserService.Infrastructure/UserService.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/Shared/">
+    <Project Path="Shared/Shared.Kernel/Shared.Kernel.csproj" />
+  </Folder>
 </Solution>

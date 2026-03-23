@@ -2,23 +2,25 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Copy solution and project files
-COPY ["UserService.API/UserService.API.csproj", "UserService.API/"]
-COPY ["UserService.Application/UserService.Application.csproj", "UserService.Application/"]
-COPY ["UserService.Domain/UserService.Domain.csproj", "UserService.Domain/"]
-COPY ["UserService.Infrastructure/UserService.Infrastructure.csproj", "UserService.Infrastructure/"]
+# Copy project files and shared library
+COPY ["Services/UserService/UserService.API/UserService.API.csproj", "Services/UserService/UserService.API/"]
+COPY ["Services/UserService/UserService.Application/UserService.Application.csproj", "Services/UserService/UserService.Application/"]
+COPY ["Services/UserService/UserService.Domain/UserService.Domain.csproj", "Services/UserService/UserService.Domain/"]
+COPY ["Services/UserService/UserService.Infrastructure/UserService.Infrastructure.csproj", "Services/UserService/UserService.Infrastructure/"]
+COPY ["Shared/Shared.Kernel/Shared.Kernel.csproj", "Shared/Shared.Kernel/"]
 
 # Restore dependencies
-RUN dotnet restore "UserService.API/UserService.API.csproj"
+RUN dotnet restore "Services/UserService/UserService.API/UserService.API.csproj"
 
-# Copy only the application source
-COPY ["UserService.API/", "UserService.API/"]
-COPY ["UserService.Application/", "UserService.Application/"]
-COPY ["UserService.Domain/", "UserService.Domain/"]
-COPY ["UserService.Infrastructure/", "UserService.Infrastructure/"]
+# Copy source code
+COPY ["Services/UserService/UserService.API/", "Services/UserService/UserService.API/"]
+COPY ["Services/UserService/UserService.Application/", "Services/UserService/UserService.Application/"]
+COPY ["Services/UserService/UserService.Domain/", "Services/UserService/UserService.Domain/"]
+COPY ["Services/UserService/UserService.Infrastructure/", "Services/UserService/UserService.Infrastructure/"]
+COPY ["Shared/Shared.Kernel/", "Shared/Shared.Kernel/"]
 
 # Build
-WORKDIR "/src/UserService.API"
+WORKDIR "/src/Services/UserService/UserService.API"
 RUN dotnet build "UserService.API.csproj" -c Release -o /app/build
 
 # Stage 2: Publish

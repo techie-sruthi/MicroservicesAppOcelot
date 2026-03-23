@@ -1,13 +1,14 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Shared.Kernel.Results;
 using UserService.Application.Common.Interfaces;
 using UserService.Application.Contracts;
 
 namespace UserService.Application.Users.Commands.LoginUser;
 
 public class LoginUserCommandHandler
-    : IRequestHandler<LoginUserCommand, object>
+    : IRequestHandler<LoginUserCommand, Result<object>>
 {
     private readonly IUserDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
@@ -33,16 +34,16 @@ public class LoginUserCommandHandler
     }
 
 
-    public async Task<object> Handle(LoginUserCommand request, CancellationToken cancellationToken)
+    public async Task<Result<object>> Handle(LoginUserCommand request, CancellationToken cancellationToken)
     {
         var user = await _context.Users
             .FirstOrDefaultAsync(x => x.Email == request.Email, cancellationToken);
 
         if (user == null)
-            throw new UnauthorizedAccessException("User not found with this email address");
+            return Result<object>.Failure("User not found with this email address");
 
         if (!_passwordHasher.Verify(request.Password, user.PasswordHash))
-            throw new UnauthorizedAccessException("Invalid password. Please try again");
+            return Result<object>.Failure("Invalid password. Please try again");
 
         var otp = _otpService.GenerateOtp();
         _otpService.StoreOtp(user.Email, otp);
@@ -53,12 +54,12 @@ public class LoginUserCommandHandler
             _logger.LogDebug("OTP sent to {Email}", user.Email);
         }
 
-        return new
+        return Result<object>.Success(new
         {
             email = user.Email,
             message = "OTP sent to your email. Please verify to complete login.",
             otpRequired = true,
             expirySeconds = _otpService.GetExpirySeconds()
-        };
+        }, "OTP sent successfully.");
     }
 }

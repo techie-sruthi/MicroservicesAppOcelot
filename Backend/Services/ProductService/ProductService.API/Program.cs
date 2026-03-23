@@ -1,5 +1,6 @@
 using ProductService.API.DependencyInjection;
-using ProductService.API.Middleware;
+using Shared.Kernel.Extensions;
+using Shared.Kernel.Middleware;
 using ProductService.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
@@ -45,7 +46,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseCors("AllowAngular");
 
-app.UseMiddleware<ExceptionMiddleware>();
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

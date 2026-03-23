@@ -2,7 +2,8 @@ using UserService.Application.Common.Interfaces;
 using UserService.Application.Contracts;
 using UserService.Infrastructure.Services;
 using UserService.Infrastructure.Settings;
-using UserService.API.Services;
+using Shared.Kernel.Interfaces;
+using Shared.Kernel.Services;
 
 namespace UserService.API.DependencyInjection;
 

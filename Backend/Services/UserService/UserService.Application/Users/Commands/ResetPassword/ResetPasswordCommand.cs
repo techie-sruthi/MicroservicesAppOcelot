@@ -1,6 +1,7 @@
 using MediatR;
-using UserService.Application.Common.Models;
+using Shared.Kernel.Results;
+using Shared.Kernel.Models;
 
 namespace UserService.Application.Users.Commands.ResetPassword;
 
-public record ResetPasswordCommand(string Token, string NewPassword) : IRequest<MessageResponse>;
+public record ResetPasswordCommand(string Token, string NewPassword) : IRequest<Result<MessageResponse>>;
