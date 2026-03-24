@@ -470,7 +470,7 @@ export class UserProductsComponent implements OnInit, OnDestroy {
     this.confirmationService.confirm({
       message: 'Are you sure you want to delete this product?',
       header: 'Confirm Delete',
-      icon: 'pi pi-exclamation-triangle',
+      // icon: 'pi pi-exclamation-triangle',
       acceptButtonStyleClass: 'p-button-danger',
       rejectButtonStyleClass: 'p-button-secondary',
       accept: () => {
