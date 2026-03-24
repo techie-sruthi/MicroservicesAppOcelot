@@ -99,8 +99,8 @@ services:
 
   apigateway:
     build:
-      context: ./Services/ApiGateway
-      dockerfile: ApiGateway/Dockerfile
+      context: .
+      dockerfile: Services/ApiGateway/ApiGateway/Dockerfile
     container_name: apigateway
     restart: unless-stopped
     ports:

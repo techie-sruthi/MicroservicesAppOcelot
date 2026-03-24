@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Shared.Kernel.Exceptions;
 using Shared.Kernel.Responses;
 
 namespace Shared.Kernel.Middleware;
@@ -27,8 +28,16 @@ public class GlobalExceptionMiddleware
 
             if (!context.Response.HasStarted)
             {
-                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                var response = ApiResponse<object>.Fail("An internal server error occurred.");
+                var (statusCode, message) = ex switch
+                {
+                    ConfigurationMissingException =>
+                        (StatusCodes.Status500InternalServerError, ex.Message),
+                    _ =>
+                        (StatusCodes.Status500InternalServerError, "An internal server error occurred.")
+                };
+
+                context.Response.StatusCode = statusCode;
+                var response = ApiResponse<object>.Fail(message);
                 await context.Response.WriteAsJsonAsync(response);
             }
         }

@@ -3,16 +3,17 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy project file
-COPY ["ApiGateway/ApiGateway.csproj", "ApiGateway/"]
+COPY ["Services/ApiGateway/ApiGateway/ApiGateway.csproj", "Services/ApiGateway/ApiGateway/"]
+COPY ["Shared/Shared.Kernel/Shared.Kernel.csproj", "Shared/Shared.Kernel/"]
 
 # Restore dependencies
-RUN dotnet restore "ApiGateway/ApiGateway.csproj"
+RUN dotnet restore "Services/ApiGateway/ApiGateway/ApiGateway.csproj"
 
 # Copy only the application source
-COPY ["ApiGateway/", "ApiGateway/"]
+COPY . .
 
 # Build
-WORKDIR "/src/ApiGateway"
+WORKDIR "/src/Services/ApiGateway/ApiGateway"
 RUN dotnet build "ApiGateway.csproj" -c Release -o /app/build
 
 # Stage 2: Publish

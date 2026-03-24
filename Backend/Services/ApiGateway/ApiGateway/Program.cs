@@ -5,13 +5,14 @@ using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 using Microsoft.AspNetCore.Http;
 using ApiGateway;
-using ApiGateway.Exceptions;
 using ApiGateway.Security;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using ApiGateway.Aggregator;
 using Microsoft.IdentityModel.Logging;
 using System.IdentityModel.Tokens.Jwt;
+using Shared.Kernel.Exceptions;
+using Shared.Kernel.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -68,6 +69,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseCors("AllowAngular");
 app.UseAuthentication();
 app.UseAuthorization();
