@@ -42,7 +42,7 @@
      
         <small class="p-error" *ngIf="!emailError && !checkingEmail && registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
           <span *ngIf="registerForm.get('email')?.errors?.['required']">Email is required.</span>
-          <span *ngIf="registerForm.get('email')?.errors?.['email']">Please enter a valid email.</span>
+          <span *ngIf="registerForm.get('email')?.errors?.['pattern']">Please enter a valid email.</span>
         </small>
       </div>
 

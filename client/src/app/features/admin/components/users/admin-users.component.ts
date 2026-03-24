@@ -73,8 +73,8 @@ export class AdminUsersComponent implements OnInit {
       this.emailError = '';
       return true;
     }
-    if (!this.emailPattern.test(email)) {
-      this.emailError = 'Please enter a valid email address';
+    if (!this.emailPattern.test(email.trim())) {
+      this.emailError = 'Please enter a valid email.';
       return false;
     }
     this.emailError = '';

@@ -8,7 +8,7 @@
   ></p-confirmDialog>
 
   <div class="dashboard-container">
-    <p-card header="Products" class="mb-4">
+    <p-card header="Products">
    
       <div class="flex justify-content-between mb-3">
         <div class="search-container">
@@ -117,6 +117,7 @@
         [totalRecords]="totalRecords"
         [loading]="loading"
         (onLazyLoad)="onLazyLoad($event)"
+         [tableStyle]="{ 'min-width': 'auto','min-height': 'auto' }"
         [rowsPerPageOptions]="[5, 10, 20]"
         [showCurrentPageReport]="true"
         currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
@@ -143,7 +144,7 @@
               <p-sortIcon field="dateOfManufacture"></p-sortIcon>
             </th>
 
-            <th style="width: 150px">Actions</th>
+            <th style="width: 150px; text-align: center">Actions</th> 
           </tr>
         </ng-template>
 

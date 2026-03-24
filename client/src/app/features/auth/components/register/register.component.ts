@@ -15,6 +15,8 @@ import { AuthService } from '../../../../shared/services/auth.service';
 import { Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, tap, catchError, finalize } from 'rxjs/operators';
 
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
 @Component({
   selector: 'app-register',
   standalone: true,
@@ -49,7 +51,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
   ) {
     this.registerForm = this.fb.group({
       userName: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
+      email: ['', [Validators.required, Validators.pattern(EMAIL_REGEX)]],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required],
     });
@@ -70,7 +72,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
         distinctUntilChanged(),
         switchMap((email) => {
           // Check if email is valid format and not empty
-          if (!email || !this.isValidEmail(email)) {
+          if (!email || !EMAIL_REGEX.test(email)) {
             return of({ exists: false });
           }
           this.checkingEmail = true;
@@ -88,11 +90,6 @@ export class RegisterComponent implements OnInit, OnDestroy {
         })
       )
       .subscribe();
-  }
-
-  isValidEmail(email: string): boolean {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return emailRegex.test(email);
   }
 
   onEmailChange(email: string): void {

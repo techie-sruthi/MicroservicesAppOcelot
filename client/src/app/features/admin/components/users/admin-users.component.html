@@ -27,6 +27,7 @@
             id="email" 
             type="email"
             [(ngModel)]="selectedUser.email" 
+            (ngModelChange)="onEmailChange($event)"
             (blur)="onEmailBlur()"
             placeholder="Enter email"
             class="w-full"

@@ -42,6 +42,21 @@
   }
 }
 
+@media (max-width: 700px) {
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .search-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-container input {
+    width: 100% !important;
+  }
+}
+
 /* Form Styles */
 .form-grid {
   display: grid;
@@ -536,10 +551,6 @@
     font-size: 0.875rem !important;
   }
 
-  ::ng-deep .p-datatable button .p-button-label {
-    display: none; /* Hide button text, show only icons */
-  }
-
   /* Image upload */
   .image-preview img {
     max-height: 200px;
@@ -588,10 +599,8 @@
 
   /* Hide more columns on small screens */
   ::ng-deep .p-datatable .p-datatable-tbody > tr > td:nth-child(5),
-  ::ng-deep .p-datatable .p-datatable-thead > tr > th:nth-child(5),
-  ::ng-deep .p-datatable .p-datatable-tbody > tr > td:nth-child(6),
-  ::ng-deep .p-datatable .p-datatable-thead > tr > th:nth-child(6) {
-    display: none; /* Hide date columns on small screens */
+  ::ng-deep .p-datatable .p-datatable-thead > tr > th:nth-child(5) {
+    display: none; /* Hide date column on small screens */
   }
 
   /* Pagination */
@@ -649,6 +658,12 @@
   ::ng-deep .p-confirmdialog.p-dialog .p-dialog-content {
     max-height: calc(74vh - 6.5rem) !important;
     overflow-y: auto !important;
+  }
+
+  /* Table actions vertical */
+  ::ng-deep .p-datatable .flex.gap-2 {
+    flex-direction: column;
+    gap: 0.25rem !important;
   }
 }
 
